@@ -1,0 +1,18 @@
+{
+"Chat.Prefix": "{darkred}[Discord]{default}",
+"Menu.ReportSelectPlayer": "Oyuncu Seç",
+"Menu.ReportSelectReason": "Sebep Seç",
+"Menu.ReportCustomReason": "Kendim Yazmak İstiyorum",
+"Menu.Back": "Geri",
+"Chat.ReportSend": "Oyuncu {0} rapor edildi! (Sebep: {1})",
+"Chat.ReportCancelled": "Raporunuz başarıyla iptal edildi.",
+"Chat.ReportShortReason": "Sebep uzunluğu yetersiz",
+"Chat.InserYourReason": "Sebebinizi sohbete yazın! İptal etmek için, {green}!cancel yazın",
+"Chat.InvalidReportUsage": "Geçersiz rapor kullanımı! {green}/report <oyuncu> <sebep>",
+"Chat.LinkAccount": "====\nl Kod: {0}\n===",
+"Chat.AlreadyLinked": "Steam Hesabınız zaten bağlanmış!",
+"Chat.AccountLinked": "Steam Hesabınız Discord Hesabı ile bağlandı {green}{0}",
+"Chat.TargetNotFound": "{green}{0}{default} adında bir oyuncu bulunamadı!",
+"Chat.TargetNotConnected": "{green}{0}{default} oyuncusu artık bağlı değil!",
+"Chat.MultipleTargetFound": "{green}{0}{default} ismiyle birden fazla oyuncu bulundu!"
+}
