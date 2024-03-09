@@ -18,7 +18,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 - [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/manage-roles-and-permissions)
 
 # Installation
-1. Download the latest verison - https://github.com/NockyCZ/CS2-DiscordUtilities/releases/latest
+1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
 2. Unzip into your servers csgo/addons/counterstrikesharp/plugins/ dir
 3. Restart the server
 4. Configure the config file
