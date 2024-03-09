@@ -1,0 +1,18 @@
+{
+  "Chat.Prefix": "{darkred}[Discord]{default}",
+  "Menu.ReportSelectPlayer": "Select a Player",
+  "Menu.ReportSelectReason": "Select a Reason",
+  "Menu.ReportCustomReason": "Custom Reason",
+  "Menu.Back": "Back",
+  "Chat.ReportSend": "Player {0} has been reported! (Reason: {1})",
+  "Chat.ReportCancelled": "Your report has been successfully cancelled.",
+  "Chat.ReportShortReason": "Insufficient length of reason",
+  "Chat.InserYourReason": "Insert your reason to the chat! To cancel, type {green}!cancel",
+  "Chat.InvalidReportUsage": "Invalid report usage! {green}/report <player> <reason>",
+  "Chat.LinkAccount": "====\nl Code: {0}\n===",
+  "Chat.AlreadyLinked": "Your Steam Account is already linked!",
+  "Chat.AccountLinked": "Your Steam Account has been linked with Discord Account {green}{0}",
+  "Chat.TargetNotFound": "A player named {green}{0}{default} was not found!",
+  "Chat.TargetNotConnected": "Player {green}{0}{default} is no longer connected!",
+  "Chat.MultipleTargetFound": "Multiple players were found with the name {green}{0}{default}!"
+}
