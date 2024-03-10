@@ -15,8 +15,8 @@ namespace DiscordUtilities
     public partial class DiscordUtilities : BasePlugin, IPluginConfig<DUConfig>
     {
         public override string ModuleName => "Discord Utilities";
-        public override string ModuleAuthor => "Nocky";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
+        public override string ModuleVersion => "1.0.1";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -35,8 +35,8 @@ namespace DiscordUtilities
             if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
                 _ = CreateDatabaseConnection();
 
-            AddCommandListener("say", OnPlayerSay);
-            AddCommandListener("say_team", OnPlayerSayTeam);
+            AddCommandListener("say", OnPlayerSay, HookMode.Post);
+            AddCommandListener("say_team", OnPlayerSayTeam, HookMode.Post);
             CreateCustomCommands();
             LoadManageRolesAndFlags();
 
@@ -205,6 +205,7 @@ namespace DiscordUtilities
         }
         private async Task DiscordLink_CMD(SocketSlashCommand command)
         {
+            Console.WriteLine("0");
             ulong guildId = command.GuildId!.Value;
             var guild = BotClient!.GetGuild(guildId);
 
@@ -221,38 +222,33 @@ namespace DiscordUtilities
                 SendConsoleMessage($"[Discord Utilities] Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
                 return;
             }
-
-            var code = command.Data.Options.First().Value.ToString();
-            var returnedEmbed = EmbedTypes.LinkFailed;
-            var returnedContent = ContentTypes.LinkFailed;
-
             string content = string.Empty;
             EmbedBuilder embed;
-
             string[] data = new string[1];
+
             var linkedSteamd = await CheckIsPlayerLinked(user.Id.ToString());
             if (!string.IsNullOrEmpty(linkedSteamd))
             {
                 data[0] = linkedSteamd;
-                returnedEmbed = EmbedTypes.AlreadyLinked;
-                returnedContent = ContentTypes.AlreadyLinked;
-
-                content = GetContent(returnedContent, data);
-                embed = GetEmbed(returnedEmbed, data);
+                content = GetContent(ContentTypes.AlreadyLinked, data);
+                embed = GetEmbed(EmbedTypes.AlreadyLinked, data);
                 await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
                 return;
             }
 
-            data[0] = code!;
+            var code = command.Data.Options.First().Value.ToString();
             if (!string.IsNullOrEmpty(code) && linkCodes.ContainsKey(code))
             {
-                returnedEmbed = EmbedTypes.LinkSuccess;
-                returnedContent = ContentTypes.LinkSuccess;
+                data[0] = code!;
+                content = GetContent(ContentTypes.LinkSuccess, data);
+                embed = GetEmbed(EmbedTypes.LinkSuccess, data);
                 await InsertPlayerData(linkCodes[code].ToString(), command.User.Id.ToString());
+                await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
                 Server.NextFrame(() => { PerformLinkAccount(code, command.User.GlobalName, command.User.Id.ToString()); });
+                return;
             }
-            content = GetContent(returnedContent, data);
-            embed = GetEmbed(returnedEmbed, data);
+            content = GetContent(ContentTypes.LinkFailed, data);
+            embed = GetEmbed(EmbedTypes.LinkFailed, data);
             await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
         }
         private async Task UnLoadDiscordBOT()

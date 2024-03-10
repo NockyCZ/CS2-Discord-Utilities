@@ -63,6 +63,11 @@ namespace DiscordUtilities
             if (player == null || !player.IsValid)
                 return;
 
+            if (GetTargetsForReportCount(player) == 0)
+            {
+                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportNoTargetsFound"]}");
+                return;
+            }
             var arg1 = info.GetArg(1);
             var arg2 = info.GetArg(2);
             switch (Config.Report.ReportMethod)
@@ -78,6 +83,11 @@ namespace DiscordUtilities
                     }
                     if (GetTargetByName(arg1, player) is var target && target != null)
                     {
+                        if (target == player)
+                        {
+                            player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.SelfReport"]}");
+                            return;
+                        }
                         SendReport(player, target, arg2);
                     }
                     break;
@@ -100,6 +110,11 @@ namespace DiscordUtilities
                     {
                         if (target != null)
                         {
+                            if (target == player)
+                            {
+                                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.SelfReport"]}");
+                                return;
+                            }
                             OpenReportMenu_Reason(player, target);
                         }
                     }
@@ -107,6 +122,11 @@ namespace DiscordUtilities
                     {
                         if (target != null)
                         {
+                            if (target == player)
+                            {
+                                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.SelfReport"]}");
+                                return;
+                            }
                             SendReport(player, target, arg2);
                         }
                     }

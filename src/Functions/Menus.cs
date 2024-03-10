@@ -9,9 +9,14 @@ namespace DiscordUtilities
     {
         public void OpenReportMenu_Players(CCSPlayerController player)
         {
-            var Menu = new CenterHtmlMenu($"{Localizer["Menu.ReportSelectPlayer"]}<br>");
+            if (GetTargetsForReportCount(player) == 0)
+            {
+                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportNoTargetsFound"]}");
+                return;
+            }
+            var Menu = new CenterHtmlMenu($"{Localizer["Menu.ReportSelectPlayer"]}");
 
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, "@discord_utilities/antireport")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p != player && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, "@discord_utilities/antireport")))
                 Menu.AddMenuOption(p.PlayerName, (player, target) => OnSelectPlayer_ReportMenu(player, p));
 
             MenuManager.OpenCenterHtmlMenu(Instance, player!, Menu);
@@ -21,7 +26,7 @@ namespace DiscordUtilities
         {
             var selectedTarget = target;
             string[] Reasons = Config.Report.ReportReasons.Split(',');
-            var Menu = new CenterHtmlMenu($"{Localizer["Menu.ReportSelectReason"]}<br>");
+            var Menu = new CenterHtmlMenu($"{Localizer["Menu.ReportSelectReason"]}");
             foreach (var reason in Reasons)
             {
                 if (reason.Contains("#CUSTOMREASON"))

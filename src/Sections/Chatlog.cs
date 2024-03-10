@@ -6,8 +6,8 @@ namespace DiscordUtilities
     {
         public void PerformChatlog(ulong playerSteamID, string message, int team, bool isTeamMessage)
         {
-            EmbedBuilder embed = new EmbedBuilder();
-            string content = string.Empty;
+            var embed = new EmbedBuilder();
+            var content = string.Empty;
             string[] data = new string[2];
             data[0] = playerSteamID.ToString();
             data[1] = message;

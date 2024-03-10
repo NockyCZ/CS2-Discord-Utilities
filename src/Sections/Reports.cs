@@ -14,6 +14,11 @@ namespace DiscordUtilities
                     sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.TargetNotConnected"]}");
                     return;
                 }
+                if (target == sender)
+                {
+                    sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.SelfReport"]}");
+                    return;
+                }
             }
             string[] data = new string[3];
             data[0] = sender.AuthorizedSteamID!.SteamId64.ToString();

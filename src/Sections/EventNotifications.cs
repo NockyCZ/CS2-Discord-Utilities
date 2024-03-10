@@ -13,7 +13,7 @@ namespace DiscordUtilities
             _ = SendDiscordMessage(embedBuiler, content, ulong.Parse(Config.EventNotifications.Connect.ChannelID), "Connect Event");
         }
 
-        public void PerformDisconnectEvent(ulong steamid)
+        public async Task PerformDisconnectEvent(ulong steamid)
         {
             string[] data = new string[1];
             data[0] = steamid.ToString();
@@ -21,7 +21,7 @@ namespace DiscordUtilities
             var embedBuiler = GetEmbed(EmbedTypes.Disconnect, data);
             var content = GetContent(ContentTypes.Disconnect, data);
 
-            _ = SendDiscordMessage(embedBuiler, content, ulong.Parse(Config.EventNotifications.Disconnect.ChannelID), "Disconnect Event");
+            await SendDiscordMessage(embedBuiler, content, ulong.Parse(Config.EventNotifications.Disconnect.ChannelID), "Disconnect Event");
         }
     }
 }

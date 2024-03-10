@@ -89,8 +89,10 @@ namespace DiscordUtilities
                 PlayerData newPlayer = new PlayerData
                 {
                     Name = player.PlayerName,
+                    NameWithoutEmoji = RemoveEmoji(player.PlayerName),
                     SteamId32 = player.AuthorizedSteamID!.SteamId32.ToString(),
                     SteamId64 = player.AuthorizedSteamID.SteamId64.ToString(),
+                    IpAddress = player.IpAddress!.ToString(),
                     CommunityUrl = player.AuthorizedSteamID.ToCommunityUrl().ToString(),
                     TeamShortName = GetTeamShortName(player.TeamNum),
                     TeamLongName = GetTeamLongName(player.TeamNum),
@@ -128,7 +130,7 @@ namespace DiscordUtilities
             if (player != null && player.IsValid && player.AuthorizedSteamID != null)
             {
                 if (Config.EventNotifications.Disconnect.Enabled)
-                    PerformDisconnectEvent(player.AuthorizedSteamID.SteamId64);
+                    _ = PerformDisconnectEvent(player.AuthorizedSteamID.SteamId64);
 
                 playerData.RemoveAll(p => p.SteamId64 == player.AuthorizedSteamID.SteamId64.ToString());
 

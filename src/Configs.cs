@@ -45,7 +45,7 @@ public class Report
 public class ReportEmbed
 {
     [JsonPropertyName("Content")] public string Content { get; set; } = "New Report (@everyone)";
-    //[JsonPropertyName("Title")] public string Title { get; set; } = "{Server.Name}";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "{Server.Name}";
     [JsonPropertyName("Description")] public string Description { get; set; } = "> From [{Player.Name}]({Player.CommunityUrl}) ({Player.DiscordPing})";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "Reported player;{Target.CountryEmoji} [{Target.Name}]({Target.CommunityUrl}) ({Target.DiscordPing});true|Reason;`{REASON}`;true";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
@@ -202,7 +202,7 @@ public class ServerStatusDropdownClick
 
 public class BotStatus
 {
-    [JsonPropertyName("Update Time")] public int UpdateTimer { get; set; } = 30;
+    [JsonPropertyName("Update Time")] public int UpdateTimer { get; set; } = 0;
     [JsonPropertyName("Status")] public int Status { get; set; } = 1;
     [JsonPropertyName("Activity Type")] public int ActivityType { get; set; } = 1;
     [JsonPropertyName("Activity Text")] public string ActivityFormat { get; set; } = "{Server.MapName} ({Server.OnlinePlayers}/{Server.MaxPlayers})";

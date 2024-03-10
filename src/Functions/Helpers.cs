@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
 using Discord;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace DiscordUtilities
 {
@@ -26,8 +27,10 @@ namespace DiscordUtilities
         public class PlayerData
         {
             public required string Name { get; set; }
+            public required string NameWithoutEmoji { get; set; }
             public required string SteamId32 { get; set; }
             public required string SteamId64 { get; set; }
+            public required string IpAddress { get; set; }
             public required string CommunityUrl { get; set; }
             public required string TeamShortName { get; set; }
             public required string TeamLongName { get; set; }
@@ -338,24 +341,26 @@ namespace DiscordUtilities
             {
                 var replacedData = new Dictionary<string, string>
                 {
-                    { $"{{{player}.Name}}", selectedPlayer.Name ?? "" },
-                    { $"{{{player}.SteamID32}}", selectedPlayer.SteamId32 ?? "" },
-                    { $"{{{player}.SteamID64}}", selectedPlayer.SteamId64 ?? "" },
-                    { $"{{{player}.CommunityUrl}}", selectedPlayer.CommunityUrl ?? "" },
-                    { $"{{{player}.TeamShortName}}", selectedPlayer.TeamShortName ?? "" },
-                    { $"{{{player}.TeamLongName}}", selectedPlayer.TeamLongName ?? "" },
-                    { $"{{{player}.TeamNumber}}", selectedPlayer.TeamNumber ?? "" },
-                    { $"{{{player}.Kills}}", selectedPlayer.Kills ?? "" },
-                    { $"{{{player}.Deaths}}", selectedPlayer.Deaths ?? "" },
-                    { $"{{{player}.Assists}}", selectedPlayer.Assists ?? "" },
-                    { $"{{{player}.Points}}", selectedPlayer.Points ?? "" },
-                    { $"{{{player}.CountryShort}}", selectedPlayer.CountryShort ?? "" },
-                    { $"{{{player}.CountryLong}}", selectedPlayer.CountryLong ?? "" },
-                    { $"{{{player}.CountryEmoji}}", selectedPlayer.CountryEmoji ?? "" },
-                    { $"{{{player}.DiscordGlobalname}}", selectedPlayer.DiscordGlobalname ?? "" },
-                    { $"{{{player}.DiscordNickname}}", selectedPlayer.DiscordNickname ?? "" },
-                    { $"{{{player}.DiscordPing}}", selectedPlayer.DiscordPing ?? "" },
-                    { $"{{{player}.DiscordID}}", selectedPlayer.DiscordID ?? "" }
+                    { $"{{{player}.Name}}", selectedPlayer.Name},
+                    { $"{{{player}.NameWithoutEmoji}}", selectedPlayer.NameWithoutEmoji},
+                    { $"{{{player}.SteamID32}}", selectedPlayer.SteamId32},
+                    { $"{{{player}.SteamID64}}", selectedPlayer.SteamId64},
+                    { $"{{{player}.IpAddress}}", selectedPlayer.IpAddress},
+                    { $"{{{player}.CommunityUrl}}", selectedPlayer.CommunityUrl},
+                    { $"{{{player}.TeamShortName}}", selectedPlayer.TeamShortName},
+                    { $"{{{player}.TeamLongName}}", selectedPlayer.TeamLongName},
+                    { $"{{{player}.TeamNumber}}", selectedPlayer.TeamNumber },
+                    { $"{{{player}.Kills}}", selectedPlayer.Kills},
+                    { $"{{{player}.Deaths}}", selectedPlayer.Deaths},
+                    { $"{{{player}.Assists}}", selectedPlayer.Assists},
+                    { $"{{{player}.Points}}", selectedPlayer.Points},
+                    { $"{{{player}.CountryShort}}", selectedPlayer.CountryShort},
+                    { $"{{{player}.CountryLong}}", selectedPlayer.CountryLong},
+                    { $"{{{player}.CountryEmoji}}", selectedPlayer.CountryEmoji},
+                    { $"{{{player}.DiscordGlobalname}}", selectedPlayer.DiscordGlobalname},
+                    { $"{{{player}.DiscordNickname}}", selectedPlayer.DiscordNickname},
+                    { $"{{{player}.DiscordPing}}", selectedPlayer.DiscordPing},
+                    { $"{{{player}.DiscordID}}", selectedPlayer.DiscordID}
                 };
 
                 foreach (var item in replacedData)
@@ -452,6 +457,10 @@ namespace DiscordUtilities
 
             return embedOptions > 0;
         }
+        private static string RemoveEmoji(string text)
+        {
+            return Regex.Replace(text, @"[\uD83C-\uDBFF\uDC00-\uDFFF]+", string.Empty);
+        }
         private int GetPlayersCount()
         {
             return Utilities.GetPlayers().Where(p => p.IsValid && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17).Count();
@@ -463,6 +472,10 @@ namespace DiscordUtilities
         private int GetBotsCounts()
         {
             return Utilities.GetPlayers().Where(p => p.IsValid && !p.IsHLTV && p.IsBot).Count();
+        }
+        private int GetTargetsForReportCount(CCSPlayerController player)
+        {
+            return Utilities.GetPlayers().Where(p => p.IsValid && p != player && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17 && AdminManager.PlayerHasPermissions(p, Config.Report.UnreportableFlag)).Count();
         }
         private static CCSGameRules GameRules()
         {
