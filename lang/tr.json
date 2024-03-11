@@ -7,6 +7,8 @@
   "Chat.ReportSend": "Oyuncu {0} rapor edildi! (Sebep: {1})",
   "Chat.ReportCancelled": "Raporunuz başarıyla iptal edildi.",
   "Chat.ReportShortReason": "Sebep uzunluğu yetersiz",
+  "Chat.ReportNoTargetsFound": "Sunucuda sadece siz varsınız, raporlanacak hedef bulunamadı.",
+  "Chat.SelfReport": "Kendinizi raporlayamazsınız!",
   "Chat.InserYourReason": "Sebebinizi sohbete yazın! İptal etmek için, {green}!cancel yazın",
   "Chat.InvalidReportUsage": "Geçersiz rapor kullanımı! {green}/report <oyuncu> <sebep>",
   "Chat.LinkAccount": "====\nl Kod: {0}\n===",
