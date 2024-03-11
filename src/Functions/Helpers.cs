@@ -475,7 +475,7 @@ namespace DiscordUtilities
         }
         private int GetTargetsForReportCount(CCSPlayerController player)
         {
-            return Utilities.GetPlayers().Where(p => p.IsValid && p != player && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17 && AdminManager.PlayerHasPermissions(p, Config.Report.UnreportableFlag)).Count();
+            return Utilities.GetPlayers().Where(p => p.IsValid && p != player && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.Report.UnreportableFlag)).Count();
         }
         private static CCSGameRules GameRules()
         {

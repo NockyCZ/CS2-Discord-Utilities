@@ -123,7 +123,7 @@ public class Chatlog
 public class AllChatEmbed
 {
     [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
-    [JsonPropertyName("Content")] public string Content { get; set; } = "{Player.CountryEmoji} **[{Player.Name}](<{Player.CommunityUrl}>)**: {MESSAGE}";
+    [JsonPropertyName("Content")] public string Content { get; set; } = "{Player.CountryEmoji} **[{Player.NameWithoutEmoji}](<{Player.CommunityUrl}>)**: {MESSAGE}";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
     [JsonPropertyName("Description")] public string Description { get; set; } = "";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
@@ -137,7 +137,7 @@ public class AllChatEmbed
 public class TeamChatEmbed
 {
     [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
-    [JsonPropertyName("Content")] public string Content { get; set; } = "{Player.CountryEmoji} [{Player.TeamShortName}] **[{Player.Name}](<{Player.CommunityUrl}>)**: {MESSAGE}";
+    [JsonPropertyName("Content")] public string Content { get; set; } = "{Player.CountryEmoji} [{Player.TeamShortName}] **[{Player.NameWithoutEmoji}](<{Player.CommunityUrl}>)**: {MESSAGE}";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
     [JsonPropertyName("Description")] public string Description { get; set; } = "";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
@@ -236,7 +236,7 @@ public class ConnectedEmbed
 {
     [JsonPropertyName("Content")] public string Content { get; set; } = "";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
-    [JsonPropertyName("Description")] public string Description { get; set; } = "> Player {Player.CountryEmoji} **[{Player.Name}]({Player.CommunityUrl})** has connected to the server.";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> Player {Player.CountryEmoji} **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})** has connected to the server.";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "";
@@ -249,7 +249,7 @@ public class DisconnectdEmbed
 {
     [JsonPropertyName("Content")] public string Content { get; set; } = "";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
-    [JsonPropertyName("Description")] public string Description { get; set; } = "> Player {Player.CountryEmoji} **[{Player.Name}]({Player.CommunityUrl})** has disconnected from the server.";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> Player {Player.CountryEmoji} **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})** has disconnected from the server.";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "";
