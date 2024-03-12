@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 
 namespace DiscordUtilities
@@ -133,7 +134,7 @@ namespace DiscordUtilities
                     break;
             }
         }
-
+        
         [ConsoleCommand("css_du_serverstatus", "Perform and setup Server Status")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void PerformFirstServerStatus_CMD(CCSPlayerController player, CommandInfo info)

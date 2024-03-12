@@ -82,15 +82,15 @@ namespace DiscordUtilities
                                             {
                                                 foreach (var item in RolesToPermissions)
                                                 {
-                                                    if (!item.Value.StartsWith('@') || item.Value.StartsWith('#'))
-                                                    {
-                                                        SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Value}'!", ConsoleColor.Red);
-                                                        return;
-                                                    }
-                                                    else
+                                                    if (item.Value.StartsWith('@') || item.Value.StartsWith('#'))
                                                     {
                                                         if (!AdminManager.PlayerHasPermissions(player, item.Value))
                                                             PerformRoleToPermission(ulong.Parse(discordID), ulong.Parse(steamid), ulong.Parse(item.Key), item.Value);
+                                                    }
+                                                    else
+                                                    {
+                                                        SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Value}'!", ConsoleColor.Red);
+                                                        return;
                                                     }
                                                 }
                                             }
@@ -98,15 +98,15 @@ namespace DiscordUtilities
                                             {
                                                 foreach (var item in PermissionsToRoles)
                                                 {
-                                                    if (!item.Key.StartsWith('@') || item.Key.StartsWith('#'))
-                                                    {
-                                                        SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Value}'!", ConsoleColor.Red);
-                                                        return;
-                                                    }
-                                                    else
+                                                    if (item.Key.StartsWith('@') || item.Key.StartsWith('#'))
                                                     {
                                                         if (AdminManager.PlayerHasPermissions(player, item.Key))
                                                             _ = PerformPermissionToRole(ulong.Parse(discordID), ulong.Parse(item.Value));
+                                                    }
+                                                    else
+                                                    {
+                                                        SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Value}'!", ConsoleColor.Red);
+                                                        return;
                                                     }
                                                 }
                                             }

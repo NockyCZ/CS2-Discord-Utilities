@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "1.0.2";
+        public override string ModuleVersion => "1.0.3";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -137,7 +137,7 @@ namespace DiscordUtilities
             await BotClient.SetStatusAsync((UserStatus)Config.BotStatus.Status);
 
             var linkCommand = new SlashCommandBuilder()
-                .WithName(Config.Link.DiscordCommand)
+                .WithName(Config.Link.DiscordCommand.ToLower())
                 .WithDescription(Config.Link.DiscordDescription)
                 .AddOption(Config.Link.DiscordOptionName.ToLower(), ApplicationCommandOptionType.String, Config.Link.DiscordOptionDescription, isRequired: true);
 

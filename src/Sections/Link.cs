@@ -20,22 +20,25 @@ namespace DiscordUtilities
         public void PerformLinkPermission(ulong steamid)
         {
             var Permission = Config.Link.LinkPermissions;
-            if (!Permission.StartsWith('@') || Permission.StartsWith('#'))
+            if (Permission.StartsWith('@') || Permission.StartsWith('#'))
+            {
+
+                var player = GetTargetBySteamID64(steamid);
+                if (player == null || !player.IsValid)
+                    return;
+
+                if (!string.IsNullOrEmpty(Permission))
+                {
+                    if (Permission.StartsWith('@'))
+                        AdminManager.AddPlayerPermissions(player, Permission);
+                    else
+                        AdminManager.AddPlayerToGroup(player, Permission);
+                }
+            }
+            else
             {
                 SendConsoleMessage($"[Discord Utilities] Invalid permission '{Permission}'!", ConsoleColor.Red);
                 return;
-            }
-
-            var player = GetTargetBySteamID64(steamid);
-            if (player == null || !player.IsValid)
-                return;
-
-            if (!string.IsNullOrEmpty(Permission))
-            {
-                if (Permission.StartsWith('@'))
-                    AdminManager.AddPlayerPermissions(player, Permission);
-                else
-                    AdminManager.AddPlayerToGroup(player, Permission);
             }
         }
         public async Task PerformLinkRole(string discordid)
