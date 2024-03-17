@@ -59,7 +59,8 @@ public class Link
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Code Length")] public int CodeLength { get; set; } = 7;
-    [JsonPropertyName("Ingame Link Commands")] public string IngameCommands { get; set; } = "link,discord";
+    [JsonPropertyName("Ingame Link Commands")] public string IngameLinkCommands { get; set; } = "link,discord";
+    [JsonPropertyName("Ingame Unlink Commands")] public string IngameUnlinkCommands { get; set; } = "unlink,logout";
     [JsonPropertyName("Discord Link Command")] public string DiscordCommand { get; set; } = "link";
     [JsonPropertyName("Discord Link Description")] public string DiscordDescription { get; set; } = "Link your Discord profile with your Steam Account";
     [JsonPropertyName("Discord Link Option Description")] public string DiscordOptionDescription { get; set; } = "Insert your link code";
@@ -116,8 +117,17 @@ public class Chatlog
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Blocked Words")] public string BlockedWords { get; set; } = "@everyone,@here";
+    [JsonPropertyName("Display Commands")] public bool DisplayCommands { get; set; } = true;
     [JsonPropertyName("All Chat Embed")] public AllChatEmbed AllChatEmbed { get; set; } = new AllChatEmbed();
     [JsonPropertyName("Team Chat Embed")] public TeamChatEmbed TeamChatEmbed { get; set; } = new TeamChatEmbed();
+    [JsonPropertyName("Admin Chat Log")] public AdminChat AdminChat { get; set; } = new AdminChat();
+}
+
+public class AdminChat
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Admin Flag")] public string AdminFlag { get; set; } = "@css/chat";
+    [JsonPropertyName("Admin Chat Embed")] public AdminChatEmbed AdminChatEmbed { get; set; } = new AdminChatEmbed();
 }
 
 public class AllChatEmbed
@@ -148,11 +158,25 @@ public class TeamChatEmbed
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
 }
 
+public class AdminChatEmbed
+{
+    [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
+    [JsonPropertyName("Content")] public string Content { get; set; } = "**[Admin Chat]** **[{Player.NameWithoutEmoji}](<{Player.CommunityUrl}>)**: {MESSAGE}";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "";
+    [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
+    [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
+    [JsonPropertyName("Image")] public string Image { get; set; } = "";
+    [JsonPropertyName("HEX Color")] public string Color { get; set; } = "";
+    [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
+    [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
+}
+
 public class DiscordRelay
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
-    [JsonPropertyName("Ingame Message Format")] public string MessageFormat { get; set; } = "{Blue}[{Discord.ChannelName}] {Green}{Discord.UserNickName}: {Default}{Discord.Message}";
+    [JsonPropertyName("Ingame Message Format")] public string MessageFormat { get; set; } = "{Blue}[{Discord.ChannelName}] {Green}{Discord.UserDisplayName}: {Default}{Discord.Message}";
 }
 
 public class ServerStatus

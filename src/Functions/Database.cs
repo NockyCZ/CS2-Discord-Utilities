@@ -31,7 +31,8 @@ namespace DiscordUtilities
                 await connection.OpenAsync();
                 await CreateTable(connection);
                 IsDbConnected = true;
-                SendConsoleMessage("[Discord Utilities] Database has been connected!", ConsoleColor.Green);
+                await LoadLinkedPlayers();
+                SendConsoleMessage("[Discord Utilities] The database has been connected!", ConsoleColor.Green);
             }
             catch (Exception ex)
             {
@@ -48,74 +49,54 @@ namespace DiscordUtilities
                 discordid VARCHAR(64) NOT NULL
             )", connection);
             await cmd.ExecuteNonQueryAsync();
+
+            /*using var cmd = new MySqlCommand(
+                @"CREATE TABLE IF NOT EXISTS Discord_Utilities (
+                steamid VARCHAR(32) UNIQUE NOT NULL,
+                discordid VARCHAR(32) NOT NULL,
+                UNIQUE (`steamid`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;", connection);
+            await cmd.ExecuteNonQueryAsync();*/
         }
 
-        private async Task LoadPlayerData(string steamid)
+        private async Task UpdateDatabase()
         {
             try
             {
                 using (var connection = GetConnection())
                 {
                     await connection.OpenAsync();
-                    string sql = "SELECT discordid FROM Discord_Utilities WHERE steamid = @steamid";
+                    string sql = "ALTER TABLE Discord_Utilities DROP COLUMN id, MODIFY COLUMN steamid VARCHAR(32) COLLATE utf8mb4_unicode_ci UNIQUE NOT NULL, MODIFY COLUMN discordid VARCHAR(32) NOT NULL, ADD UNIQUE INDEX unique_steamid (steamid);";
                     using (var cmd = new MySqlCommand(sql, connection))
                     {
-                        cmd.Parameters.AddWithValue("@steamid", steamid);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                    SendConsoleMessage($"[Discord Utilities] The database has been successfully updated!", ConsoleColor.Green);
+                }
+            }
+            catch (Exception ex)
+            {
+                SendConsoleMessage($"[Discord Utilities] There was an error when updating the database: {ex.Message}", ConsoleColor.Red);
+            }
+        }
+
+        private async Task LoadLinkedPlayers()
+        {
+            try
+            {
+                using (var connection = GetConnection())
+                {
+                    await connection.OpenAsync();
+                    string sql = "SELECT * FROM Discord_Utilities";
+                    using (var cmd = new MySqlCommand(sql, connection))
+                    {
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
                             while (await reader.ReadAsync())
                             {
-                                string discordID = reader.GetString("discordid");
-                                if (!linkedPlayers.ContainsKey(ulong.Parse(steamid)))
-                                {
-                                    linkedPlayers.Add(ulong.Parse(steamid), discordID);
-                                    await PerformLinkRole(discordID);
-                                    LoadPlayerDiscordData(ulong.Parse(steamid), ulong.Parse(discordID));
-
-                                    Server.NextFrame(() =>
-                                    {
-                                        PerformLinkPermission(ulong.Parse(steamid));
-                                        if (Config.CustomFlagsAndRoles.Enabled)
-                                        {
-                                            var player = GetTargetBySteamID64(ulong.Parse(steamid));
-                                            if (RolesToPermissions.Count != 0)
-                                            {
-                                                foreach (var item in RolesToPermissions)
-                                                {
-                                                    if (item.Value.StartsWith('@') || item.Value.StartsWith('#'))
-                                                    {
-                                                        if (!AdminManager.PlayerHasPermissions(player, item.Value))
-                                                            PerformRoleToPermission(ulong.Parse(discordID), ulong.Parse(steamid), ulong.Parse(item.Key), item.Value);
-                                                    }
-                                                    else
-                                                    {
-                                                        SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Value}'!", ConsoleColor.Red);
-                                                        return;
-                                                    }
-                                                }
-                                            }
-                                            if (PermissionsToRoles.Count != 0)
-                                            {
-                                                foreach (var item in PermissionsToRoles)
-                                                {
-                                                    if (item.Key.StartsWith('@') || item.Key.StartsWith('#'))
-                                                    {
-                                                        if (AdminManager.PlayerHasPermissions(player, item.Key))
-                                                            _ = PerformPermissionToRole(ulong.Parse(discordID), ulong.Parse(item.Value));
-                                                    }
-                                                    else
-                                                    {
-                                                        SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Value}'!", ConsoleColor.Red);
-                                                        return;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    });
-                                    if (Config.ConnectedPlayers.Enabled)
-                                        await AddConnectedPlayersRole(ulong.Parse(discordID));
-
-                                }
+                                string steamid = reader.GetString("steamid");
+                                string discordid = reader.GetString("discordid");
+                                linkedPlayers.Add(ulong.Parse(steamid), discordid);
                             }
                         }
                     }
@@ -123,7 +104,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                SendConsoleMessage($"[Discord Utilities] There was an error loading the data: {ex.Message}", ConsoleColor.Red);
+                SendConsoleMessage($"[Discord Utilities] There was an error when loading the data: {ex.Message}", ConsoleColor.Red);
             }
         }
 
@@ -131,13 +112,10 @@ namespace DiscordUtilities
         {
             try
             {
-                if (await IsPlayerExistsInDatabase(steamid))
-                    return;
-
                 using (var connection = GetConnection())
                 {
                     await connection.OpenAsync();
-                    string sql = "INSERT INTO Discord_Utilities (steamid, discordid) VALUES (@steamid, @discordid)";
+                    string sql = "INSERT INTO Discord_Utilities (steamid, discordid) VALUES (@steamid, @discordid) ON DUPLICATE KEY UPDATE steamid = @steamid";
                     using (var cmd = new MySqlCommand(sql, connection))
                     {
                         cmd.Parameters.AddWithValue("@steamid", steamid);
@@ -151,52 +129,85 @@ namespace DiscordUtilities
                 SendConsoleMessage($"[Discord Utilities] An error occurred while entering data into the database: {ex.Message}", ConsoleColor.Red);
             }
         }
-
-        private async Task<bool> IsPlayerExistsInDatabase(string steamid)
+        public async Task RemovePlayerData(string steamid)
         {
-            using (var connection = GetConnection())
+            try
             {
-                await connection.OpenAsync();
-
-                string sql = "SELECT COUNT(*) FROM Discord_Utilities WHERE steamid = @steamid";
-                using (var cmd = new MySqlCommand(sql, connection))
+                using (var connection = GetConnection())
                 {
-                    cmd.Parameters.AddWithValue("@steamid", steamid);
-                    var result = await cmd.ExecuteScalarAsync();
-
-                    if (result == null || result == DBNull.Value)
+                    await connection.OpenAsync();
+                    string sql = "DELETE FROM Discord_Utilities WHERE steamid = @steamid";
+                    using (var cmd = new MySqlCommand(sql, connection))
                     {
-                        return false;
+                        cmd.Parameters.AddWithValue("@steamid", steamid);
+                        await cmd.ExecuteNonQueryAsync();
                     }
-
-                    return Convert.ToInt32(result) > 0;
                 }
+            }
+            catch (Exception ex)
+            {
+                SendConsoleMessage($"[Discord Utilities] An error occurred while removing player from the database: {ex.Message}", ConsoleColor.Red);
             }
         }
-        private async Task<string> CheckIsPlayerLinked(string discordId)
+        private async Task LoadPlayerData(string steamid)
         {
-            using (var connection = GetConnection())
+            var discordID = linkedPlayers[ulong.Parse(steamid)];
+
+            await PerformLinkRole(discordID);
+            LoadPlayerDiscordData(ulong.Parse(steamid), ulong.Parse(discordID));
+
+            Server.NextFrame(() =>
             {
-                await connection.OpenAsync();
-
-                string sql = "SELECT steamid FROM Discord_Utilities WHERE discordid = @discordid";
-                using (var cmd = new MySqlCommand(sql, connection))
+                PerformLinkPermission(ulong.Parse(steamid));
+                if (Config.CustomFlagsAndRoles.Enabled)
                 {
-                    cmd.Parameters.AddWithValue("@discordid", discordId);
-
-                    using (var reader = await cmd.ExecuteReaderAsync())
+                    var player = GetTargetBySteamID64(ulong.Parse(steamid));
+                    if (RolesToPermissions.Count != 0)
                     {
-                        if (await reader.ReadAsync())
+                        foreach (var item in RolesToPermissions)
                         {
-                            return reader.GetString(0);
+                            if (item.Value.StartsWith('@'))
+                            {
+                                if (!AdminManager.PlayerHasPermissions(player, item.Value))
+                                    PerformRoleToPermission(ulong.Parse(discordID), ulong.Parse(steamid), ulong.Parse(item.Key), item.Value);
+                            }
+                            else if (item.Value.StartsWith('#'))
+                            {
+                                if (!AdminManager.PlayerInGroup(player, item.Value))
+                                    PerformRoleToPermission(ulong.Parse(discordID), ulong.Parse(steamid), ulong.Parse(item.Key), item.Value);
+                            }
+                            else
+                            {
+                                SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Value}'!", ConsoleColor.Red);
+                                return;
+                            }
                         }
-                        else
+                    }
+                    if (PermissionsToRoles.Count != 0)
+                    {
+                        foreach (var item in PermissionsToRoles)
                         {
-                            return "";
+                            if (item.Key.StartsWith('@'))
+                            {
+                                if (AdminManager.PlayerHasPermissions(player, item.Key))
+                                    _ = PerformPermissionToRole(ulong.Parse(discordID), ulong.Parse(item.Value));
+                            }
+                            else if (item.Key.StartsWith('#'))
+                            {
+                                if (AdminManager.PlayerInGroup(player, item.Key))
+                                    _ = PerformPermissionToRole(ulong.Parse(discordID), ulong.Parse(item.Value));
+                            }
+                            else
+                            {
+                                SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Key}'!", ConsoleColor.Red);
+                                return;
+                            }
                         }
                     }
                 }
-            }
+            });
+            if (Config.ConnectedPlayers.Enabled)
+                await AddConnectedPlayersRole(ulong.Parse(discordID));
         }
     }
 }

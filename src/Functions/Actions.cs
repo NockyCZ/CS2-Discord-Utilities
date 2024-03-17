@@ -32,12 +32,13 @@ namespace DiscordUtilities
             var user = guild.GetUser(discordid);
             if (user == null)
                 return;
-
-            PlayerData p = playerData.FirstOrDefault(p => p.SteamId64 == steamid.ToString())!;
+            
+            var target = GetTargetBySteamID64(steamid);
+            var p = playerData[target];
             if (p != null)
             {
                 p.DiscordGlobalname = user.GlobalName;
-                p.DiscordNickname = user.Nickname;
+                p.DiscordDisplayName = user.DisplayName;
                 p.DiscordID = user.Id.ToString();
                 p.DiscordPing = $"<@{user.Id}>";
             }
@@ -85,7 +86,8 @@ namespace DiscordUtilities
         }
         private void UpdatePlayerCountry(ulong steamid, string[] country)
         {
-            PlayerData p = playerData.FirstOrDefault(p => p.SteamId64 == steamid.ToString())!;
+            var target = GetTargetBySteamID64(steamid);
+            var p = playerData[target];
             if (p != null)
             {
                 if (!string.IsNullOrWhiteSpace(country[0]))
@@ -110,9 +112,7 @@ namespace DiscordUtilities
             if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
                 return;
 
-            //bool playerExists = playerData.Any(p => p.SteamId64 == player.AuthorizedSteamID.SteamId64.ToString());
-
-            PlayerData p = playerData.FirstOrDefault(p => p.SteamId64 == player.AuthorizedSteamID.SteamId64.ToString())!;
+            var p = playerData[player];
             if (p != null)
             {
                 switch (Event)

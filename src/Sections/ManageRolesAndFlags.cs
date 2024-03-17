@@ -55,7 +55,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                SendConsoleMessage($"[Discord Utilities] An error occurred while getting players role in Role To Permission: {ex.Message}", ConsoleColor.Red);
+                SendConsoleMessage($"[Discord Utilities] An error occurred while add role to user in Permission To Role: {ex.Message}", ConsoleColor.Red);
             }
 
             return;
@@ -89,9 +89,15 @@ namespace DiscordUtilities
                             return;
 
                         if (permission.StartsWith('@'))
+                        {
+                            //SendConsoleMessage($"{player.PlayerName} added flag {permission}", ConsoleColor.Green);
                             AdminManager.AddPlayerPermissions(player, permission);
+                        }
                         else
+                        {
+                            //SendConsoleMessage($"{player.PlayerName} added group {permission}", ConsoleColor.Green);
                             AdminManager.AddPlayerToGroup(player, permission);
+                        }
                     });
                 }
             }

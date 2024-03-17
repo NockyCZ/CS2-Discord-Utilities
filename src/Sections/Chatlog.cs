@@ -24,5 +24,16 @@ namespace DiscordUtilities
                 _ = SendDiscordMessage(embed, content, ulong.Parse(Config.Chatlog.AllChatEmbed.ChannelID), "All Chatlog");
             }
         }
+
+        public void PerformAdminChatlog(ulong playerSteamID, string message)
+        {
+            string[] data = new string[2];
+            data[0] = playerSteamID.ToString();
+            data[1] = message;
+
+            var embed = GetEmbed(EmbedTypes.Admin_Chatlog, data);
+            var content = GetContent(ContentTypes.Admin_Chatlog, data);
+            _ = SendDiscordMessage(embed, content, ulong.Parse(Config.Chatlog.AdminChat.AdminChatEmbed.ChannelID), "Admin Chat log");
+        }
     }
 }

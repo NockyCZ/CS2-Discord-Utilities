@@ -23,8 +23,11 @@ namespace DiscordUtilities
 
                 foreach (var p in playerData!)
                 {
-                    string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, ulong.Parse(p.SteamId64));
-                    menuBuilder.AddOption(label: replacedLabel, value: p.SteamId64);
+                    if (p.Key == null || !p.Key.IsValid || p.Key.AuthorizedSteamID == null)
+                        continue;
+
+                    string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, p.Key.AuthorizedSteamID.SteamId64);
+                    menuBuilder.AddOption(label: replacedLabel, value: p.Key.AuthorizedSteamID.SteamId64.ToString());
                     totalMenuPlayers++;
                 }
                 componentsBuilder.WithSelectMenu(menuBuilder);
@@ -61,8 +64,11 @@ namespace DiscordUtilities
 
                     foreach (var p in playerData!)
                     {
-                        string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, ulong.Parse(p.SteamId64));
-                        menuBuilder.AddOption(label: replacedLabel, value: p.SteamId64);
+                        if (p.Key == null || !p.Key.IsValid || p.Key.AuthorizedSteamID == null)
+                            continue;
+
+                        string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, p.Key.AuthorizedSteamID.SteamId64);
+                        menuBuilder.AddOption(label: replacedLabel, value: p.Key.AuthorizedSteamID.SteamId64.ToString());
                         totalMenuPlayers++;
                     }
                     componentsBuilder.WithSelectMenu(menuBuilder);

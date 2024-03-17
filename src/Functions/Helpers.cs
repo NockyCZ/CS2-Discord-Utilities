@@ -11,7 +11,7 @@ namespace DiscordUtilities
     public partial class DiscordUtilities
     {
         private ServerData? serverData;
-        private List<PlayerData> playerData = new List<PlayerData>();
+        private Dictionary<CCSPlayerController, PlayerData> playerData = new Dictionary<CCSPlayerController, PlayerData>();
         public class ServerData
         {
             public required string GameDirectory { get; set; }
@@ -43,7 +43,7 @@ namespace DiscordUtilities
             public required string CountryLong { get; set; }
             public required string CountryEmoji { get; set; }
             public required string DiscordGlobalname { get; set; }
-            public required string DiscordNickname { get; set; }
+            public required string DiscordDisplayName { get; set; }
             public required string DiscordPing { get; set; }
             public required string DiscordID { get; set; }
         }
@@ -56,6 +56,7 @@ namespace DiscordUtilities
             AlreadyLinked,
             All_Chatlog,
             Team_Chatlog,
+            Admin_Chatlog,
             ServerStatus,
             ServerStatus_Player,
             Connect,
@@ -69,6 +70,7 @@ namespace DiscordUtilities
             AlreadyLinked,
             All_Chatlog,
             Team_Chatlog,
+            Admin_Chatlog,
             ServerStatus,
             ServerStatus_Player,
             Connect,
@@ -99,6 +101,12 @@ namespace DiscordUtilities
 
                 case ContentTypes.All_Chatlog:
                     content = ReplacePlayerDataVariables(Config.Chatlog.AllChatEmbed.Content, ulong.Parse(data[0]));
+                    content = ReplaceServerDataVariables(content);
+                    content = content.Replace("{MESSAGE}", data[1]);
+                    break;
+
+                case ContentTypes.Admin_Chatlog:
+                    content = ReplacePlayerDataVariables(Config.Chatlog.AdminChat.AdminChatEmbed.Content, ulong.Parse(data[0]));
                     content = ReplaceServerDataVariables(content);
                     content = content.Replace("{MESSAGE}", data[1]);
                     break;
@@ -190,6 +198,12 @@ namespace DiscordUtilities
                             replacedValue = replacedValue.Replace("{MESSAGE}", data[1]);
                             break;
 
+                        case EmbedTypes.Admin_Chatlog:
+                            replacedValue = ReplacePlayerDataVariables((string)value, ulong.Parse(data[0]));
+                            replacedValue = ReplaceServerDataVariables(replacedValue);
+                            replacedValue = replacedValue.Replace("{MESSAGE}", data[1]);
+                            break;
+
                         case EmbedTypes.LinkSuccess:
                             replacedValue = (string)value;
                             replacedValue = replacedValue.Replace("{STEAM}", linkCodes[data[0]].ToString());
@@ -270,6 +284,7 @@ namespace DiscordUtilities
                 EmbedTypes.AlreadyLinked => Config.Link.LinkEmbed.AlreadyLinked,
                 EmbedTypes.Team_Chatlog => Config.Chatlog.TeamChatEmbed,
                 EmbedTypes.All_Chatlog => Config.Chatlog.AllChatEmbed,
+                EmbedTypes.Admin_Chatlog => Config.Chatlog.AdminChat.AdminChatEmbed,
                 EmbedTypes.Connect => Config.EventNotifications.Connect.ConnectedEmbed,
                 EmbedTypes.Disconnect => Config.EventNotifications.Disconnect.DisconnectdEmbed,
                 _ => null!,
@@ -286,7 +301,7 @@ namespace DiscordUtilities
             int matchingCount = 0;
             CCSPlayerController target = null!;
 
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, "@discord_utilities/antireport")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.Report.UnreportableFlag)))
             {
                 if (p.PlayerName.Contains(name))
                 {
@@ -334,8 +349,11 @@ namespace DiscordUtilities
         }
         private string ReplacePlayerDataVariables(string replacedString, ulong steamid, bool isTarget = false)
         {
-            PlayerData selectedPlayer = playerData.FirstOrDefault(p => p.SteamId64 == steamid.ToString())!;
+            var target = GetTargetBySteamID64(steamid);
+            if (target == null)
+                return replacedString;
 
+            var selectedPlayer = playerData[target];
             string player = isTarget ? "Target" : "Player";
             if (selectedPlayer != null)
             {
@@ -358,7 +376,7 @@ namespace DiscordUtilities
                     { $"{{{player}.CountryLong}}", selectedPlayer.CountryLong},
                     { $"{{{player}.CountryEmoji}}", selectedPlayer.CountryEmoji},
                     { $"{{{player}.DiscordGlobalname}}", selectedPlayer.DiscordGlobalname},
-                    { $"{{{player}.DiscordNickname}}", selectedPlayer.DiscordNickname},
+                    { $"{{{player}.DiscordDisplayName}}", selectedPlayer.DiscordDisplayName},
                     { $"{{{player}.DiscordPing}}", selectedPlayer.DiscordPing},
                     { $"{{{player}.DiscordID}}", selectedPlayer.DiscordID}
                 };

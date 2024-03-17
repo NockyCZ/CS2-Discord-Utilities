@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 
 namespace DiscordUtilities
@@ -8,7 +9,7 @@ namespace DiscordUtilities
     {
         private HookResult OnPlayerSay(CCSPlayerController? player, CommandInfo info)
         {
-            if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
+            if (player == null || !player.IsValid || player.AuthorizedSteamID == null || !playerData.ContainsKey(player))
                 return HookResult.Continue;
 
             if (performReport.ContainsKey(player))
@@ -31,6 +32,10 @@ namespace DiscordUtilities
             if (Config.Chatlog.Enabled)
             {
                 string msg = info.GetArg(1);
+
+                if ((msg.StartsWith('!') || msg.StartsWith('/')) && !Config.Chatlog.DisplayCommands)
+                    return HookResult.Continue;
+
                 string[] blockedWords = Config.Chatlog.BlockedWords.Split(',');
                 foreach (var word in blockedWords)
                 {
@@ -45,7 +50,7 @@ namespace DiscordUtilities
         }
         private HookResult OnPlayerSayTeam(CCSPlayerController? player, CommandInfo info)
         {
-            if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
+            if (player == null || !player.IsValid || player.AuthorizedSteamID == null || !playerData.ContainsKey(player))
                 return HookResult.Continue;
 
             if (performReport.ContainsKey(player))
@@ -65,9 +70,20 @@ namespace DiscordUtilities
                 performReport.Remove(player);
                 return HookResult.Handled;
             }
+
+            string msg = info.GetArg(1);
+            if (msg.StartsWith('@') && Config.Chatlog.AdminChat.Enabled && AdminManager.PlayerHasPermissions(player, Config.Chatlog.AdminChat.AdminFlag))
+            {
+                msg = msg.Replace("@", string.Empty);
+                if (!string.IsNullOrEmpty(msg))
+                    PerformAdminChatlog(player.AuthorizedSteamID.SteamId64, msg);
+                return HookResult.Handled;
+            }
             if (Config.Chatlog.Enabled)
             {
-                string msg = info.GetArg(1);
+                if ((msg.StartsWith('!') || msg.StartsWith('/')) && !Config.Chatlog.DisplayCommands)
+                    return HookResult.Continue;
+
                 string[] blockedWords = Config.Chatlog.BlockedWords.Split(',');
                 foreach (var word in blockedWords)
                 {
@@ -84,7 +100,7 @@ namespace DiscordUtilities
         public HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
         {
             var player = @event.Userid;
-            if (player != null && player.IsValid && player.AuthorizedSteamID != null)
+            if (player != null && player.IsValid && player.AuthorizedSteamID != null && !playerData.ContainsKey(player))
             {
                 PlayerData newPlayer = new PlayerData
                 {
@@ -105,13 +121,13 @@ namespace DiscordUtilities
                     CountryLong = "Undefined",
                     CountryEmoji = ":flag_white:",
                     DiscordGlobalname = "",
-                    DiscordNickname = "",
+                    DiscordDisplayName = "",
                     DiscordPing = "",
                     DiscordID = "",
                 };
-                playerData.Add(newPlayer);
+                playerData.Add(player, newPlayer);
 
-                if (IsDbConnected)
+                if (IsDbConnected && Config.Link.Enabled && linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
                     _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString());
 
                 string IpAddress = player!.IpAddress!.Split(":")[0];
@@ -127,20 +143,14 @@ namespace DiscordUtilities
         {
             var player = @event.Userid;
 
-            if (player != null && player.IsValid && player.AuthorizedSteamID != null)
+            if (player != null && player.IsValid && playerData.ContainsKey(player))
             {
                 if (Config.EventNotifications.Disconnect.Enabled)
-                    _ = PerformDisconnectEvent(player.AuthorizedSteamID.SteamId64);
+                    _ = PerformDisconnectEvent(player.AuthorizedSteamID!.SteamId64);
 
-                playerData.RemoveAll(p => p.SteamId64 == player.AuthorizedSteamID.SteamId64.ToString());
+                playerData.Remove(player);
 
-                /*if (linkCodes.ContainsValue(player.AuthorizedSteamID.SteamId64))
-                {
-                    var code = linkCodes.FirstOrDefault(x => x.Value == player.AuthorizedSteamID!.SteamId64).Key;
-                    linkCodes.Remove(code);
-                }*/
-
-                if (linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
+                if (linkedPlayers.ContainsKey(player.AuthorizedSteamID!.SteamId64))
                 {
                     if (Config.ConnectedPlayers.Enabled)
                     {
@@ -148,7 +158,6 @@ namespace DiscordUtilities
                         if (!string.IsNullOrEmpty(discordId))
                             _ = RemoveConnectedPlayersRole(ulong.Parse(discordId));
                     }
-                    linkedPlayers.Remove(player.AuthorizedSteamID.SteamId64);
                 }
             }
             return HookResult.Continue;
@@ -161,11 +170,12 @@ namespace DiscordUtilities
             var attacker = @event.Attacker;
             var assister = @event.Assister;
 
-            if (player != null && player.IsValid && player.AuthorizedSteamID != null)
+            bool hasPlayerData = playerData.ContainsKey(player);
+            if (player != null && player.IsValid && hasPlayerData)
                 UpdatePlayerData(player, 1);
-            if (attacker != null && attacker.IsValid && attacker.AuthorizedSteamID != null)
+            if (attacker != null && attacker.IsValid && hasPlayerData)
                 UpdatePlayerData(attacker, 1);
-            if (assister != null && assister.IsValid && assister.AuthorizedSteamID != null)
+            if (assister != null && assister.IsValid && hasPlayerData)
                 UpdatePlayerData(assister, 1);
 
             return HookResult.Continue;
@@ -175,7 +185,7 @@ namespace DiscordUtilities
         public HookResult OnPlayerTeam(EventPlayerTeam @event, GameEventInfo info)
         {
             var player = @event.Userid;
-            if (player != null && player.IsValid && player.AuthorizedSteamID != null)
+            if (player != null && player.IsValid && playerData.ContainsKey(player))
                 UpdatePlayerData(player, 2, @event.Team);
 
             return HookResult.Continue;

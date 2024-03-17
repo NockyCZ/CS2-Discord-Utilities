@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "1.0.3";
+        public override string ModuleVersion => "1.0.4";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -30,11 +30,6 @@ namespace DiscordUtilities
         }
         public override void Load(bool hotReload)
         {
-            IsDbConnected = false;
-            IsBotConnected = false;
-            if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
-                _ = CreateDatabaseConnection();
-
             AddCommandListener("say", OnPlayerSay, HookMode.Post);
             AddCommandListener("say_team", OnPlayerSayTeam, HookMode.Post);
             CreateCustomCommands();
@@ -42,6 +37,15 @@ namespace DiscordUtilities
 
             RegisterListener<Listeners.OnMapStart>(mapName =>
             {
+                linkCodes.Clear();
+                linkedPlayers.Clear();
+                playerData.Clear();
+                relaysList.Clear();
+                IsDbConnected = false;
+                IsBotConnected = false;
+                if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
+                    _ = CreateDatabaseConnection();
+
                 serverData = new ServerData
                 {
                     GameDirectory = Server.GameDirectory,
@@ -53,7 +57,7 @@ namespace DiscordUtilities
                     OnlineBots = GetBotsCounts().ToString(),
                     Timeleft = 60.ToString()
                 };
-                if (!string.IsNullOrEmpty(Config.Token))
+                if (!string.IsNullOrEmpty(Config.Token) && !IsBotConnected)
                     _ = LoadDiscordBOT();
 
                 Server.NextFrame(() =>
@@ -88,14 +92,6 @@ namespace DiscordUtilities
                     }
                 });
             });
-        }
-        public override void Unload(bool hotReload)
-        {
-            linkCodes.Clear();
-            linkedPlayers.Clear();
-            playerData.Clear();
-            //_ = UpdateServerStatus(true);
-            //_ = UnLoadDiscordBOT();
         }
 
         private async Task LoadDiscordBOT()
@@ -205,7 +201,6 @@ namespace DiscordUtilities
         }
         private async Task DiscordLink_CMD(SocketSlashCommand command)
         {
-            Console.WriteLine("0");
             ulong guildId = command.GuildId!.Value;
             var guild = BotClient!.GetGuild(guildId);
 
@@ -226,10 +221,11 @@ namespace DiscordUtilities
             EmbedBuilder embed;
             string[] data = new string[1];
 
-            var linkedSteamd = await CheckIsPlayerLinked(user.Id.ToString());
-            if (!string.IsNullOrEmpty(linkedSteamd))
+            if (linkedPlayers.ContainsValue(user.Id.ToString()))
             {
-                data[0] = linkedSteamd;
+
+                var findSteamIdByUserId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id.ToString()).Key; 
+                data[0] = findSteamIdByUserId.ToString();
                 content = GetContent(ContentTypes.AlreadyLinked, data);
                 embed = GetEmbed(EmbedTypes.AlreadyLinked, data);
                 await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
@@ -237,13 +233,17 @@ namespace DiscordUtilities
             }
 
             var code = command.Data.Options.First().Value.ToString();
+            data[0] = code!;
             if (!string.IsNullOrEmpty(code) && linkCodes.ContainsKey(code))
             {
-                data[0] = code!;
                 content = GetContent(ContentTypes.LinkSuccess, data);
                 embed = GetEmbed(EmbedTypes.LinkSuccess, data);
                 await InsertPlayerData(linkCodes[code].ToString(), command.User.Id.ToString());
                 await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
+                if (!user.Roles.Any(id => id == role))
+                {
+                    await user.AddRoleAsync(role);
+                }
                 Server.NextFrame(() => { PerformLinkAccount(code, command.User.GlobalName, command.User.Id.ToString()); });
                 return;
             }

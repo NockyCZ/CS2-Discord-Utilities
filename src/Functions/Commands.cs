@@ -1,7 +1,9 @@
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using Newtonsoft.Json.Linq;
 
 namespace DiscordUtilities
 {
@@ -17,9 +19,43 @@ namespace DiscordUtilities
             }
             if (Config.Link.Enabled)
             {
-                string[] Commands = Config.Link.IngameCommands.Split(',');
-                foreach (var cmd in Commands)
+                string[] LinkCmds = Config.Link.IngameLinkCommands.Split(',');
+                foreach (var cmd in LinkCmds)
                     AddCommand($"css_{cmd}", $"Discord Link Command ({cmd})", LinkProfile_CMD);
+
+                string[] UnlinkCmds = Config.Link.IngameUnlinkCommands.Split(',');
+                foreach (var cmd in UnlinkCmds)
+                    AddCommand($"css_{cmd}", $"Discord Unink Command ({cmd})", UnlinkProfile_CMD);
+            }
+        }
+
+        public void UnlinkProfile_CMD(CCSPlayerController? player, CommandInfo info)
+        {
+            if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
+                return;
+
+            if (!IsDbConnected)
+            {
+                player.PrintToChat("Database is not connected! Contact the Administrator.");
+                return;
+            }
+            if (!IsBotConnected)
+            {
+                player.PrintToChat("Discord BOT is not connected! Contact the Administrator.");
+                return;
+            }
+
+            if (linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
+            {
+                var discordId = linkedPlayers[player.AuthorizedSteamID.SteamId64];
+                linkedPlayers.Remove(player.AuthorizedSteamID.SteamId64);
+                _ = RemovePlayerData(player.AuthorizedSteamID.SteamId64.ToString());
+                _ = RemoveLinkRole(discordId);
+                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.AccountUnliked"]}");
+            }
+            else
+            {
+                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.NotLinked"]}");
             }
         }
         public void LinkProfile_CMD(CCSPlayerController? player, CommandInfo info)
@@ -30,6 +66,11 @@ namespace DiscordUtilities
             if (!IsDbConnected)
             {
                 player.PrintToChat("Database is not connected! Contact the Administrator.");
+                return;
+            }
+            if (!IsBotConnected)
+            {
+                player.PrintToChat("Discord BOT is not connected! Contact the Administrator.");
                 return;
             }
 
@@ -63,6 +104,12 @@ namespace DiscordUtilities
         {
             if (player == null || !player.IsValid)
                 return;
+
+            if (!IsBotConnected)
+            {
+                player.PrintToChat("Discord BOT is not connected! Contact the Administrator.");
+                return;
+            }
 
             if (GetTargetsForReportCount(player) == 0)
             {
@@ -134,8 +181,20 @@ namespace DiscordUtilities
                     break;
             }
         }
-        
-        [ConsoleCommand("css_du_serverstatus", "Perform and setup Server Status")]
+
+        [ConsoleCommand("css_du_updatedatabase", "Update Database to the latest version")]
+        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+        public void UpdateDatabase_CMD(CCSPlayerController player, CommandInfo info)
+        {
+            if (!IsDbConnected)
+            {
+                SendConsoleMessage("[Discord Utilities] Database is not connected!", ConsoleColor.DarkRed);
+                return;
+            }
+            _ = UpdateDatabase();
+        }
+
+        [ConsoleCommand("css_du_serverstatus", "Perform and setup the Server Status")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void PerformFirstServerStatus_CMD(CCSPlayerController player, CommandInfo info)
         {
