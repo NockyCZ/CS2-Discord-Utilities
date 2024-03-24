@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "1.0.4";
+        public override string ModuleVersion => "1.0.5";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -43,6 +43,7 @@ namespace DiscordUtilities
                 relaysList.Clear();
                 IsDbConnected = false;
                 IsBotConnected = false;
+
                 if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
                     _ = CreateDatabaseConnection();
 
@@ -62,7 +63,7 @@ namespace DiscordUtilities
 
                 Server.NextFrame(() =>
                 {
-                    if (Config.ConnectedPlayers.Enabled)
+                    if (Config.ConnectedPlayers.Enabled && IsBotConnected)
                         _ = ClearConnectedPlayersRole();
 
                     AddTimer(5.0f, () =>
@@ -75,18 +76,37 @@ namespace DiscordUtilities
                     {
                         AddTimer(Config.BotStatus.UpdateTimer, () =>
                         {
-                            if (IsBotConnected)
-                                _ = UpdateBotStatus();
+                            _ = UpdateBotStatus();
 
                         }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
                     }
-                    if (Config.ServerStatus.UpdateTimer > 29)
+                    if (Config.ServerStatus.UpdateTimer > 29 && !string.IsNullOrEmpty(Config.ServerStatus.ChannelID))
                     {
-                        _ = UpdateServerStatus();
+                        _ = UpdateServerStatus(components: null!, 0);
                         AddTimer(Config.ServerStatus.UpdateTimer, () =>
                         {
-                            if (IsBotConnected && !string.IsNullOrEmpty(Config.ServerStatus.ChannelID))
-                                _ = UpdateServerStatus();
+                            var componentsBuilder = new ComponentBuilder();
+                            int totalMenuPlayers = 0;
+                            if (playerData.Count() > 0 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)
+                            {
+                                var menuBuilder = new SelectMenuBuilder()
+                                    .WithPlaceholder(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.MenuName)
+                                    .WithCustomId("serverstatus-players")
+                                    .WithMinValues(1)
+                                    .WithMaxValues(1);
+
+                                foreach (var p in playerData!)
+                                {
+                                    if (p.Key == null || !p.Key.IsValid || p.Key.AuthorizedSteamID == null)
+                                        continue;
+
+                                    string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, p.Key.AuthorizedSteamID.SteamId64);
+                                    menuBuilder.AddOption(label: replacedLabel, value: p.Key.AuthorizedSteamID.SteamId64.ToString());
+                                    totalMenuPlayers++;
+                                }
+                                componentsBuilder.WithSelectMenu(menuBuilder);
+                            }
+                            _ = UpdateServerStatus(componentsBuilder, totalMenuPlayers);
 
                         }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
                     }
@@ -150,7 +170,7 @@ namespace DiscordUtilities
                 BotClient.SlashCommandExecuted += SlashCommandHandler;
             if (Config.DiscordRelay.Enabled && !string.IsNullOrEmpty(Config.DiscordRelay.ChannelID))
                 BotClient.MessageReceived += MessageReceived;
-            if (Config.ServerStatus.UpdateTimer > 29 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)
+            if ((Config.ServerStatus.UpdateTimer > 29 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled) || Config.Report.ReportEmbed.ReportButton.Enabled)
                 BotClient.InteractionCreated += OnInteractionCreatedAsync;
         }
         private async Task OnInteractionCreatedAsync(SocketInteraction interaction)
@@ -162,13 +182,40 @@ namespace DiscordUtilities
                 {
                     if (componentData.CustomId == "serverstatus-players")
                     {
-                        IReadOnlyCollection<string> selectedValues = componentData.Values;
-                        string[] selectedPlayer = new string[1];
-                        selectedPlayer[0] = selectedValues.FirstOrDefault()!;
+                        Server.NextWorldUpdate(() =>
+                        {
+                            SelectMenuResponse(component);
+                        });
+                    }
+                    else if (componentData.CustomId.Contains("report-"))
+                    {
+                        ulong guildId = interaction.GuildId!.Value;
+                        var guild = BotClient!.GetGuild(guildId);
+                        if (guild == null)
+                            return;
 
-                        var content = GetContent(ContentTypes.ServerStatus_Player, selectedPlayer);
-                        var embed = GetEmbed(EmbedTypes.ServerStatus_Player, selectedPlayer);
-                        await component.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
+                        string reportedId = componentData.CustomId.Replace("report-", "");
+                        var user = guild.GetUser(interaction.User.Id);
+
+                        var permissions = user.GuildPermissions;
+                        var role = guild.GetRole(ulong.Parse(Config.Report.ReportEmbed.ReportButton.AdminRoleId));
+                        if (role == null)
+                        {
+                            SendConsoleMessage($"[Discord Utilities] Role with id '{Config.Report.ReportEmbed.ReportButton.AdminRoleId}' was not found (Report Admin Role)!", ConsoleColor.Red);
+                            return;
+                        }
+
+                        if (permissions.Administrator || user.Roles.Any(id => id == role))
+                        {
+                            await UpdateReportMessage(user, ulong.Parse(reportedId));
+                            var content = GetContent(ContentTypes.Report_Reply, new string[0]);
+                            var embed = GetEmbed(EmbedTypes.Report_Reply, new string[0]);
+                            await component.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
+                        }
+                        else
+                        {
+                            await component.RespondAsync(text: "You're not the administrator!", ephemeral: true);
+                        }
                     }
                 }
             }
@@ -185,7 +232,7 @@ namespace DiscordUtilities
                     return Task.CompletedTask;
 
                 var user = guild.GetUser(message.Author.Id);
-                Server.NextFrame(() =>
+                Server.NextWorldUpdate(() =>
                 {
                     PerformChatRelay(user, message);
                 });
@@ -224,7 +271,7 @@ namespace DiscordUtilities
             if (linkedPlayers.ContainsValue(user.Id.ToString()))
             {
 
-                var findSteamIdByUserId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id.ToString()).Key; 
+                var findSteamIdByUserId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id.ToString()).Key;
                 data[0] = findSteamIdByUserId.ToString();
                 content = GetContent(ContentTypes.AlreadyLinked, data);
                 embed = GetEmbed(EmbedTypes.AlreadyLinked, data);
@@ -244,7 +291,7 @@ namespace DiscordUtilities
                 {
                     await user.AddRoleAsync(role);
                 }
-                Server.NextFrame(() => { PerformLinkAccount(code, command.User.GlobalName, command.User.Id.ToString()); });
+                Server.NextWorldUpdate(() => { PerformLinkAccount(code, command.User.GlobalName, command.User.Id.ToString()); });
                 return;
             }
             content = GetContent(ContentTypes.LinkFailed, data);

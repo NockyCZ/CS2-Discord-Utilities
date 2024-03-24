@@ -24,6 +24,44 @@ namespace DiscordUtilities
                 PermissionsToRoles = permissionToRole.ToObject<Dictionary<string, string>>()!;
             }
         }
+        public async Task PerformRemoveRole(ulong discordid, ulong roleid)
+        {
+            if (PermissionsToRoles.Count() == 0)
+                return;
+
+            try
+            {
+                var guild = BotClient!.GetGuild(ulong.Parse(Config.ServerID));
+                if (guild == null)
+                {
+                    SendConsoleMessage($"[Discord Utilities] Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
+                    return;
+                }
+
+                var user = guild.GetUser(discordid);
+                if (user == null)
+                    return;
+
+                var role = guild.GetRole(roleid);
+                if (role == null)
+                {
+                    SendConsoleMessage($"[Discord Utilities] Role with id '{roleid}' was not found (Permission To Role)!", ConsoleColor.Red);
+                    return;
+                }
+                
+                if (user.Roles.Any(id => id == role))
+                {
+                    await user.RemoveRoleAsync(role);
+                }
+            }
+            catch (Exception ex)
+            {
+                SendConsoleMessage($"[Discord Utilities] An error occurred while add role to user in Permission To Role: {ex.Message}", ConsoleColor.Red);
+            }
+
+            return;
+        }
+
         public async Task PerformPermissionToRole(ulong discordid, ulong roleid)
         {
             if (PermissionsToRoles.Count() == 0)

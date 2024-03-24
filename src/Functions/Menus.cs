@@ -15,8 +15,8 @@ namespace DiscordUtilities
                 return;
             }
             var Menu = new CenterHtmlMenu($"{Localizer["Menu.ReportSelectPlayer"]}");
-
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p != player && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.Report.UnreportableFlag)))
+            //foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p.SteamID.ToString().Length == 17))
+                foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p != player && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.Report.UnreportableFlag)))
                 Menu.AddMenuOption(p.PlayerName, (player, target) => OnSelectPlayer_ReportMenu(player, p));
 
             MenuManager.OpenCenterHtmlMenu(Instance, player!, Menu);

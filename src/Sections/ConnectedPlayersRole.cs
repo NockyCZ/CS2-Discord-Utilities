@@ -20,7 +20,7 @@ namespace DiscordUtilities
                     return;
                 }
 
-                var users = role!.Members;
+                var users = role.Members;
                 if (users != null)
                 {
                     foreach (var user in users)

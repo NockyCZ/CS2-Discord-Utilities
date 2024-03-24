@@ -1,5 +1,6 @@
 
 using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using MySqlConnector;
 
@@ -44,19 +45,11 @@ namespace DiscordUtilities
         {
             using var cmd = new MySqlCommand(
                 @"CREATE TABLE IF NOT EXISTS Discord_Utilities (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                steamid VARCHAR(64) NOT NULL,
-                discordid VARCHAR(64) NOT NULL
-            )", connection);
-            await cmd.ExecuteNonQueryAsync();
-
-            /*using var cmd = new MySqlCommand(
-                @"CREATE TABLE IF NOT EXISTS Discord_Utilities (
                 steamid VARCHAR(32) UNIQUE NOT NULL,
                 discordid VARCHAR(32) NOT NULL,
                 UNIQUE (`steamid`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;", connection);
-            await cmd.ExecuteNonQueryAsync();*/
+            await cmd.ExecuteNonQueryAsync();
         }
 
         private async Task UpdateDatabase()
@@ -153,8 +146,26 @@ namespace DiscordUtilities
         {
             var discordID = linkedPlayers[ulong.Parse(steamid)];
 
+            var guild = BotClient!.GetGuild(ulong.Parse(Config.ServerID));
+            if (guild == null)
+            {
+                SendConsoleMessage($"[Discord Utilities] Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
+                return;
+            }
+            var user = guild.GetUser(ulong.Parse(discordID));
+            if (user == null)
+            {
+                linkedPlayers.Remove(ulong.Parse(steamid));
+                await RemovePlayerData(steamid);
+                SendConsoleMessage($"[Discord Utilities] User with ID '{discordID}' was not found! Players has been removed from the Linked players.", ConsoleColor.DarkYellow);
+                return;
+            }
+
             await PerformLinkRole(discordID);
             LoadPlayerDiscordData(ulong.Parse(steamid), ulong.Parse(discordID));
+
+            if (Config.ConnectedPlayers.Enabled)
+                await AddConnectedPlayersRole(ulong.Parse(discordID));
 
             Server.NextFrame(() =>
             {
@@ -162,6 +173,9 @@ namespace DiscordUtilities
                 if (Config.CustomFlagsAndRoles.Enabled)
                 {
                     var player = GetTargetBySteamID64(ulong.Parse(steamid));
+                    if (player == null || !player.IsValid)
+                        return;
+
                     if (RolesToPermissions.Count != 0)
                     {
                         foreach (var item in RolesToPermissions)
@@ -191,11 +205,22 @@ namespace DiscordUtilities
                             {
                                 if (AdminManager.PlayerHasPermissions(player, item.Key))
                                     _ = PerformPermissionToRole(ulong.Parse(discordID), ulong.Parse(item.Value));
+                                else
+                                {
+                                    if (!Config.CustomFlagsAndRoles.removeRolesOnPermissionLoss)
+                                        continue;
+                                }
                             }
                             else if (item.Key.StartsWith('#'))
                             {
                                 if (AdminManager.PlayerInGroup(player, item.Key))
                                     _ = PerformPermissionToRole(ulong.Parse(discordID), ulong.Parse(item.Value));
+                                else
+                                {
+                                    if (!Config.CustomFlagsAndRoles.removeRolesOnPermissionLoss)
+                                        continue;
+                                    _ = PerformRemoveRole(ulong.Parse(discordID), ulong.Parse(item.Value));
+                                }
                             }
                             else
                             {
@@ -206,8 +231,6 @@ namespace DiscordUtilities
                     }
                 }
             });
-            if (Config.ConnectedPlayers.Enabled)
-                await AddConnectedPlayersRole(ulong.Parse(discordID));
         }
     }
 }

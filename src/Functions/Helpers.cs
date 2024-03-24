@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
 using Discord;
+using Discord.WebSocket;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -51,6 +52,7 @@ namespace DiscordUtilities
         public enum EmbedTypes
         {
             Report,
+            Report_Reply,
             LinkFailed,
             LinkSuccess,
             AlreadyLinked,
@@ -65,6 +67,7 @@ namespace DiscordUtilities
         public enum ContentTypes
         {
             Report,
+            Report_Reply,
             LinkFailed,
             LinkSuccess,
             AlreadyLinked,
@@ -97,6 +100,10 @@ namespace DiscordUtilities
                     content = ReplacePlayerDataVariables(content, ulong.Parse(data[1]), true);
                     content = ReplaceServerDataVariables(content);
                     content = content.Replace("{REASON}", data[2]);
+                    break;
+
+                case ContentTypes.Report_Reply:
+                    content = Config.Report.ReportEmbed.ReportButton.ReplyReportEmbed.Content;
                     break;
 
                 case ContentTypes.All_Chatlog:
@@ -186,6 +193,10 @@ namespace DiscordUtilities
                             replacedValue = replacedValue.Replace("{REASON}", data[2]);
                             break;
 
+                        case EmbedTypes.Report_Reply:
+                            replacedValue = (string)value;
+                            break;
+
                         case EmbedTypes.All_Chatlog:
                             replacedValue = ReplacePlayerDataVariables((string)value, ulong.Parse(data[0]));
                             replacedValue = ReplaceServerDataVariables(replacedValue);
@@ -248,7 +259,7 @@ namespace DiscordUtilities
                 case "Color":
                     if (value.StartsWith("#"))
                         value = value.Substring(1);
-                    embed.WithColor(new Discord.Color(Convert.ToUInt32(value, 16)));
+                    embed.WithColor(new Color(Convert.ToUInt32(value, 16)));
                     break;
                 case "Footer":
                     embed.WithFooter(value);
@@ -279,6 +290,7 @@ namespace DiscordUtilities
                 EmbedTypes.ServerStatus => Config.ServerStatus.ServerStatusEmbed,
                 EmbedTypes.ServerStatus_Player => Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.ServerStatusDropdownClick,
                 EmbedTypes.Report => Config.Report.ReportEmbed,
+                EmbedTypes.Report_Reply => Config.Report.ReportEmbed.ReportButton.ReplyReportEmbed,
                 EmbedTypes.LinkSuccess => Config.Link.LinkEmbed.Success,
                 EmbedTypes.LinkFailed => Config.Link.LinkEmbed.Failed,
                 EmbedTypes.AlreadyLinked => Config.Link.LinkEmbed.AlreadyLinked,
@@ -291,9 +303,14 @@ namespace DiscordUtilities
             };
         }
 
-        private CCSPlayerController GetTargetBySteamID64(ulong steamid64)
+        private CCSPlayerController GetTargetBySteamID64(ulong steamid)
         {
-            return Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.AuthorizedSteamID!.SteamId64 == steamid64).FirstOrDefault() ?? null!;
+            foreach (var p in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.AuthorizedSteamID != null))
+            {
+                if (p.AuthorizedSteamID!.SteamId64 == steamid)
+                    return p;
+            }
+            return null!;
         }
 
         private CCSPlayerController GetTargetByName(string name, CCSPlayerController player)
@@ -347,6 +364,7 @@ namespace DiscordUtilities
 
             return keyBuilder.ToString();
         }
+
         private string ReplacePlayerDataVariables(string replacedString, ulong steamid, bool isTarget = false)
         {
             var target = GetTargetBySteamID64(steamid);
@@ -443,7 +461,36 @@ namespace DiscordUtilities
             }
             return replacedString;
         }
-
+        private string ReplaceDiscordUserVariables(SocketGuildUser user, string replacedString)
+        {
+            var replacedData = new Dictionary<string, string>
+            {
+                { "{Discord.UserDisplayName}", user.DisplayName },
+                { "{Discord.UserGlobalName}", user.GlobalName },
+                { "{Discord.UserID}", user.Id.ToString() }
+            };
+            foreach (var item in replacedData)
+            {
+                if (replacedString.Contains(item.Key))
+                    replacedString = replacedString.Replace(item.Key, item.Value);
+            }
+            return replacedString;
+        }
+        private string ReplaceDiscordChannelVariables(SocketMessage message, string replacedString)
+        {
+            var replacedData = new Dictionary<string, string>
+            {
+                { "{Discord.ChannelName}", message.Channel.Name },
+                { "{Discord.ChannelID}", message.Channel.Id.ToString() },
+                { "{Discord.Message}", message.Content }
+            };
+            foreach (var item in replacedData)
+            {
+                if (replacedString.Contains(item.Key))
+                    replacedString = replacedString.Replace(item.Key, item.Value);
+            }
+            return replacedString;
+        }
         private string ReplaceColors(string message)
         {
             var modifiedValue = message;

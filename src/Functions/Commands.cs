@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using Discord;
 using Newtonsoft.Json.Linq;
 
 namespace DiscordUtilities
@@ -203,7 +204,29 @@ namespace DiscordUtilities
                 SendConsoleMessage("[Discord Utilities] You do not have Server Status enabled! The minimum value of Update Time must be more than 30.", ConsoleColor.DarkYellow);
                 return;
             }
-            _ = PerformFirstServerStatus();
+
+            int totalMenuPlayers = 0;
+            var componentsBuilder = new ComponentBuilder();
+            if (playerData.Count() > 0 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)
+            {
+                var menuBuilder = new SelectMenuBuilder()
+                    .WithPlaceholder(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.MenuName)
+                    .WithCustomId("serverstatus-players")
+                    .WithMinValues(1)
+                    .WithMaxValues(1);
+
+                foreach (var p in playerData!)
+                {
+                    if (p.Key == null || !p.Key.IsValid || p.Key.AuthorizedSteamID == null)
+                        continue;
+
+                    string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, p.Key.AuthorizedSteamID.SteamId64);
+                    menuBuilder.AddOption(label: replacedLabel, value: p.Key.AuthorizedSteamID.SteamId64.ToString());
+                    totalMenuPlayers++;
+                }
+                componentsBuilder.WithSelectMenu(menuBuilder);
+            }
+            _ = PerformFirstServerStatus(componentsBuilder, totalMenuPlayers);
         }
     }
 }

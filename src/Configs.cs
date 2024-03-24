@@ -53,6 +53,42 @@ public class ReportEmbed
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#ffff66";
     [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
+    [JsonPropertyName("Report Embed")] public ReportButton ReportButton { get; set; } = new ReportButton();
+}
+
+public class ReportButton
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
+    [JsonPropertyName("Admin Role ID")] public string AdminRoleId { get; set; } = "";
+    [JsonPropertyName("Button Color")] public int Color { get; set; } = 1;
+    [JsonPropertyName("Button Text")] public string Text { get; set; } = "Mark as solved";
+    [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = "";
+    [JsonPropertyName("Button Reply Embed")] public ReplyReportEmbed ReplyReportEmbed { get; set; } = new ReplyReportEmbed();
+    [JsonPropertyName("Modified Report Embed")] public UpdatedReportEmbed UpdatedReportEmbed { get; set; } = new UpdatedReportEmbed();
+}
+
+public class UpdatedReportEmbed
+{
+    [JsonPropertyName("Content")] public string Content { get; set; } = "Solved by <@{Discord.UserID}>";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "Report solved by {Discord.UserDisplayName}!";
+    [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
+    [JsonPropertyName("Image")] public string Image { get; set; } = "";
+    [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#00ff99";
+    [JsonPropertyName("Footer")] public string Footer { get; set; } = "Solved at";
+    [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
+}
+
+public class ReplyReportEmbed
+{
+    [JsonPropertyName("Content")] public string Content { get; set; } = "";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> The report has been successfully marked as solved!";
+    [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
+    [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
+    [JsonPropertyName("Image")] public string Image { get; set; } = "";
+    [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#ff0066";
+    [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
+    [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
 }
 
 public class Link
@@ -204,7 +240,7 @@ public class ServerStatusEmbed
 
 public class ServerStatusDropdown
 {
-    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
     [JsonPropertyName("Menu Name")] public string MenuName { get; set; } = "Select Players";
     [JsonPropertyName("Players Format")] public string PlayersFormat { get; set; } = "{Player.Name} | {Player.Kills}/{Player.Deaths}";
     [JsonPropertyName("On Click On Player in Menu Embed")] public ServerStatusDropdownClick ServerStatusDropdownClick { get; set; } = new ServerStatusDropdownClick();
@@ -285,6 +321,7 @@ public class DisconnectdEmbed
 public class CustomFlagsAndRoles
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Remove Roles On Permission Loss")] public bool removeRolesOnPermissionLoss { get; set; } = false;
 
     [JsonPropertyName("Role To Permission")]
     public Dictionary<string, string> RoleToPermission { get; set; } = new Dictionary<string, string>()
