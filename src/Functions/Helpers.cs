@@ -63,6 +63,8 @@ namespace DiscordUtilities
             ServerStatus_Player,
             Connect,
             Disconnect,
+            MapChanged,
+            Rcon,
         }
         public enum ContentTypes
         {
@@ -78,6 +80,8 @@ namespace DiscordUtilities
             ServerStatus_Player,
             Connect,
             Disconnect,
+            MapChanged,
+            Rcon,
         }
 
         public string GetContent(ContentTypes type, string[] data)
@@ -93,6 +97,16 @@ namespace DiscordUtilities
                 case ContentTypes.Disconnect:
                     content = ReplacePlayerDataVariables(Config.EventNotifications.Disconnect.DisconnectdEmbed.Content, ulong.Parse(data[0]));
                     content = ReplaceServerDataVariables(content);
+                    break;
+
+                case ContentTypes.MapChanged:
+                    content = ReplaceServerDataVariables(Config.EventNotifications.MapChanged.MapChangedEmbed.Content);
+                    break;
+
+                case ContentTypes.Rcon:
+                    content = Config.Rcon.RconReplyEmbed.Content;
+                    content = content.Replace("{COMMAND}", data[0]);
+                    content = content.Replace("{SERVER}", data[1]);
                     break;
 
                 case ContentTypes.Report:
@@ -175,6 +189,16 @@ namespace DiscordUtilities
                         case EmbedTypes.Disconnect:
                             replacedValue = ReplacePlayerDataVariables((string)value, ulong.Parse(data[0]));
                             replacedValue = ReplaceServerDataVariables(replacedValue);
+                            break;
+
+                        case EmbedTypes.MapChanged:
+                            replacedValue = ReplaceServerDataVariables((string)value);
+                            break;
+
+                        case EmbedTypes.Rcon:
+                            replacedValue = (string)value;
+                            replacedValue = replacedValue.Replace("{COMMAND}", data[0]);
+                            replacedValue = replacedValue.Replace("{SERVER}", data[1]);
                             break;
 
                         case EmbedTypes.ServerStatus_Player:
@@ -299,6 +323,8 @@ namespace DiscordUtilities
                 EmbedTypes.Admin_Chatlog => Config.Chatlog.AdminChat.AdminChatEmbed,
                 EmbedTypes.Connect => Config.EventNotifications.Connect.ConnectedEmbed,
                 EmbedTypes.Disconnect => Config.EventNotifications.Disconnect.DisconnectdEmbed,
+                EmbedTypes.MapChanged => Config.EventNotifications.MapChanged.MapChangedEmbed,
+                EmbedTypes.Rcon => Config.Rcon.RconReplyEmbed,
                 _ => null!,
             };
         }

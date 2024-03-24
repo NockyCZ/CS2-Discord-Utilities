@@ -13,13 +13,40 @@ public class DUConfig : BasePluginConfig
     [JsonPropertyName("Link Section")] public Link Link { get; set; } = new Link();
     [JsonPropertyName("Ingame Chatlog Section")] public Chatlog Chatlog { get; set; } = new Chatlog();
     [JsonPropertyName("Discord Relay Section")] public DiscordRelay DiscordRelay { get; set; } = new DiscordRelay();
+    [JsonPropertyName("Rcon Section")] public Rcon Rcon { get; set; } = new Rcon();
     [JsonPropertyName("Server Status Section")] public ServerStatus ServerStatus { get; set; } = new ServerStatus();
     [JsonPropertyName("Conneced Players Role")] public ConnectedPlayers ConnectedPlayers { get; set; } = new ConnectedPlayers();
     [JsonPropertyName("Event Notifications")] public EventNotifications EventNotifications { get; set; } = new EventNotifications();
     [JsonPropertyName("Manage Roles and Permissions")] public CustomFlagsAndRoles CustomFlagsAndRoles { get; set; } = new CustomFlagsAndRoles();
-    [JsonPropertyName("ConfigVersion")] public new int Version { get; set; } = 3;
 }
 
+public class Rcon
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Admin Role ID")] public string AdminRoleId { get; set; } = "";
+    [JsonPropertyName("Servers List")] public string ServerList { get; set; } = "Only Mirage,Public,AWP";
+    [JsonPropertyName("Server")] public string Server { get; set; } = "Public";
+    [JsonPropertyName("Discord Rcon Command")] public string Command { get; set; } = "rcon";
+    [JsonPropertyName("Discord Rcon Command Description")] public string Description { get; set; } = "Execute commands from the Discord server";
+    [JsonPropertyName("Discord Server Option Name")] public string ServerOptionName { get; set; } = "server";
+    [JsonPropertyName("Discord Server Option Description")] public string ServerOptionDescription { get; set; } = "On which server the command will be executed";
+    [JsonPropertyName("Discord Command Option Name")] public string CommandOptionName { get; set; } = "command";
+    [JsonPropertyName("Discord Command Option Description")] public string CommandOptionDescription { get; set; } = "What command will be executed";
+    [JsonPropertyName("Rcon Reply Embed")] public RconReplyEmbed RconReplyEmbed { get; set; } = new RconReplyEmbed();
+
+}
+public class RconReplyEmbed
+{
+    [JsonPropertyName("Content")] public string Content { get; set; } = "";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> Command `{COMMAND}` was executed on the `{SERVER}` server";
+    [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
+    [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
+    [JsonPropertyName("Image")] public string Image { get; set; } = "";
+    [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#0099cc";
+    [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
+    [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
+}
 public class Database
 {
     [JsonPropertyName("Host")] public string Host { get; set; } = "";
@@ -53,12 +80,12 @@ public class ReportEmbed
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#ffff66";
     [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
-    [JsonPropertyName("Report Embed")] public ReportButton ReportButton { get; set; } = new ReportButton();
+    [JsonPropertyName("Button Settings")] public ReportButton ReportButton { get; set; } = new ReportButton();
 }
 
 public class ReportButton
 {
-    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Admin Role ID")] public string AdminRoleId { get; set; } = "";
     [JsonPropertyName("Button Color")] public int Color { get; set; } = 1;
     [JsonPropertyName("Button Text")] public string Text { get; set; } = "Mark as solved";
@@ -75,7 +102,7 @@ public class UpdatedReportEmbed
     [JsonPropertyName("Image")] public string Image { get; set; } = "";
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#00ff99";
     [JsonPropertyName("Footer")] public string Footer { get; set; } = "Solved at";
-    [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
+    [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = true;
 }
 
 public class ReplyReportEmbed
@@ -278,6 +305,13 @@ public class EventNotifications
 {
     [JsonPropertyName("Player Connect")] public Connect Connect { get; set; } = new Connect();
     [JsonPropertyName("Player Disconnect")] public Disconnect Disconnect { get; set; } = new Disconnect();
+    [JsonPropertyName("Map Changed")] public MapChanged MapChanged { get; set; } = new MapChanged();
+}
+public class MapChanged
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
+    [JsonPropertyName("Map Changed Embed")] public MapChangedEmbed MapChangedEmbed { get; set; } = new MapChangedEmbed();
 }
 public class Connect
 {
@@ -314,6 +348,19 @@ public class DisconnectdEmbed
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "";
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#ff9933";
+    [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
+    [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
+}
+
+public class MapChangedEmbed
+{
+    [JsonPropertyName("Content")] public string Content { get; set; } = "";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> The `{Server.MapName}` map has just started!";
+    [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
+    [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
+    [JsonPropertyName("Image")] public string Image { get; set; } = "";
+    [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#993366";
     [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
 }

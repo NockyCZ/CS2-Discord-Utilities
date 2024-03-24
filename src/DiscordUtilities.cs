@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "1.0.5";
+        public override string ModuleVersion => "1.0.6";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -66,6 +66,7 @@ namespace DiscordUtilities
                     if (Config.ConnectedPlayers.Enabled && IsBotConnected)
                         _ = ClearConnectedPlayersRole();
 
+                    PerformMapStart();
                     AddTimer(5.0f, () =>
                     {
                         UpdateServerData();
@@ -113,7 +114,6 @@ namespace DiscordUtilities
                 });
             });
         }
-
         private async Task LoadDiscordBOT()
         {
             try
@@ -157,16 +157,36 @@ namespace DiscordUtilities
                 .WithDescription(Config.Link.DiscordDescription)
                 .AddOption(Config.Link.DiscordOptionName.ToLower(), ApplicationCommandOptionType.String, Config.Link.DiscordOptionDescription, isRequired: true);
 
+            var rconCommand = new SlashCommandBuilder()
+                .WithName(Config.Rcon.Command.ToLower())
+                .WithDescription(Config.Rcon.Description);
+
+            var serverOption = new SlashCommandOptionBuilder()
+                .WithName(Config.Rcon.ServerOptionName.ToLower())
+                .WithDescription(Config.Rcon.ServerOptionDescription)
+                .WithType(ApplicationCommandOptionType.String)
+                .WithRequired(true);
+
+            serverOption.AddChoice("All", "All");
+            string[] Servers = Config.Rcon.ServerList.Split(',');
+            foreach (var server in Servers)
+                serverOption.AddChoice(server, server);
+            rconCommand.AddOption(serverOption);
+            rconCommand.AddOption(Config.Rcon.CommandOptionName.ToLower(), ApplicationCommandOptionType.String, Config.Rcon.CommandOptionDescription, isRequired: true);
+
             try
             {
-                await BotClient.CreateGlobalApplicationCommandAsync(linkCommand.Build());
+                if (Config.Link.Enabled && IsDbConnected)
+                    await BotClient.CreateGlobalApplicationCommandAsync(linkCommand.Build());
+                if (Config.Rcon.Enabled)
+                    await BotClient.CreateGlobalApplicationCommandAsync(rconCommand.Build());
             }
             catch (HttpException ex)
             {
                 SendConsoleMessage($"[Discord Utilities] An error occurred while updating Slash Commands: {ex.Message}", ConsoleColor.Red);
             }
 
-            if (Config.Link.Enabled && IsDbConnected)
+            if (Config.Link.Enabled || Config.Rcon.Enabled)
                 BotClient.SlashCommandExecuted += SlashCommandHandler;
             if (Config.DiscordRelay.Enabled && !string.IsNullOrEmpty(Config.DiscordRelay.ChannelID))
                 BotClient.MessageReceived += MessageReceived;
@@ -197,14 +217,19 @@ namespace DiscordUtilities
                         string reportedId = componentData.CustomId.Replace("report-", "");
                         var user = guild.GetUser(interaction.User.Id);
 
-                        var permissions = user.GuildPermissions;
+                        if (string.IsNullOrEmpty(Config.Report.ReportEmbed.ReportButton.AdminRoleId))
+                        {
+                            await component.RespondAsync(text: "The Admin role ID is not set!", ephemeral: true);
+                            return;
+                        }
                         var role = guild.GetRole(ulong.Parse(Config.Report.ReportEmbed.ReportButton.AdminRoleId));
                         if (role == null)
                         {
-                            SendConsoleMessage($"[Discord Utilities] Role with id '{Config.Report.ReportEmbed.ReportButton.AdminRoleId}' was not found (Report Admin Role)!", ConsoleColor.Red);
+                            SendConsoleMessage($"[Discord Utilities] Admin Role with ID '{Config.Report.ReportEmbed.ReportButton.AdminRoleId}' was not found (Report Admin Role)!", ConsoleColor.Red);
                             return;
                         }
 
+                        var permissions = user.GuildPermissions;
                         if (permissions.Administrator || user.Roles.Any(id => id == role))
                         {
                             await UpdateReportMessage(user, ulong.Parse(reportedId));
@@ -214,7 +239,7 @@ namespace DiscordUtilities
                         }
                         else
                         {
-                            await component.RespondAsync(text: "You're not the administrator!", ephemeral: true);
+                            await component.RespondAsync(text: "You're not the Administrator!", ephemeral: true);
                         }
                     }
                 }
@@ -232,19 +257,76 @@ namespace DiscordUtilities
                     return Task.CompletedTask;
 
                 var user = guild.GetUser(message.Author.Id);
-                Server.NextWorldUpdate(() =>
+                Server.NextFrame(() =>
                 {
                     PerformChatRelay(user, message);
                 });
             }
-
             return Task.CompletedTask;
         }
 
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
-            if (command.CommandName == Config.Link.DiscordCommand)
+            if (command.CommandName == Config.Link.DiscordCommand.ToLower())
                 await DiscordLink_CMD(command);
+            if (command.CommandName == Config.Rcon.Command.ToLower())
+                await DiscordRcon_CMD(command);
+        }
+        private async Task DiscordRcon_CMD(SocketSlashCommand command)
+        {
+            ulong guildId = command.GuildId!.Value;
+            var guild = BotClient!.GetGuild(guildId);
+
+            if (guild == null)
+                return;
+            var user = guild.GetUser(command.User.Id);
+            if (user == null)
+                return;
+            if (string.IsNullOrEmpty(Config.Rcon.AdminRoleId))
+            {
+                await command.RespondAsync(text: "The Admin role ID is not set!", ephemeral: true);
+                return;
+            }
+            var role = guild.GetRole(ulong.Parse(Config.Rcon.AdminRoleId));
+            if (role == null)
+            {
+                SendConsoleMessage($"[Discord Utilities] Admin Role with ID '{Config.Rcon.AdminRoleId}' was not found (Rcon Section)!", ConsoleColor.Red);
+                return;
+            }
+            string[] data = new string[2];
+            foreach (var option in command.Data.Options)
+            {
+                if (option.Name == Config.Rcon.ServerOptionName)
+                {
+                    data[1] = option.Value.ToString()!;
+                }
+                else if (option.Name == Config.Rcon.CommandOptionName)
+                {
+                    data[0] = option.Value.ToString()!;
+                }
+            }
+            if (data[1] != Config.Rcon.Server)
+            {
+                if (data[1] != "All")
+                    return;
+            }
+            
+            var permissions = user.GuildPermissions;
+            if (permissions.Administrator || user.Roles.Any(id => id == role))
+            {
+                Server.NextWorldUpdate(() =>
+                {
+                    Server.ExecuteCommand(data[0]);
+                });
+
+                var content = GetContent(ContentTypes.Rcon, data);
+                var embed = GetEmbed(EmbedTypes.Rcon, data);
+                await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
+            }
+            else
+            {
+                await command.RespondAsync(text: "You're not the Administrator!", ephemeral: true);
+            }
         }
         private async Task DiscordLink_CMD(SocketSlashCommand command)
         {

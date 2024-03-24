@@ -2,6 +2,13 @@ namespace DiscordUtilities
 {
     public partial class DiscordUtilities
     {
+        public void PerformMapStart()
+        {
+            var embedBuiler = GetEmbed(EmbedTypes.MapChanged, new string[1]);
+            var content = GetContent(ContentTypes.MapChanged, new string[1]);
+
+            _ = SendDiscordMessage(embedBuiler, content, ulong.Parse(Config.EventNotifications.MapChanged.ChannelID), "Map Changed Event");
+        }
         public void PerformConnectEvent(ulong steamid)
         {
             string[] data = new string[1];

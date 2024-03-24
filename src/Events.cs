@@ -170,12 +170,11 @@ namespace DiscordUtilities
             var attacker = @event.Attacker;
             var assister = @event.Assister;
 
-            bool hasPlayerData = playerData.ContainsKey(player);
-            if (player != null && player.IsValid && hasPlayerData)
+            if (player != null && player.IsValid && playerData.ContainsKey(player))
                 UpdatePlayerData(player, 1);
-            if (attacker != null && attacker.IsValid && hasPlayerData)
+            if (attacker != null && attacker.IsValid && playerData.ContainsKey(attacker))
                 UpdatePlayerData(attacker, 1);
-            if (assister != null && assister.IsValid && hasPlayerData)
+            if (assister != null && assister.IsValid && playerData.ContainsKey(assister))
                 UpdatePlayerData(assister, 1);
 
             return HookResult.Continue;
