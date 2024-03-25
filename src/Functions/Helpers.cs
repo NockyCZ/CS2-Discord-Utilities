@@ -397,7 +397,12 @@ namespace DiscordUtilities
             if (target == null)
                 return replacedString;
 
-            var selectedPlayer = playerData[target];
+            PlayerData? selectedPlayer = null;
+            if (playerData.ContainsKey(target))
+                selectedPlayer = playerData[target];
+            else
+                return replacedString;
+
             string player = isTarget ? "Target" : "Player";
             if (selectedPlayer != null)
             {

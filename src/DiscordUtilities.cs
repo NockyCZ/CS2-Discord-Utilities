@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "1.0.6";
+        public override string ModuleVersion => "1.0.7";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -44,9 +44,6 @@ namespace DiscordUtilities
                 IsDbConnected = false;
                 IsBotConnected = false;
 
-                if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
-                    _ = CreateDatabaseConnection();
-
                 serverData = new ServerData
                 {
                     GameDirectory = Server.GameDirectory,
@@ -58,22 +55,35 @@ namespace DiscordUtilities
                     OnlineBots = GetBotsCounts().ToString(),
                     Timeleft = 60.ToString()
                 };
-                if (!string.IsNullOrEmpty(Config.Token) && !IsBotConnected)
-                    _ = LoadDiscordBOT();
 
-                Server.NextFrame(() =>
+                if (Config.ServerStatus.UpdateTimer > 29 || Config.BotStatus.UpdateTimer > 29)
+                    Server.ExecuteCommand("sv_hibernate_when_empty false");
+
+                _ = LoadDiscordBOT();
+                if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
+                    _ = CreateDatabaseConnection();
+
+                while (!IsBotConnected)
                 {
-                    if (Config.ConnectedPlayers.Enabled && IsBotConnected)
+                    SendConsoleMessage($"[Discord Utilities] BOT is not loaded...", ConsoleColor.DarkYellow);
+                    Thread.Sleep(3000);
+                }
+
+                if (IsBotConnected)
+                {
+                    if (Config.ConnectedPlayers.Enabled)
                         _ = ClearConnectedPlayersRole();
 
-                    PerformMapStart();
+                    if (Config.EventNotifications.MapChanged.Enabled)
+                        PerformMapStart();
+
                     AddTimer(5.0f, () =>
                     {
                         UpdateServerData();
 
                     }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
 
-                    if (Config.BotStatus.UpdateTimer > 5)
+                    if (Config.BotStatus.UpdateTimer > 29)
                     {
                         AddTimer(Config.BotStatus.UpdateTimer, () =>
                         {
@@ -111,7 +121,7 @@ namespace DiscordUtilities
 
                         }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
                     }
-                });
+                }
             });
         }
         private async Task LoadDiscordBOT()
@@ -134,7 +144,6 @@ namespace DiscordUtilities
                 await BotClient.StartAsync();
 
                 BotClient.Ready += ReadyAsync;
-
                 await Task.Delay(-1);
             }
             catch (Exception ex)
@@ -167,8 +176,10 @@ namespace DiscordUtilities
                 .WithType(ApplicationCommandOptionType.String)
                 .WithRequired(true);
 
-            serverOption.AddChoice("All", "All");
             string[] Servers = Config.Rcon.ServerList.Split(',');
+            if (Servers.Count() > 1)
+                serverOption.AddChoice("All", "All");
+
             foreach (var server in Servers)
                 serverOption.AddChoice(server, server);
             rconCommand.AddOption(serverOption);
@@ -185,7 +196,6 @@ namespace DiscordUtilities
             {
                 SendConsoleMessage($"[Discord Utilities] An error occurred while updating Slash Commands: {ex.Message}", ConsoleColor.Red);
             }
-
             if (Config.Link.Enabled || Config.Rcon.Enabled)
                 BotClient.SlashCommandExecuted += SlashCommandHandler;
             if (Config.DiscordRelay.Enabled && !string.IsNullOrEmpty(Config.DiscordRelay.ChannelID))
@@ -202,7 +212,7 @@ namespace DiscordUtilities
                 {
                     if (componentData.CustomId == "serverstatus-players")
                     {
-                        Server.NextWorldUpdate(() =>
+                        Server.NextFrame(() =>
                         {
                             SelectMenuResponse(component);
                         });
@@ -310,11 +320,11 @@ namespace DiscordUtilities
                 if (data[1] != "All")
                     return;
             }
-            
+
             var permissions = user.GuildPermissions;
             if (permissions.Administrator || user.Roles.Any(id => id == role))
             {
-                Server.NextWorldUpdate(() =>
+                Server.NextFrame(() =>
                 {
                     Server.ExecuteCommand(data[0]);
                 });
@@ -373,7 +383,7 @@ namespace DiscordUtilities
                 {
                     await user.AddRoleAsync(role);
                 }
-                Server.NextWorldUpdate(() => { PerformLinkAccount(code, command.User.GlobalName, command.User.Id.ToString()); });
+                Server.NextFrame(() => { PerformLinkAccount(code, command.User.GlobalName, command.User.Id.ToString()); });
                 return;
             }
             content = GetContent(ContentTypes.LinkFailed, data);

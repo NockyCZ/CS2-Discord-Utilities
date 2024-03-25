@@ -162,7 +162,6 @@ namespace DiscordUtilities
             }
             return HookResult.Continue;
         }
-
         [GameEventHandler(HookMode.Post)]
         public HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
         {
