@@ -11,12 +11,12 @@ using Discord.Net;
 
 namespace DiscordUtilities
 {
-    [MinimumApiVersion(166)]
+    [MinimumApiVersion(202)]
     public partial class DiscordUtilities : BasePlugin, IPluginConfig<DUConfig>
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "1.0.7";
+        public override string ModuleVersion => "1.0.8";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -35,33 +35,32 @@ namespace DiscordUtilities
             CreateCustomCommands();
             LoadManageRolesAndFlags();
 
+            IsDbConnected = false;
+            IsBotConnected = false;
+            serverData = new ServerData
+            {
+                GameDirectory = Server.GameDirectory,
+                Name = "Counter-Strike Server",
+                MaxPlayers = 10.ToString(),
+                MapName = "",
+                OnlinePlayers = 0.ToString(),
+                OnlinePlayersAndBots = 0.ToString(),
+                OnlineBots = 0.ToString(),
+                Timeleft = 60.ToString()
+            };
+
+            _ = LoadDiscordBOT();
+            if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
+                _ = CreateDatabaseConnection();
+                
             RegisterListener<Listeners.OnMapStart>(mapName =>
             {
-                linkCodes.Clear();
-                linkedPlayers.Clear();
                 playerData.Clear();
-                relaysList.Clear();
-                IsDbConnected = false;
-                IsBotConnected = false;
-
-                serverData = new ServerData
-                {
-                    GameDirectory = Server.GameDirectory,
-                    Name = ConVar.Find("hostname")!.StringValue,
-                    MaxPlayers = Server.MaxPlayers.ToString(),
-                    MapName = Server.MapName,
-                    OnlinePlayers = GetPlayersCount().ToString(),
-                    OnlinePlayersAndBots = GetPlayersCountWithBots().ToString(),
-                    OnlineBots = GetBotsCounts().ToString(),
-                    Timeleft = 60.ToString()
-                };
+                reportCooldowns.Clear();
+                performReport.Clear();
 
                 if (Config.ServerStatus.UpdateTimer > 29 || Config.BotStatus.UpdateTimer > 29)
                     Server.ExecuteCommand("sv_hibernate_when_empty false");
-
-                _ = LoadDiscordBOT();
-                if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
-                    _ = CreateDatabaseConnection();
 
                 while (!IsBotConnected)
                 {
@@ -93,31 +92,17 @@ namespace DiscordUtilities
                     }
                     if (Config.ServerStatus.UpdateTimer > 29 && !string.IsNullOrEmpty(Config.ServerStatus.ChannelID))
                     {
-                        _ = UpdateServerStatus(components: null!, 0);
+                        _ = UpdateServerStatus(components: null!, false);
                         AddTimer(Config.ServerStatus.UpdateTimer, () =>
                         {
                             var componentsBuilder = new ComponentBuilder();
-                            int totalMenuPlayers = 0;
-                            if (playerData.Count() > 0 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)
+                            bool addComponents = false;
+                            if (Config.ServerStatus.ServerStatusEmbed.JoinButton.Enabled || Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)
                             {
-                                var menuBuilder = new SelectMenuBuilder()
-                                    .WithPlaceholder(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.MenuName)
-                                    .WithCustomId("serverstatus-players")
-                                    .WithMinValues(1)
-                                    .WithMaxValues(1);
-
-                                foreach (var p in playerData!)
-                                {
-                                    if (p.Key == null || !p.Key.IsValid || p.Key.AuthorizedSteamID == null)
-                                        continue;
-
-                                    string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, p.Key.AuthorizedSteamID.SteamId64);
-                                    menuBuilder.AddOption(label: replacedLabel, value: p.Key.AuthorizedSteamID.SteamId64.ToString());
-                                    totalMenuPlayers++;
-                                }
-                                componentsBuilder.WithSelectMenu(menuBuilder);
+                                addComponents = true;
+                                componentsBuilder = GetServerStatusComponents(componentsBuilder);
                             }
-                            _ = UpdateServerStatus(componentsBuilder, totalMenuPlayers);
+                            _ = UpdateServerStatus(componentsBuilder, addComponents);
 
                         }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
                     }
@@ -196,12 +181,27 @@ namespace DiscordUtilities
             {
                 SendConsoleMessage($"[Discord Utilities] An error occurred while updating Slash Commands: {ex.Message}", ConsoleColor.Red);
             }
+
             if (Config.Link.Enabled || Config.Rcon.Enabled)
+            {
                 BotClient.SlashCommandExecuted += SlashCommandHandler;
+                if (Config.Debug)
+                    SendConsoleMessage($"[Discord Utilities] DEBUG: Link or RCON Slash Command Loaded (Slash Command Handler)", ConsoleColor.Cyan);
+            }
+
             if (Config.DiscordRelay.Enabled && !string.IsNullOrEmpty(Config.DiscordRelay.ChannelID))
+            {
                 BotClient.MessageReceived += MessageReceived;
+                if (Config.Debug)
+                    SendConsoleMessage($"[Discord Utilities] DEBUG: Discord Relay Loaded (Message Received Handler)", ConsoleColor.Cyan);
+            }
+
             if ((Config.ServerStatus.UpdateTimer > 29 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled) || Config.Report.ReportEmbed.ReportButton.Enabled)
+            {
                 BotClient.InteractionCreated += OnInteractionCreatedAsync;
+                if (Config.Debug)
+                    SendConsoleMessage($"[Discord Utilities] DEBUG: Server Status or Report Button Loaded (Interaction Handler)", ConsoleColor.Cyan);
+            }
         }
         private async Task OnInteractionCreatedAsync(SocketInteraction interaction)
         {
@@ -222,7 +222,10 @@ namespace DiscordUtilities
                         ulong guildId = interaction.GuildId!.Value;
                         var guild = BotClient!.GetGuild(guildId);
                         if (guild == null)
+                        {
+                            SendConsoleMessage($"[Discord Utilities] Report: Guild has not been found ('{guildId}')", ConsoleColor.Red);
                             return;
+                        }
 
                         string reportedId = componentData.CustomId.Replace("report-", "");
                         var user = guild.GetUser(interaction.User.Id);
@@ -260,15 +263,23 @@ namespace DiscordUtilities
             if (message.Author.IsBot || message.Author.IsWebhook)
                 return Task.CompletedTask;
 
+            if (Config.Debug)
+                SendConsoleMessage($"[Discord Utilities] DEBUG: Discord Message '{message}' was logged in channel '{message.Channel.Id}'", ConsoleColor.Cyan);
+
             if (message.Channel.Id == ulong.Parse(Config.DiscordRelay.ChannelID))
             {
                 var guild = BotClient!.GetGuild(ulong.Parse(Config.ServerID));
                 if (guild == null)
+                {
+                    SendConsoleMessage($"[Discord Utilities] Discord Relay: Guild has not been found ('{Config.ServerID}')", ConsoleColor.Red);
                     return Task.CompletedTask;
+                }
 
                 var user = guild.GetUser(message.Author.Id);
                 Server.NextFrame(() =>
                 {
+                    if (Config.Debug)
+                        SendConsoleMessage($"[Discord Utilities] DEBUG: Discord Message '{message}' was sent to the server by user '{user.DisplayName}'", ConsoleColor.Cyan);
                     PerformChatRelay(user, message);
                 });
             }
@@ -277,32 +288,48 @@ namespace DiscordUtilities
 
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
+            if (Config.Debug)
+                SendConsoleMessage($"[Discord Utilities] DEBUG: User '{command.User.GlobalName}' executed Slash Command '{command.CommandName}'", ConsoleColor.Cyan);
+
             if (command.CommandName == Config.Link.DiscordCommand.ToLower())
                 await DiscordLink_CMD(command);
             if (command.CommandName == Config.Rcon.Command.ToLower())
                 await DiscordRcon_CMD(command);
         }
+
         private async Task DiscordRcon_CMD(SocketSlashCommand command)
         {
+            if (Config.Debug)
+                SendConsoleMessage($"[Discord Utilities] DEBUG: Slash command '{command.CommandName}' has been successfully logged", ConsoleColor.Cyan);
+
             ulong guildId = command.GuildId!.Value;
             var guild = BotClient!.GetGuild(guildId);
-
             if (guild == null)
+            {
+                SendConsoleMessage($"[Discord Utilities] RCON Slash Command Error: Guild has not been found ('{guildId}')", ConsoleColor.Red);
                 return;
+            }
+
             var user = guild.GetUser(command.User.Id);
             if (user == null)
+            {
+                SendConsoleMessage($"[Discord Utilities] RCON Slash Command Error: User was not found!", ConsoleColor.Red);
                 return;
+            }
+
             if (string.IsNullOrEmpty(Config.Rcon.AdminRoleId))
             {
                 await command.RespondAsync(text: "The Admin role ID is not set!", ephemeral: true);
                 return;
             }
+
             var role = guild.GetRole(ulong.Parse(Config.Rcon.AdminRoleId));
             if (role == null)
             {
-                SendConsoleMessage($"[Discord Utilities] Admin Role with ID '{Config.Rcon.AdminRoleId}' was not found (Rcon Section)!", ConsoleColor.Red);
+                SendConsoleMessage($"[Discord Utilities] RCON Slash Command Error: Admin Role with ID '{Config.Rcon.AdminRoleId}' was not found!", ConsoleColor.Red);
                 return;
             }
+
             string[] data = new string[2];
             foreach (var option in command.Data.Options)
             {
@@ -318,12 +345,17 @@ namespace DiscordUtilities
             if (data[1] != Config.Rcon.Server)
             {
                 if (data[1] != "All")
+                {
+                    if (Config.Debug)
+                        SendConsoleMessage($"[Discord Utilities] DEBUG: This server is not '{data[1]}'!", ConsoleColor.Cyan);
                     return;
+                }
             }
 
             var permissions = user.GuildPermissions;
             if (permissions.Administrator || user.Roles.Any(id => id == role))
             {
+                data[1] = Config.Rcon.Server;
                 Server.NextFrame(() =>
                 {
                     Server.ExecuteCommand(data[0]);
@@ -340,29 +372,38 @@ namespace DiscordUtilities
         }
         private async Task DiscordLink_CMD(SocketSlashCommand command)
         {
+            if (Config.Debug)
+                SendConsoleMessage($"[Discord Utilities] DEBUG: Slash command '{command.CommandName}' has been successfully logged", ConsoleColor.Cyan);
+
             ulong guildId = command.GuildId!.Value;
             var guild = BotClient!.GetGuild(guildId);
 
             if (guild == null)
+            {
+                SendConsoleMessage($"[Discord Utilities] LINK Slash Command Error: Guild has not been found ('{guildId}')", ConsoleColor.Red);
                 return;
+            }
 
             var user = guild.GetUser(command.User.Id);
             if (user == null)
+            {
+                SendConsoleMessage($"[Discord Utilities] LINK Slash Command Error: User was not found!", ConsoleColor.Red);
                 return;
+            }
 
             var role = guild.GetRole(ulong.Parse(Config.Link.LinkRole));
             if (role == null)
             {
-                SendConsoleMessage($"[Discord Utilities] Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
+                SendConsoleMessage($"[Discord Utilities] LINK Slash Command Error: Role with id '{Config.Link.LinkRole}' was not found!", ConsoleColor.Red);
                 return;
             }
             string content = string.Empty;
             EmbedBuilder embed;
             string[] data = new string[1];
 
+            var linkedPlayers = await GetLinkedPlayers();
             if (linkedPlayers.ContainsValue(user.Id.ToString()))
             {
-
                 var findSteamIdByUserId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id.ToString()).Key;
                 data[0] = findSteamIdByUserId.ToString();
                 content = GetContent(ContentTypes.AlreadyLinked, data);
@@ -372,28 +413,53 @@ namespace DiscordUtilities
             }
 
             var code = command.Data.Options.First().Value.ToString();
-            data[0] = code!;
-            if (!string.IsNullOrEmpty(code) && linkCodes.ContainsKey(code))
+            code = code!.Replace(" ", "");
+            data[0] = code;
+
+            var codesList = await GetCodesList();
+            if (!string.IsNullOrEmpty(code) && codesList.ContainsKey(code))
             {
+                data[0] = codesList[code];
                 content = GetContent(ContentTypes.LinkSuccess, data);
                 embed = GetEmbed(EmbedTypes.LinkSuccess, data);
-                await InsertPlayerData(linkCodes[code].ToString(), command.User.Id.ToString());
+                await InsertPlayerData(codesList[code].ToString(), command.User.Id.ToString());
+                await RemoveCode(code, false);
                 await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
                 if (!user.Roles.Any(id => id == role))
                 {
                     await user.AddRoleAsync(role);
                 }
-                Server.NextFrame(() => { PerformLinkAccount(code, command.User.GlobalName, command.User.Id.ToString()); });
                 return;
             }
             content = GetContent(ContentTypes.LinkFailed, data);
             embed = GetEmbed(EmbedTypes.LinkFailed, data);
             await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
         }
-        private async Task UnLoadDiscordBOT()
+        public override void Unload(bool hotReload)
         {
-            if (BotClient != null)
-                await BotClient.StopAsync();
+            if (IsBotConnected)
+            {
+                if (Config.Link.Enabled || Config.Rcon.Enabled)
+                {
+                    BotClient!.SlashCommandExecuted -= SlashCommandHandler;
+                    if (Config.Debug)
+                        SendConsoleMessage($"[Discord Utilities] DEBUG: Link Slash Command Unloaded (Slash Command Handler)", ConsoleColor.Cyan);
+                }
+
+                if (Config.DiscordRelay.Enabled && !string.IsNullOrEmpty(Config.DiscordRelay.ChannelID))
+                {
+                    BotClient!.MessageReceived -= MessageReceived;
+                    if (Config.Debug)
+                        SendConsoleMessage($"[Discord Utilities] DEBUG: Discord Relay Unloaded (Message Received Handler)", ConsoleColor.Cyan);
+                }
+
+                if ((Config.ServerStatus.UpdateTimer > 29 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled) || Config.Report.ReportEmbed.ReportButton.Enabled)
+                {
+                    BotClient!.InteractionCreated -= OnInteractionCreatedAsync;
+                    if (Config.Debug)
+                        SendConsoleMessage($"[Discord Utilities] DEBUG: Server Status or Report Button Unloaded (Interaction Handler)", ConsoleColor.Cyan);
+                }
+            }
         }
 
         public static void SendConsoleMessage(string text, ConsoleColor color)

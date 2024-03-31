@@ -4,19 +4,6 @@ namespace DiscordUtilities
 {
     public partial class DiscordUtilities
     {
-        public Dictionary<string, ulong> linkCodes = new Dictionary<string, ulong>();
-        public void PerformLinkAccount(string code, string discordName, string discordId)
-        {
-            var player = GetTargetBySteamID64(linkCodes[code]);
-            linkCodes.Remove(code);
-            if (player != null && player.IsValid && player.AuthorizedSteamID != null)
-            {
-                if (!linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
-                    linkedPlayers.Add(player.AuthorizedSteamID.SteamId64, discordId);
-                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.AccountLinked", discordName]}");
-            }
-        }
-
         public void PerformLinkPermission(ulong steamid)
         {
             var Permission = Config.Link.LinkPermissions;

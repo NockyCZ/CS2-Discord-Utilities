@@ -1,3 +1,4 @@
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using Discord;
 using Discord.WebSocket;
@@ -7,8 +8,19 @@ namespace DiscordUtilities
     public partial class DiscordUtilities
     {
         public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new Dictionary<CCSPlayerController, CCSPlayerController>();
+        public Dictionary<CCSPlayerController, int> reportCooldowns = new Dictionary<CCSPlayerController, int>();
         public void SendReport(CCSPlayerController sender, CCSPlayerController target, string reason)
         {
+            if (reportCooldowns.ContainsKey(sender))
+            {
+                var remainingTime = (int)Server.CurrentTime - reportCooldowns[sender];
+                if (remainingTime < Config.Report.ReportCooldown)
+                {
+                    sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCooldown", Config.Report.ReportCooldown]}");
+                    return;
+                }
+                reportCooldowns.Remove(sender);
+            }
             if (Config.Report.ReportMethod != 3)
             {
                 if (target == null || !target.IsValid || target.AuthorizedSteamID == null)
@@ -37,7 +49,9 @@ namespace DiscordUtilities
             EmbedBuilder? embed = GetEmbed(EmbedTypes.Report, data);
             string? content = GetContent(ContentTypes.Report, data);
 
+
             _ = SendReportMessage(embed, content);
+            reportCooldowns.Add(sender, (int)Server.CurrentTime);
             //channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: Config.Report.ReportEmbed.ReportButton.Enabled ? components.Build() : null);
             sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportSend", target.PlayerName, reason]}");
         }

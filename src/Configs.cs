@@ -6,7 +6,8 @@ namespace DiscordUtilities;
 public class DUConfig : BasePluginConfig
 {
     [JsonPropertyName("Bot Token")] public string Token { get; set; } = "";
-    [JsonPropertyName("Server ID")] public string ServerID { get; set; } = "";
+    [JsonPropertyName("Discord Server ID")] public string ServerID { get; set; } = "";
+    [JsonPropertyName("Server IP")] public string ServerIP { get; set; } = "0.0.0.0:00000";
     [JsonPropertyName("Database Connection")] public Database Database { get; set; } = new Database();
     [JsonPropertyName("BOT Status Section")] public BotStatus BotStatus { get; set; } = new BotStatus();
     [JsonPropertyName("Report Section")] public Report Report { get; set; } = new Report();
@@ -15,9 +16,10 @@ public class DUConfig : BasePluginConfig
     [JsonPropertyName("Discord Relay Section")] public DiscordRelay DiscordRelay { get; set; } = new DiscordRelay();
     [JsonPropertyName("Rcon Section")] public Rcon Rcon { get; set; } = new Rcon();
     [JsonPropertyName("Server Status Section")] public ServerStatus ServerStatus { get; set; } = new ServerStatus();
-    [JsonPropertyName("Conneced Players Role")] public ConnectedPlayers ConnectedPlayers { get; set; } = new ConnectedPlayers();
+    [JsonPropertyName("Connected Players Role")] public ConnectedPlayers ConnectedPlayers { get; set; } = new ConnectedPlayers();
     [JsonPropertyName("Event Notifications")] public EventNotifications EventNotifications { get; set; } = new EventNotifications();
     [JsonPropertyName("Manage Roles and Permissions")] public CustomFlagsAndRoles CustomFlagsAndRoles { get; set; } = new CustomFlagsAndRoles();
+    [JsonPropertyName("Debug Messages")] public bool Debug { get; set; } = false;
 }
 
 public class Rcon
@@ -61,6 +63,7 @@ public class Report
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Report Commands")] public string ReportCommands { get; set; } = "report,calladmin";
     [JsonPropertyName("Unreportable Flag")] public string UnreportableFlag { get; set; } = "@discord_utilities/antireport";
+    [JsonPropertyName("Report Cooldown")] public int ReportCooldown { get; set; } = 60;
     [JsonPropertyName("Report Command Method")] public int ReportMethod { get; set; } = 1;
     [JsonPropertyName("Report Reasons")] public string ReportReasons { get; set; } = "#CUSTOMREASON,Cheating,Trolling,AFK";
     [JsonPropertyName("Custom Reason Minimum Length")] public int ReasonLength { get; set; } = 5;
@@ -255,19 +258,28 @@ public class ServerStatusEmbed
 {
     [JsonPropertyName("Content")] public string Content { get; set; } = "";
     [JsonPropertyName("Title")] public string Title { get; set; } = "{Server.Name}";
-    [JsonPropertyName("Description")] public string Description { get; set; } = "> IP: `123.46.78.45:27015`\n> Timeleft: `{Server.Timeleft}`";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> IP: `{Server.IP}`\n> Timeleft: `{Server.Timeleft}`";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "👥 Players;{Server.OnlinePlayers}/{Server.MaxPlayers};True|🗺️ Map;{Server.MapName};True";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "https://i.imgur.com/uZfZ0sr.png";
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#ffad33";
     [JsonPropertyName("Footer")] public string Footer { get; set; } = "Last update";
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = true;
+    [JsonPropertyName("First Embed Component")] public int FirstComponent { get; set; } = 1;
+    [JsonPropertyName("Join Button")] public JoinButton JoinButton { get; set; } = new JoinButton();
     [JsonPropertyName("Players Menu")] public ServerStatusDropdown ServerStatusDropdown { get; set; } = new ServerStatusDropdown();
 }
 
+public class JoinButton
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Button Text")] public string Text { get; set; } = "Join Server";
+    [JsonPropertyName("Button URL")] public string URL { get; set; } = "LINK TO CONNECT TO YOUR CS2 SERVER";
+    [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = "";
+}
 public class ServerStatusDropdown
 {
-    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Menu Name")] public string MenuName { get; set; } = "Select Players";
     [JsonPropertyName("Players Format")] public string PlayersFormat { get; set; } = "{Player.Name} | {Player.Kills}/{Player.Deaths}";
     [JsonPropertyName("On Click On Player in Menu Embed")] public ServerStatusDropdownClick ServerStatusDropdownClick { get; set; } = new ServerStatusDropdownClick();
@@ -289,7 +301,7 @@ public class ServerStatusDropdownClick
 
 public class BotStatus
 {
-    [JsonPropertyName("Update Time")] public int UpdateTimer { get; set; } = 0;
+    [JsonPropertyName("Update Time")] public int UpdateTimer { get; set; } = 60;
     [JsonPropertyName("Status")] public int Status { get; set; } = 1;
     [JsonPropertyName("Activity Type")] public int ActivityType { get; set; } = 1;
     [JsonPropertyName("Activity Text")] public string ActivityFormat { get; set; } = "{Server.MapName} ({Server.OnlinePlayers}/{Server.MaxPlayers})";

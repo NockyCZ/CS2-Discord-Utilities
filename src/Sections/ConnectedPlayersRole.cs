@@ -10,13 +10,13 @@ namespace DiscordUtilities
                 var guild = BotClient!.GetGuild(ulong.Parse(Config.ServerID));
                 if (guild == null)
                 {
-                    SendConsoleMessage($"[Discord Utilities] Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
                     return;
                 }
                 var role = guild.GetRole(ulong.Parse(Config.ConnectedPlayers.Role));
                 if (role == null)
                 {
-                    SendConsoleMessage($"[Discord Utilities] Role with id '{Config.ConnectedPlayers.Role}' was not found (Connected Players Role Section)!", ConsoleColor.Red);
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: Role with id '{Config.ConnectedPlayers.Role}' was not found!", ConsoleColor.Red);
                     return;
                 }
 
@@ -42,18 +42,21 @@ namespace DiscordUtilities
                 var guild = BotClient!.GetGuild(ulong.Parse(Config.ServerID));
                 if (guild == null)
                 {
-                    SendConsoleMessage($"[Discord Utilities] Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
                     return;
                 }
 
                 var user = guild.GetUser(discordid);
                 if (user == null)
+                {
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: User was not found!", ConsoleColor.Red);
                     return;
+                }
 
                 var role = guild.GetRole(ulong.Parse(Config.ConnectedPlayers.Role));
                 if (role == null)
                 {
-                    SendConsoleMessage($"[Discord Utilities] Role with id '{Config.ConnectedPlayers.Role}' was not found (Connected Players Role Section)!", ConsoleColor.Red);
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: Role with id '{Config.ConnectedPlayers.Role}' was not found!", ConsoleColor.Red);
                     return;
                 }
                 if (!user.Roles.Any(id => id == role))
@@ -72,17 +75,20 @@ namespace DiscordUtilities
                 var guild = BotClient!.GetGuild(ulong.Parse(Config.ServerID));
                 if (guild == null)
                 {
-                    SendConsoleMessage($"[Discord Utilities] Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: Guild with id '{Config.ServerID}' was not found!", ConsoleColor.Red);
                     return;
                 }
                 var user = guild.GetUser(discordid);
                 if (user == null)
+                {
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: User was not found!", ConsoleColor.Red);
                     return;
+                }
 
                 var role = guild.GetRole(ulong.Parse(Config.ConnectedPlayers.Role));
                 if (role == null)
                 {
-                    SendConsoleMessage($"[Discord Utilities] Role with id '{Config.ConnectedPlayers.Role}' was not found (Connected Players Role Section)!", ConsoleColor.Red);
+                    SendConsoleMessage($"[Discord Utilities] Connected Players Role Error: Role with id '{Config.ConnectedPlayers.Role}' was not found!", ConsoleColor.Red);
                     return;
                 }
 

@@ -46,11 +46,18 @@ namespace DiscordUtilities
                 return;
             }
 
+            var linkedPlayers = new Dictionary<ulong, string>();
+            var task = Task.Run(async () =>
+            {
+                linkedPlayers = await GetLinkedPlayers();
+            });
+            task.Wait();
+
             if (linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
             {
                 var discordId = linkedPlayers[player.AuthorizedSteamID.SteamId64];
-                linkedPlayers.Remove(player.AuthorizedSteamID.SteamId64);
-                _ = RemovePlayerData(player.AuthorizedSteamID.SteamId64.ToString());
+                var steamId = player.AuthorizedSteamID.SteamId64.ToString();
+                _ = RemovePlayerData(steamId);
                 _ = RemoveLinkRole(discordId);
                 player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.AccountUnliked"]}");
             }
@@ -75,17 +82,36 @@ namespace DiscordUtilities
                 return;
             }
 
+            var linkedPlayers = new Dictionary<ulong, string>();
+            var task = Task.Run(async () =>
+            {
+                linkedPlayers = await GetLinkedPlayers();
+            });
+            task.Wait();
+
             if (!linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
             {
-                string code;
-                if (linkCodes.ContainsValue(player.AuthorizedSteamID.SteamId64))
+                var codesList = new Dictionary<string, string>();
+                task = Task.Run(async () =>
                 {
-                    code = linkCodes.FirstOrDefault(x => x.Value == player.AuthorizedSteamID.SteamId64).Key;
+                    codesList = await GetCodesList();
+                });
+                task.Wait();
+
+                string code;
+                if (codesList.ContainsValue(player.AuthorizedSteamID.SteamId64.ToString()))
+                {
+                    code = codesList.FirstOrDefault(x => x.Value == player.AuthorizedSteamID.SteamId64.ToString()).Key;
                 }
                 else
                 {
                     code = GetRandomCode(Config.Link.CodeLength);
-                    linkCodes.Add(code, player.AuthorizedSteamID.SteamId64);
+                    var steamId = player.AuthorizedSteamID.SteamId64.ToString();
+                    task = Task.Run(async () =>
+                    {
+                        await InsertNewCode(steamId, code);
+                    });
+                    task.Wait();
                 }
 
                 string localizedMessage = Localizer["Chat.LinkAccount", code];
@@ -110,6 +136,17 @@ namespace DiscordUtilities
             {
                 player.PrintToChat("Discord BOT is not connected! Contact the Administrator.");
                 return;
+            }
+
+            if (reportCooldowns.ContainsKey(player))
+            {
+                var remainingTime = (int)Server.CurrentTime - reportCooldowns[player];
+                if (remainingTime < Config.Report.ReportCooldown)
+                {
+                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCooldown", Config.Report.ReportCooldown]}");
+                    return;
+                }
+                reportCooldowns.Remove(player);
             }
 
             if (GetTargetsForReportCount(player) == 0)
@@ -183,18 +220,6 @@ namespace DiscordUtilities
             }
         }
 
-        [ConsoleCommand("css_du_updatedatabase", "Update Database to the latest version")]
-        [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
-        public void UpdateDatabase_CMD(CCSPlayerController player, CommandInfo info)
-        {
-            if (!IsDbConnected)
-            {
-                SendConsoleMessage("[Discord Utilities] Database is not connected!", ConsoleColor.DarkRed);
-                return;
-            }
-            _ = UpdateDatabase();
-        }
-
         [ConsoleCommand("css_du_serverstatus", "Perform and setup the Server Status")]
         [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
         public void PerformFirstServerStatus_CMD(CCSPlayerController player, CommandInfo info)
@@ -205,28 +230,14 @@ namespace DiscordUtilities
                 return;
             }
 
-            int totalMenuPlayers = 0;
             var componentsBuilder = new ComponentBuilder();
-            if (playerData.Count() > 0 && Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)
+            bool addComponents = false;
+            if (Config.ServerStatus.ServerStatusEmbed.JoinButton.Enabled || Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)
             {
-                var menuBuilder = new SelectMenuBuilder()
-                    .WithPlaceholder(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.MenuName)
-                    .WithCustomId("serverstatus-players")
-                    .WithMinValues(1)
-                    .WithMaxValues(1);
-
-                foreach (var p in playerData!)
-                {
-                    if (p.Key == null || !p.Key.IsValid || p.Key.AuthorizedSteamID == null)
-                        continue;
-
-                    string replacedLabel = ReplacePlayerDataVariables(Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.PlayersFormat, p.Key.AuthorizedSteamID.SteamId64);
-                    menuBuilder.AddOption(label: replacedLabel, value: p.Key.AuthorizedSteamID.SteamId64.ToString());
-                    totalMenuPlayers++;
-                }
-                componentsBuilder.WithSelectMenu(menuBuilder);
+                addComponents = true;
+                componentsBuilder = GetServerStatusComponents(componentsBuilder);
             }
-            _ = PerformFirstServerStatus(componentsBuilder, totalMenuPlayers);
+            _ = PerformFirstServerStatus(componentsBuilder, addComponents);
         }
     }
 }

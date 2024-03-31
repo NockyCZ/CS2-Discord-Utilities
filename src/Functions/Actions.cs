@@ -32,7 +32,7 @@ namespace DiscordUtilities
             var user = guild.GetUser(discordid);
             if (user == null)
                 return;
-            
+
             var target = GetTargetBySteamID64(steamid);
             var p = playerData[target];
             if (p != null)
@@ -80,6 +80,8 @@ namespace DiscordUtilities
             TimeSpan time = TimeSpan.FromSeconds(timeleft);
 
             serverData!.Timeleft = $"{time:mm\\:ss}";
+            serverData.MaxPlayers = Server.MaxPlayers.ToString();
+            serverData.Name = ConVar.Find("hostname")!.StringValue;
             serverData.OnlinePlayers = GetPlayersCount().ToString();
             serverData.OnlinePlayersAndBots = GetPlayersCountWithBots().ToString();
             serverData.OnlineBots = GetBotsCounts().ToString();
@@ -98,7 +100,7 @@ namespace DiscordUtilities
                 {
                     p.CountryShort = country[1].ToUpper();
                     string emoji = $":flag_{country[1].ToLower()}:";
-                    p.CountryEmoji = emoji;
+                    p.CountryEmoji = IsValidFlag(emoji);
                 }
                 else
                 {

@@ -124,11 +124,24 @@ namespace DiscordUtilities
                     DiscordDisplayName = "",
                     DiscordPing = "",
                     DiscordID = "",
+                    IsLinked = false,
                 };
                 playerData.Add(player, newPlayer);
 
+                var linkedPlayers = new Dictionary<ulong, string>();
+                var task =Task.Run(async () =>
+                {
+                    linkedPlayers = await GetLinkedPlayers();
+                });
+                task.Wait();
+                
                 if (IsDbConnected && Config.Link.Enabled && linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
-                    _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString());
+                {
+                    if (playerData.ContainsKey(player))
+                        playerData[player].IsLinked = true;
+
+                    _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), ulong.Parse(linkedPlayers[player.AuthorizedSteamID.SteamId64]));
+                }
 
                 string IpAddress = player!.IpAddress!.Split(":")[0];
                 LoadPlayerCountry(IpAddress, player.AuthorizedSteamID.SteamId64);
@@ -148,13 +161,12 @@ namespace DiscordUtilities
                 if (Config.EventNotifications.Disconnect.Enabled)
                     _ = PerformDisconnectEvent(player.AuthorizedSteamID!.SteamId64);
 
-                playerData.Remove(player);
-
-                if (linkedPlayers.ContainsKey(player.AuthorizedSteamID!.SteamId64))
+                if (playerData[player].IsLinked)
                 {
                     if (Config.ConnectedPlayers.Enabled)
                     {
-                        var discordId = linkedPlayers[player.AuthorizedSteamID.SteamId64];
+                        var discordId = playerData[player].DiscordID;
+                        playerData.Remove(player);
                         if (!string.IsNullOrEmpty(discordId))
                             _ = RemoveConnectedPlayersRole(ulong.Parse(discordId));
                     }

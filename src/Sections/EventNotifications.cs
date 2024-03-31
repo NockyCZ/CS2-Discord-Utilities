@@ -1,9 +1,12 @@
+using CounterStrikeSharp.API;
+
 namespace DiscordUtilities
 {
     public partial class DiscordUtilities
     {
         public void PerformMapStart()
         {
+            serverData!.MapName = Server.MapName;
             var embedBuiler = GetEmbed(EmbedTypes.MapChanged, new string[1]);
             var content = GetContent(ContentTypes.MapChanged, new string[1]);
 

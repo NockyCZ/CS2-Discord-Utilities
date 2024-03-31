@@ -47,6 +47,7 @@ namespace DiscordUtilities
             public required string DiscordDisplayName { get; set; }
             public required string DiscordPing { get; set; }
             public required string DiscordID { get; set; }
+            public required bool IsLinked { get; set; }
         }
 
         public enum EmbedTypes
@@ -148,7 +149,7 @@ namespace DiscordUtilities
                     break;
 
                 case ContentTypes.LinkSuccess:
-                    content = Config.Link.LinkEmbed.Success.Content.Replace("{STEAM}", linkCodes[data[0]].ToString());
+                    content = Config.Link.LinkEmbed.Success.Content.Replace("{STEAM}", data[0]);
                     break;
 
                 case ContentTypes.LinkFailed:
@@ -241,7 +242,7 @@ namespace DiscordUtilities
 
                         case EmbedTypes.LinkSuccess:
                             replacedValue = (string)value;
-                            replacedValue = replacedValue.Replace("{STEAM}", linkCodes[data[0]].ToString());
+                            replacedValue = replacedValue.Replace("{STEAM}", data[0]);
                             break;
                         case EmbedTypes.LinkFailed:
                             replacedValue = (string)value;
@@ -480,7 +481,8 @@ namespace DiscordUtilities
                 { "{Server.Timeleft}", serverData.Timeleft },
                 { "{Server.OnlinePlayers}", serverData.OnlinePlayers },
                 { "{Server.OnlinePlayersAndBots}", serverData.OnlinePlayersAndBots },
-                { "{Server.OnlineBots}", serverData.OnlineBots }
+                { "{Server.OnlineBots}", serverData.OnlineBots },
+                { "{Server.IP}", Config.ServerIP }
             };
 
             foreach (var item in replacedData)
@@ -552,6 +554,70 @@ namespace DiscordUtilities
                 embedOptions++;
 
             return embedOptions > 0;
+        }
+
+        private static string IsValidFlag(string flagEmoji)
+        {
+            var flagsList = new List<string>
+            {
+                ":flag_ac:", ":flag_ad:", ":flag_ae:", ":flag_af:", ":flag_ag:",
+                ":flag_ai:", ":flag_al:", ":flag_am:", ":flag_ao:", ":flag_aq:",
+                ":flag_ar:", ":flag_as:", ":flag_at:", ":flag_au:", ":flag_aw:",
+                ":flag_ax:", ":flag_az:", ":flag_ba:", ":flag_bb:", ":flag_bd:",
+                ":flag_be:", ":flag_bf:", ":flag_bg:", ":flag_bh:", ":flag_bi:",
+                ":flag_bj:", ":flag_bl:", ":flag_bm:", ":flag_bn:", ":flag_bo:",
+                ":flag_bq:", ":flag_br:", ":flag_bs:", ":flag_bt:", ":flag_bv:",
+                ":flag_bw:", ":flag_by:", ":flag_bz:", ":flag_ca:", ":flag_cc:",
+                ":flag_cd:", ":flag_cf:", ":flag_cg:", ":flag_ch:", ":flag_ci:",
+                ":flag_ck:", ":flag_cl:", ":flag_cm:", ":flag_cn:", ":flag_co:",
+                ":flag_cp:", ":flag_cr:", ":flag_cu:", ":flag_cv:", ":flag_cw:",
+                ":flag_cx:", ":flag_cy:", ":flag_cz:", ":flag_de:", ":flag_dg:",
+                ":flag_dj:", ":flag_dk:", ":flag_dm:", ":flag_do:", ":flag_dz:",
+                ":flag_ea:", ":flag_ec:", ":flag_ee:", ":flag_eg:", ":flag_eh:",
+                ":flag_er:", ":flag_es:", ":flag_et:", ":flag_eu:", ":flag_fi:",
+                ":flag_fj:", ":flag_fk:", ":flag_fm:", ":flag_fo:", ":flag_fr:",
+                ":flag_ga:", ":flag_gb:", ":flag_gd:", ":flag_ge:", ":flag_gf:",
+                ":flag_gg:", ":flag_gh:", ":flag_gi:", ":flag_gl:", ":flag_gm:",
+                ":flag_gn:", ":flag_gp:", ":flag_gq:", ":flag_gr:", ":flag_gs:",
+                ":flag_gt:", ":flag_gu:", ":flag_gw:", ":flag_gy:", ":flag_hk:",
+                ":flag_hm:", ":flag_hn:", ":flag_hr:", ":flag_ht:", ":flag_hu:",
+                ":flag_ic:", ":flag_id:", ":flag_ie:", ":flag_il:", ":flag_im:",
+                ":flag_in:", ":flag_io:", ":flag_iq:", ":flag_ir:", ":flag_is:",
+                ":flag_it:", ":flag_je:", ":flag_jm:", ":flag_jo:", ":flag_jp:",
+                ":flag_ke:", ":flag_kg:", ":flag_kh:", ":flag_ki:", ":flag_km:",
+                ":flag_kn:", ":flag_kp:", ":flag_kr:", ":flag_kw:", ":flag_ky:",
+                ":flag_kz:", ":flag_la:", ":flag_lb:", ":flag_lc:", ":flag_li:",
+                ":flag_lk:", ":flag_lr:", ":flag_ls:", ":flag_lt:", ":flag_lu:",
+                ":flag_lv:", ":flag_ly:", ":flag_ma:", ":flag_mc:", ":flag_md:",
+                ":flag_me:", ":flag_mf:", ":flag_mg:", ":flag_mh:", ":flag_mk:",
+                ":flag_ml:", ":flag_mm:", ":flag_mn:", ":flag_mo:", ":flag_mp:",
+                ":flag_mq:", ":flag_mr:", ":flag_ms:", ":flag_mt:", ":flag_mu:",
+                ":flag_mv:", ":flag_mw:", ":flag_mx:", ":flag_my:", ":flag_mz:",
+                ":flag_na:", ":flag_nc:", ":flag_ne:", ":flag_nf:", ":flag_ng:",
+                ":flag_ni:", ":flag_nl:", ":flag_no:", ":flag_np:", ":flag_nr:",
+                ":flag_nu:", ":flag_nz:", ":flag_om:", ":flag_pa:", ":flag_pe:",
+                ":flag_pf:", ":flag_pg:", ":flag_ph:", ":flag_pk:", ":flag_pl:",
+                ":flag_pm:", ":flag_pn:", ":flag_pr:", ":flag_ps:", ":flag_pt:",
+                ":flag_pw:", ":flag_py:", ":flag_qa:", ":flag_re:", ":flag_ro:",
+                ":flag_rs:", ":flag_ru:", ":flag_rw:", ":flag_sa:", ":flag_sb:",
+                ":flag_sc:", ":flag_sd:", ":flag_se:", ":flag_sg:", ":flag_sh:",
+                ":flag_si:", ":flag_sj:", ":flag_sk:", ":flag_sl:", ":flag_sm:",
+                ":flag_sn:", ":flag_so:", ":flag_sr:", ":flag_ss:", ":flag_st:",
+                ":flag_sv:", ":flag_sx:", ":flag_sy:", ":flag_sz:", ":flag_ta:",
+                ":flag_tc:", ":flag_td:", ":flag_tf:", ":flag_tg:", ":flag_th:",
+                ":flag_tj:", ":flag_tk:", ":flag_tl:", ":flag_tm:", ":flag_tn:",
+                ":flag_to:", ":flag_tr:", ":flag_tt:", ":flag_tv:", ":flag_tw:",
+                ":flag_tz:", ":flag_ua:", ":flag_ug:", ":flag_um:", ":flag_us:",
+                ":flag_uy:", ":flag_uz:", ":flag_va:", ":flag_vc:", ":flag_ve:",
+                ":flag_vg:", ":flag_vi:", ":flag_vn:", ":flag_vu:", ":flag_wf:",
+                ":flag_ws:", ":flag_xk:", ":flag_ye:", ":flag_yt:", ":flag_za:",
+                ":flag_zm:", ":flag_zw:"
+            };
+
+            if (flagsList.Contains(flagEmoji))
+                return flagEmoji;
+
+            return ":flag_white:";
         }
         private static string RemoveEmoji(string text)
         {
