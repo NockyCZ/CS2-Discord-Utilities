@@ -104,11 +104,9 @@ namespace DiscordUtilities
                 SendConsoleMessage($"[Discord Utilities] Invalid Channel ID '{Config.ServerStatus.ChannelID}' in the Server Status Section!", ConsoleColor.Red);
                 return;
             }
-
             string[] data = new string[1];
             var embed = GetEmbed(EmbedTypes.ServerStatus, data);
             var content = GetContent(ContentTypes.ServerStatus, data);
-
             var sentMessage = await channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: addComponents ? components.Build() : null);
             UpdateDiscordChannelID(sentMessage.Id.ToString());
         }

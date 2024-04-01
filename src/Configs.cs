@@ -124,6 +124,7 @@ public class ReplyReportEmbed
 public class Link
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Response Server")] public bool ResponseServer { get; set; } = true;
     [JsonPropertyName("Code Length")] public int CodeLength { get; set; } = 7;
     [JsonPropertyName("Ingame Link Commands")] public string IngameLinkCommands { get; set; } = "link,discord";
     [JsonPropertyName("Ingame Unlink Commands")] public string IngameUnlinkCommands { get; set; } = "unlink,logout";

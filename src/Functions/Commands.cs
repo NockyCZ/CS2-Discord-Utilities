@@ -229,7 +229,6 @@ namespace DiscordUtilities
                 SendConsoleMessage("[Discord Utilities] You do not have Server Status enabled! The minimum value of Update Time must be more than 30.", ConsoleColor.DarkYellow);
                 return;
             }
-
             var componentsBuilder = new ComponentBuilder();
             bool addComponents = false;
             if (Config.ServerStatus.ServerStatusEmbed.JoinButton.Enabled || Config.ServerStatus.ServerStatusEmbed.ServerStatusDropdown.Enabled)

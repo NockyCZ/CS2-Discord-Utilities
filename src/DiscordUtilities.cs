@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "1.0.8";
+        public override string ModuleVersion => "1.0.9";
         private DiscordSocketClient? BotClient;
         private CommandService? BotCommands;
         private IServiceProvider? BotServices;
@@ -52,7 +52,7 @@ namespace DiscordUtilities
             _ = LoadDiscordBOT();
             if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
                 _ = CreateDatabaseConnection();
-                
+
             RegisterListener<Listeners.OnMapStart>(mapName =>
             {
                 playerData.Clear();
@@ -70,18 +70,17 @@ namespace DiscordUtilities
 
                 if (IsBotConnected)
                 {
+                    serverData!.MapName = Server.MapName;
+
                     if (Config.ConnectedPlayers.Enabled)
                         _ = ClearConnectedPlayersRole();
-
                     if (Config.EventNotifications.MapChanged.Enabled)
                         PerformMapStart();
-
                     AddTimer(5.0f, () =>
                     {
                         UpdateServerData();
 
                     }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
-
                     if (Config.BotStatus.UpdateTimer > 29)
                     {
                         AddTimer(Config.BotStatus.UpdateTimer, () =>
@@ -372,6 +371,9 @@ namespace DiscordUtilities
         }
         private async Task DiscordLink_CMD(SocketSlashCommand command)
         {
+            if (!Config.Link.ResponseServer)
+                return;
+
             if (Config.Debug)
                 SendConsoleMessage($"[Discord Utilities] DEBUG: Slash command '{command.CommandName}' has been successfully logged", ConsoleColor.Cyan);
 

@@ -128,19 +128,22 @@ namespace DiscordUtilities
                 };
                 playerData.Add(player, newPlayer);
 
-                var linkedPlayers = new Dictionary<ulong, string>();
-                var task =Task.Run(async () =>
+                if (IsDbConnected && Config.Link.Enabled)
                 {
-                    linkedPlayers = await GetLinkedPlayers();
-                });
-                task.Wait();
-                
-                if (IsDbConnected && Config.Link.Enabled && linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
-                {
-                    if (playerData.ContainsKey(player))
-                        playerData[player].IsLinked = true;
+                    var linkedPlayers = new Dictionary<ulong, string>();
+                    var task = Task.Run(async () =>
+                    {
+                        linkedPlayers = await GetLinkedPlayers();
+                    });
+                    task.Wait();
 
-                    _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), ulong.Parse(linkedPlayers[player.AuthorizedSteamID.SteamId64]));
+                    if (linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
+                    {
+                        if (playerData.ContainsKey(player))
+                            playerData[player].IsLinked = true;
+
+                        _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), ulong.Parse(linkedPlayers[player.AuthorizedSteamID.SteamId64]));
+                    }
                 }
 
                 string IpAddress = player!.IpAddress!.Split(":")[0];
