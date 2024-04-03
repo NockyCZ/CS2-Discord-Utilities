@@ -8,6 +8,7 @@
   "Chat.ReportCancelled": "Seu report foi cancelado com sucesso.",
   "Chat.ReportShortReason": "Caractéres insuficientes para envio de report.",
   "Chat.ReportNoTargetsFound": "Nenhum player encontrado! Só você está no server!",
+  "Chat.ReportCooldown": "Você pode usar o report uma vez a cada {green}{0} segundos{default}!",
   "Chat.SelfReport": "Você não pode se reportar!",
   "Chat.InserYourReason": "Digite no chat o motivo do report! Para cancelar, digite {green}!cancel",
   "Chat.InvalidReportUsage": "Uso invalido de report! {green}/report <player> <razão>",
