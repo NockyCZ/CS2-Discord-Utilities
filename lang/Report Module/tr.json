@@ -12,6 +12,11 @@
     "Chat.SelfReport": "Kendinizi rapor edemezsiniz!",
     "Chat.InserYourReason": "Nedeninizi sohbete girin! İptal etmek için, {green}!cancel yazın",
     "Chat.InvalidReportUsage": "Geçersiz rapor kullanımı! {green}/report <oyuncu> <neden>",
+    "Chat.LinkAccount": "{blue}===============\n{default}• Discord sunucumuzu ziyaret edin: {green}https://discord.gg/INVITE\n{default}• Bağlantı kodu: {darkred}{0}\n {blue}===============",
+    "Chat.AccountUnliked": "Hesabınızın bağlantısı kesildi!",
+    "Chat.NotLinked": "Hesabınız discord hesabı ile bağlı değil!",
+    "Chat.AlreadyLinked": "Steam Hesabınız zaten bağlı!",
+    "Chat.AccountLinked": "Steam Hesabınız Discord Hesabı ile bağlandı {green}{0}",
     "Chat.TargetNotFound": "{green}{0}{default} adında bir oyuncu bulunamadı!",
     "Chat.TargetNotConnected": "Oyuncu {green}{0}{default} artık bağlı değil!",
     "Chat.MultipleTargetFound": "Adı {green}{0}{default} olan birden fazla oyuncu bulundu!"
