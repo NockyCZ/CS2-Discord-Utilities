@@ -1,0 +1,8 @@
+{
+  "Chat.Prefix": "{darkred}[Discord]{default}",
+  "Chat.LinkAccount": "{blue}===============\n{default}• Discord sunucumuzu ziyaret edin: {green}https://discord.gg/INVITE\n{default}• Bağlantı kodu: {darkred}{0}\n {blue}===============",
+  "Chat.AccountUnliked": "Hesabınız başarıyla bağlantısı kesildi!",
+  "Chat.NotLinked": "Hesabınız discord hesabı ile bağlantılı değil!",
+  "Chat.AlreadyLinked": "Steam Hesabınız zaten bağlantılı!",
+  "Chat.AccountLinked": "Steam Hesabınız Discord Hesabı ile bağlandı {green}{0}"
+}
