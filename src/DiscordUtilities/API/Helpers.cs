@@ -1,10 +1,6 @@
 using System.Dynamic;
-using Discord;
-using Discord.Net;
-using Discord.WebSocket;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Builders;
-using DiscordUtilitiesAPI.Helpers;
 using static DiscordUtilitiesAPI.Builders.Components;
 
 namespace DiscordUtilities;

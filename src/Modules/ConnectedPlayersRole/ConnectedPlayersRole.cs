@@ -29,7 +29,7 @@ namespace ConnectedPlayersRole
         {
             RegisterListener<Listeners.OnMapStart>(mapName =>
             {
-                if (DiscordUtilities != null && DiscordUtilities.IsBotLoaded())
+                if (DiscordUtilities != null && DiscordUtilities.IsBotLoaded() && !string.IsNullOrEmpty(Config.RoleID))
                     DiscordUtilities.RemoveAllUsersFromRole(Config.RoleID);
             });
         }

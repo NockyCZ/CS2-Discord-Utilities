@@ -133,7 +133,7 @@ namespace Report
                 },
             };
 
-            var config = new ReportEmbed();
+            var config = Config.ReportEmbed;
             var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
             var content = DiscordUtilities!.ReplaceVariables(Config.ReportEmbed.Content, replaceVariablesBuilder);
 
@@ -232,7 +232,7 @@ namespace Report
 
                         DiscordUtilities!.UpdateMessage(ulong.Parse(CustomId), interaction.ChannelID, content, embedsBuilder, null);
 
-                        var config = new ReportSucces();
+                        var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces;
                         embedsBuilder = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
                         content = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces.Content;
                         DiscordUtilities.SendRespondMessageToInteraction(interaction.InteractionId, content, embedsBuilder, null);
@@ -240,7 +240,7 @@ namespace Report
                 }
                 else
                 {
-                    var config = new ReportFailed();
+                    var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed;
                     var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
                     string content = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed.Content;
                     DiscordUtilities.SendRespondMessageToInteraction(interaction.InteractionId, content, embedBuider, null);
@@ -290,7 +290,7 @@ namespace Report
                 reportsList.Remove(reportId);
                 reportsList.Add(message.MessageID.ToString(), newReportData);
 
-                var config = new ReportEmbed();
+                var config = Config.ReportEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities!.ReplaceVariables(Config.ReportEmbed.Content, replaceVariablesBuilder);
 

@@ -1,6 +1,8 @@
 using DiscordUtilitiesAPI;
 using CounterStrikeSharp.API.Core;
 using DiscordUtilitiesAPI.Helpers;
+using Discord.WebSocket;
+using System.Text;
 
 namespace DiscordUtilities;
 public partial class DiscordUtilities : IDiscordUtilitiesAPI
@@ -62,10 +64,34 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             return;
         }
 
-        var socketRoles = rolesIds.Select(id => socketUser.Guild.GetRole(ulong.Parse(id)));
-        if (!socketUser.Roles.Any(userRole => socketRoles.Any(role => role.Id == userRole.Id)))
+        _ = AddRolesToUserAsync(socketUser, rolesIds);
+    }
+    public async Task AddRolesToUserAsync(SocketGuildUser user, List<string> rolesIds)
+    {
+        try
         {
-            _ = socketUser.AddRolesAsync(socketRoles);
+            var socketRoles = rolesIds.Select(id => user.Guild.GetRole(ulong.Parse(id)));
+            if (!user.Roles.Any(userRole => socketRoles.Any(role => role.Id == userRole.Id)))
+            {
+                await user.AddRolesAsync(socketRoles);
+                if (IsDebug)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var roleId in rolesIds)
+                    {
+                        var role = user.Guild.GetRole(ulong.Parse(roleId));
+                        sb.Append(role.Name);
+                        sb.Append(", ");
+                    }
+                    sb.Length -= 2;
+                    Perform_SendConsoleMessage($"[Discord Utilities] Roles have been added to user '{user.DisplayName}': {sb.ToString()}", ConsoleColor.Cyan);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred when adding roles: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred when adding roles: {ex.Message}");
         }
     }
 
@@ -81,14 +107,39 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         if (socketUser == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: GetUserData - User with ID '{user!.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: RemoveRolesFromUser - User with ID '{user.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
             return;
         }
 
-        var socketRoles = rolesIds.Select(id => socketUser.Guild.GetRole(ulong.Parse(id)));
-        if (socketUser.Roles.Any(userRole => socketRoles.Any(role => role.Id == userRole.Id)))
+        _ = RemoveRolesFromUserAsync(socketUser, rolesIds);
+    }
+
+    public async Task RemoveRolesFromUserAsync(SocketGuildUser user, List<string> rolesIds)
+    {
+        try
         {
-            _ = socketUser.RemoveRolesAsync(socketRoles);
+            var socketRoles = rolesIds.Select(id => user.Guild.GetRole(ulong.Parse(id)));
+            if (user.Roles.Any(userRole => socketRoles.Any(role => role.Id == userRole.Id)))
+            {
+                await user.RemoveRolesAsync(socketRoles);
+                if (IsDebug)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var roleId in rolesIds)
+                    {
+                        var role = user.Guild.GetRole(ulong.Parse(roleId));
+                        sb.Append(role.Name);
+                        sb.Append(", ");
+                    }
+                    sb.Length -= 2;
+                    Perform_SendConsoleMessage($"[Discord Utilities] Roles have been removed from user '{user.DisplayName}': {sb.ToString()}", ConsoleColor.Cyan);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred when removing roles: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred when removing roles: {ex.Message}");
         }
     }
 

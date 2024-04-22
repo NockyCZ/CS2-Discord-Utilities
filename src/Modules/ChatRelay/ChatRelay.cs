@@ -140,14 +140,14 @@ namespace ChatRelay
             };
             if (isTeamMessage)
             {
-                TeamChatEmbed config = new TeamChatEmbed();
+                var config = Config.Chatlog.TeamChatEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities!.ReplaceVariables(Config.Chatlog.TeamChatEmbed.Content, replaceVariablesBuilder);
                 DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.Chatlog.ChannelID), content, embedBuider, null);
             }
             else
             {
-                AllChatEmbed config = new AllChatEmbed();
+                var config = Config.Chatlog.AllChatEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities!.ReplaceVariables(Config.Chatlog.AllChatEmbed.Content, replaceVariablesBuilder);
                 DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.Chatlog.ChannelID), content, embedBuider, null);
@@ -171,7 +171,7 @@ namespace ChatRelay
                 },
             };
 
-            AdminChatEmbed config = new AdminChatEmbed();
+            var config = Config.AdminChat.AdminChatEmbed;
             var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
             var content = DiscordUtilities!.ReplaceVariables(Config.AdminChat.AdminChatEmbed.Content, replaceVariablesBuilder);
             DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.AdminChat.ChannelID), content, embedBuider, null);

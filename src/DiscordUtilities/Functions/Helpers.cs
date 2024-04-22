@@ -338,8 +338,11 @@ namespace DiscordUtilities
             }
             return replacedString;
         }
-        private bool IsEmbedValid(EmbedBuilder Embed)
+        private bool IsEmbedValid(EmbedBuilder? Embed)
         {
+            if (Embed == null)
+                return false;
+
             int embedOptions = 0;
             if (!string.IsNullOrEmpty(Embed.Title))
                 embedOptions++;

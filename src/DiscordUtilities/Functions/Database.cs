@@ -140,7 +140,8 @@ namespace DiscordUtilities
                             {
                                 string steamid = reader.GetString("steamid");
                                 string discordid = reader.GetString("discordid");
-                                linkedPlayers.Add(ulong.Parse(steamid), ulong.Parse(discordid));
+                                if (!linkedPlayers.ContainsKey(ulong.Parse(steamid)))
+                                    linkedPlayers.Add(ulong.Parse(steamid), ulong.Parse(discordid));
                             }
                         }
                     }
@@ -169,7 +170,8 @@ namespace DiscordUtilities
                             {
                                 string steamid = reader.GetString("steamid");
                                 string code = reader.GetString("code");
-                                linkCodes.Add(code, steamid);
+                                if (!linkCodes.ContainsKey(code))
+                                    linkCodes.Add(code, steamid);
                             }
                         }
                     }

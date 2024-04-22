@@ -43,6 +43,9 @@ namespace RCON
         {
             if (command.CommandName == Config.CommandName)
             {
+                if (DiscordUtilities!.Debug())
+                    DiscordUtilities.SendConsoleMessage($"[Discord Utilities] DEBUG: Slash command '{command.CommandName}' has been successfully logged", MessageType.Debug);
+
                 var options = command.OptionsData;
                 string[] data = new string[2];
                 foreach (var option in options)
@@ -75,7 +78,7 @@ namespace RCON
                             { "{SERVER}", data[1] },
                         },
                     };
-                    RconReplyEmbed config = new RconReplyEmbed();
+                    var config = Config.RconReplyEmbed;
                     var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                     var content = DiscordUtilities.ReplaceVariables(Config.RconReplyEmbed.Content, replaceVariablesBuilder);
                     content = DiscordUtilities.ReplaceVariables(content, replaceVariablesBuilder);
@@ -85,7 +88,7 @@ namespace RCON
                 }
                 else
                 {
-                    RconFailedEmbed config = new RconFailedEmbed();
+                    var config = Config.RconFailedEmbed;
                     var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
                     var content = Config.RconReplyEmbed.Content;
                     DiscordUtilities!.SendRespondMessageToSlashCommand(command.InteractionId, content, embedBuider, null);

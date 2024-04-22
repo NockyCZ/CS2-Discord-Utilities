@@ -7,9 +7,7 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
-using Discord.Net;
 using CounterStrikeSharp.API.Core.Capabilities;
-using DiscordUtilitiesAPI;
 
 namespace DiscordUtilities
 {
@@ -18,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.0";
+        public override string ModuleVersion => "2.0.1";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
@@ -76,11 +74,24 @@ namespace DiscordUtilities
                 IP = Config.ServerIP
             };
 
+            int debugCounter = 0;
             AddTimer(10.0f, () =>
             {
+                debugCounter++;
                 UpdateServerData();
+                if (IsDebug && debugCounter < 11)
+                    Perform_SendConsoleMessage($"[Discord Utilities] Server Data has been successfully updated (Check: {debugCounter}/10)", ConsoleColor.Cyan);
                 if (Config.BotStatus.UpdateStatus)
+                {
                     _ = UpdateBotStatus();
+                    if (IsDebug && debugCounter < 11)
+                        Perform_SendConsoleMessage($"[Discord Utilities] Bot Status has been successfully updated (Check: {debugCounter}/10)", ConsoleColor.Cyan);
+                }
+                else
+                {
+                    if (IsDebug && debugCounter < 11)
+                        Perform_SendConsoleMessage($"[Discord Utilities] Bot status has not been updated because update is not enabled (Check: {debugCounter}/10)", ConsoleColor.Cyan);
+                }
             }, TimerFlags.REPEAT);
 
             RegisterListener<Listeners.OnMapStart>(mapName =>
@@ -98,7 +109,6 @@ namespace DiscordUtilities
                     Timeleft = 60.ToString(),
                     IP = Config.ServerIP
                 };
-
                 Server.ExecuteCommand("sv_hibernate_when_empty false");
             });
         }
@@ -151,6 +161,8 @@ namespace DiscordUtilities
                 {
                     if (IsDbConnected)
                     {
+                        if (IsDebug)
+                            Perform_SendConsoleMessage($"[Discord Utilities] Link Slash Command has been successfully updated/created", ConsoleColor.Cyan);
                         await BotClient.CreateGlobalApplicationCommandAsync(linkCommand.Build());
                     }
                     else
@@ -160,7 +172,7 @@ namespace DiscordUtilities
                     }
                 }
             }
-            catch (HttpException ex)
+            catch (Exception ex)
             {
                 Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while updating Link Slash Commands: {ex.Message}", ConsoleColor.Red);
                 throw new Exception($"An error occurred while updating Link Slash Commands: {ex.Message}");
@@ -172,7 +184,7 @@ namespace DiscordUtilities
                 BotClient.MessageReceived += MessageReceivedHandler;
                 BotClient.InteractionCreated += InteractionCreatedHandler;
             }
-            catch (HttpException ex)
+            catch (Exception ex)
             {
                 Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while creating handlers: {ex.Message}", ConsoleColor.Red);
                 throw new Exception($"An error occurred while creating handlers: {ex.Message}");

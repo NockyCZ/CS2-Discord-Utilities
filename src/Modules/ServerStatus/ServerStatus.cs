@@ -1,11 +1,7 @@
 ﻿
-using System.Drawing;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
-using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Builders;
@@ -35,7 +31,13 @@ namespace ServerStatus
 
         private void OnBotLoaded()
         {
-            if (Config.UpdateTimer > 29 && !string.IsNullOrEmpty(Config.ChannelID) && !string.IsNullOrEmpty(Config.MessageID))
+            if (string.IsNullOrEmpty(Config.MessageID))
+            {
+                SetupServerStatus();
+                return;
+            }
+
+            if (Config.UpdateTimer > 29 && !string.IsNullOrEmpty(Config.ChannelID))
             {
                 if (DiscordUtilities!.Debug())
                     DiscordUtilities.SendConsoleMessage($"[Discord Utilities] Starting Repeateable Timer ({Config.UpdateTimer} secs) for the Server Status update.", MessageType.Debug);
@@ -47,7 +49,7 @@ namespace ServerStatus
                         ServerData = true
                     };
 
-                    var config = new ServerStatusEmbed();
+                    var config = Config.ServerStatusEmbed;
                     var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                     var content = DiscordUtilities!.ReplaceVariables(Config.ServerStatusEmbed.Content, replaceVariablesBuilder);
 
@@ -98,7 +100,8 @@ namespace ServerStatus
                     File.WriteAllText(filePath, jsonObject.ToString(Formatting.Indented));
 
                     DiscordUtilities!.SendConsoleMessage($"[Discord Utilities] Server Status successfully configured. Message ID has been automatically added ({message.ChannelID})", MessageType.Success);
-                    DiscordUtilities.SendConsoleMessage($"[Discord Utilities] Restart the server to load the Server Status correctly!", MessageType.Other);
+                    Config.MessageID = message.MessageID.ToString();
+                    OnBotLoaded();
                 }
                 catch (Exception ex)
                 {
@@ -107,6 +110,44 @@ namespace ServerStatus
             }
         }
 
+        private void SetupServerStatus()
+        {
+            if (string.IsNullOrEmpty(Config.ChannelID))
+            {
+                DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Server Status cannot be sent because you have not set the Channel ID", MessageType.Error);
+                return;
+            }
+            if (Config.UpdateTimer < 30)
+            {
+                DiscordUtilities!.SendConsoleMessage("[Discord Utilities] You do not have Server Status enabled! The minimum value of Update Time must be more than 30.", MessageType.Failed);
+                return;
+            }
+
+            var replaceVariablesBuilder = new ReplaceVariables.Builder
+            {
+                ServerData = true
+            };
+
+            var config = Config.ServerStatusEmbed;
+            var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
+            var content = DiscordUtilities!.ReplaceVariables(Config.ServerStatusEmbed.Content, replaceVariablesBuilder);
+
+            var componentsBuilder = new Components.Builder();
+            if (Config.ServerStatusEmbed.JoinButton.Enabled)
+            {
+                var linkButton = new List<Components.LinkButtonsBuilder>
+                {
+                    new Components.LinkButtonsBuilder
+                    {
+                        Label = Config.ServerStatusEmbed.JoinButton.Text,
+                        URL = Config.ServerStatusEmbed.JoinButton.URL,
+                        Emoji = DiscordUtilities!.IsValidEmoji(Config.ServerStatusEmbed.JoinButton.Emoji) ? Config.ServerStatusEmbed.JoinButton.Emoji : "",
+                    }
+                };
+                componentsBuilder.LinkButtons = linkButton;
+            }
+            DiscordUtilities!.SendCustomMessageToChannel("serverstatus", ulong.Parse(Config.ChannelID), content, embedBuider, componentsBuilder);
+        }
         private IDiscordUtilitiesAPI GetDiscordUtilitiesEventSender()
         {
             if (DiscordUtilities is not null)

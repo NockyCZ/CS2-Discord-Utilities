@@ -1,15 +1,12 @@
 ﻿
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Modules.Commands;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Events;
 using DiscordUtilitiesAPI.Helpers;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace ManageRolesAndPermissions
 {
@@ -31,7 +28,7 @@ namespace ManageRolesAndPermissions
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers -= DiscordUtilitiesEventHandler;
         }
-        public override void Load(bool hotReload)
+        private void OnBotLoaded()
         {
             LoadManageRolesAndFlags();
         }
@@ -43,16 +40,30 @@ namespace ManageRolesAndPermissions
             string filePath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/DU_ManageRolesAndPermissions/DU_ManageRolesAndPermissions.json";
             if (File.Exists(filePath))
             {
-                var jsonData = File.ReadAllText(filePath);
-                dynamic deserializedJson = JsonConvert.DeserializeObject(jsonData)!;
+                try
+                {
+                    var jsonData = File.ReadAllText(filePath);
+                    dynamic deserializedJson = JsonConvert.DeserializeObject(jsonData)!;
 
-                var roleToPermission = deserializedJson["Role To Permission"].ToObject<Dictionary<string, string>>();
-                if (roleToPermission != null)
-                    RolesToPermissions = roleToPermission;
+                    var roleToPermission = deserializedJson["Role To Permission"].ToObject<Dictionary<string, string>>();
+                    if (roleToPermission != null)
+                        RolesToPermissions = roleToPermission;
 
-                var permissionToRole = deserializedJson["Permission To Role"].ToObject<Dictionary<string, string>>();
-                if (permissionToRole != null)
-                    PermissionsToRoles = permissionToRole;
+                    var permissionToRole = deserializedJson["Permission To Role"].ToObject<Dictionary<string, string>>();
+                    if (permissionToRole != null)
+                        PermissionsToRoles = permissionToRole;
+
+                    if (DiscordUtilities != null && DiscordUtilities.Debug())
+                    {
+                        DiscordUtilities.SendConsoleMessage($"[Discord Utilities] A total of {PermissionsToRoles.Count()} Permissions To Roles have been loaded", MessageType.Debug);
+                        DiscordUtilities.SendConsoleMessage($"[Discord Utilities] A total of {RolesToPermissions.Count()} Roles To Permissions Roles have been loaded", MessageType.Debug);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    DiscordUtilities!.SendConsoleMessage($"[Discord Utilities] An error occurred while loading the Manage Roles and Permissions configuration: {ex.Message}", MessageType.Error);
+                    throw new Exception($"An error occurred while loading the Manage Roles and Permissions configuration: {ex.Message}");
+                }
             }
         }
 
@@ -62,6 +73,9 @@ namespace ManageRolesAndPermissions
             {
                 case LinkedUserDataLoaded linkedUser:
                     OnLinkedUserDataLoaded(linkedUser.User, linkedUser.player);
+                    break;
+                case BotLoaded:
+                    OnBotLoaded();
                     break;
                 default:
                     break;
@@ -153,13 +167,13 @@ namespace ManageRolesAndPermissions
                 if (perm.StartsWith('@'))
                 {
                     if (DiscordUtilities!.Debug())
-                        DiscordUtilities.SendConsoleMessage($"[Discord Utilities] DEBUG: Flag '{perm}' has been added to player '{player.PlayerName}'", MessageType.Debug);
+                        DiscordUtilities.SendConsoleMessage($"[Discord Utilities] Flag '{perm}' has been added to player '{player.PlayerName}'", MessageType.Debug);
                     AdminManager.AddPlayerPermissions(player, perm);
                 }
                 else
                 {
                     if (DiscordUtilities!.Debug())
-                        DiscordUtilities.SendConsoleMessage($"[Discord Utilities] DEBUG: Group '{perm}' has been added to player '{player.PlayerName}'", MessageType.Debug);
+                        DiscordUtilities.SendConsoleMessage($"[Discord Utilities] Group '{perm}' has been added to player '{player.PlayerName}'", MessageType.Debug);
                     AdminManager.AddPlayerToGroup(player, perm);
                 }
             }

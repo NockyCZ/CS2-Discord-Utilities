@@ -1,11 +1,7 @@
-using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
 using Discord;
 using Discord.Net;
-using Discord.WebSocket;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Builders;
-using DiscordUtilitiesAPI.Helpers;
 
 namespace DiscordUtilities;
 public partial class DiscordUtilities : IDiscordUtilitiesAPI
@@ -78,21 +74,23 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             }
             customCommand.AddOption(customCommandOptions);
         }
-        _ = Perform_RegisterNewSlashCommand(customCommand);
+        _ = RegisterNewSlashCommandAsync(customCommand);
     }
 
-    public async Task Perform_RegisterNewSlashCommand(SlashCommandBuilder command)
+    public async Task RegisterNewSlashCommandAsync(SlashCommandBuilder command)
     {
         try
         {
             if (BotClient != null)
             {
                 await BotClient.CreateGlobalApplicationCommandAsync(command.Build());
+                if (IsDebug)
+                    Perform_SendConsoleMessage($"[Discord Utilities] '{command.Name}' Slash Command has been successfully updated/created", ConsoleColor.Cyan);
             }
             else
                 throw new Exception("Failed to create Slash Command because BOT is not connected!");
         }
-        catch (HttpException ex)
+        catch (Exception ex)
         {
             Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while updating API Slash Commands: {ex.Message}", ConsoleColor.Red);
             throw new Exception($"An error occurred while updating API Slash Commands: {ex.Message}");
@@ -102,7 +100,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     public void SendMessageToChannel(ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components)
     {
         EmbedBuilder? embedToBuild = new();
-        ComponentBuilder componentsToBuild = new();
+        ComponentBuilder? componentsToBuild = new();
 
         if (embed != null)
         {
@@ -112,15 +110,51 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             componentsToBuild = GetComponentsBuilder(components);
         }
-        if (BotClient?.GetChannel(channelId) is not IMessageChannel channel)
-        {
-            Perform_SendConsoleMessage($"[Discord Utilities] Invalid Channel ID '{channelId}'.", ConsoleColor.Red);
-            throw new Exception($"Invalid Channel ID '{channelId}'");
-        }
-        _ = channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embedToBuild) ? embedToBuild.Build() : null, components: componentsToBuild != null ? componentsToBuild.Build() : null);
+        _ = SendMessageToChannelAsync(channelId, content, embedToBuild, componentsToBuild);
     }
 
-    public async Task SendCustomMessageToChannelAsync(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components)
+    public async Task SendMessageToChannelAsync(ulong channelId, string? content, EmbedBuilder embed, ComponentBuilder? components)
+    {
+        try
+        {
+            if (BotClient != null)
+            {
+                if (BotClient.GetChannel(channelId) is not IMessageChannel channel)
+                {
+                    Perform_SendConsoleMessage($"[Discord Utilities] Invalid Channel ID '{channelId}'.", ConsoleColor.Red);
+                    throw new Exception($"Invalid Channel ID '{channelId}'");
+                }
+                await channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null);
+                if (IsDebug)
+                    Perform_SendConsoleMessage($"[Discord Utilities] The message was successfully sent to the channel with ID '{channelId}'", ConsoleColor.Cyan);
+            }
+            else
+                throw new Exception("Failed to send a message to channel because BOT is not connected!");
+        }
+        catch (Exception ex)
+        {
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while sending a message: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred while sending a message: {ex.Message}");
+        }
+    }
+
+    public void SendCustomMessageToChannel(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components)
+    {
+        EmbedBuilder? embedToBuild = new();
+        ComponentBuilder? componentsToBuild = new();
+
+        if (embed != null)
+        {
+            embedToBuild = GetEmbedBuilder(embed);
+        }
+        if (components != null)
+        {
+            componentsToBuild = GetComponentsBuilder(components);
+        }
+        _ = SendCustomMessageToChannelAsync(customId, channelId, content, embedToBuild, componentsToBuild);
+
+    }
+    public async Task SendCustomMessageToChannelAsync(string customId, ulong channelId, string? content, EmbedBuilder embed, ComponentBuilder? components)
     {
         try
         {
@@ -132,35 +166,18 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                     throw new Exception($"Invalid Channel ID '{channelId}'");
                 }
 
-                EmbedBuilder? embedToBuild = new();
-                ComponentBuilder componentsToBuild = new();
-
-                if (embed != null)
-                {
-                    embedToBuild = GetEmbedBuilder(embed);
-                }
-                if (components != null)
-                {
-                    componentsToBuild = GetComponentsBuilder(components);
-                }
-                var message = await channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embedToBuild) ? embedToBuild.Build() : null, components: componentsToBuild != null ? componentsToBuild.Build() : null);
+                var message = await channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null);
                 if (message != null)
                     Event_CustomMessageReceived(customId, message);
             }
             else
-                throw new Exception("Failed to get message builders because BOT is not connected!");
+                throw new Exception("Failed to send a custom message to channel because BOT is not connected!");
         }
-        catch (HttpException ex)
+        catch (Exception ex)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while retrieving the builders: {ex.Message}", ConsoleColor.Red);
-            throw new Exception($"An error occurred while retrieving the builders: {ex.Message}");
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while sending a custom message: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred while sending a custom message: {ex.Message}");
         }
-    }
-
-    public void SendCustomMessageToChannel(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components)
-    {
-        _ = SendCustomMessageToChannelAsync(customId, channelId, content, embed, components);
-
     }
 
     public void SendRespondToMessage(ulong messageId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components)
@@ -177,10 +194,10 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             componentsToBuild = GetComponentsBuilder(components);
         }
 
-        _ = Perform_SendRespondToMessage(messageId, channelId, content != null ? content : "", embedToBuild, componentsToBuild);
+        _ = SendRespondToMessageAsync(messageId, channelId, content, embedToBuild, componentsToBuild);
     }
 
-    public async Task Perform_SendRespondToMessage(ulong messageId, ulong channelId, string content, EmbedBuilder embed, ComponentBuilder components)
+    public async Task SendRespondToMessageAsync(ulong messageId, ulong channelId, string? content, EmbedBuilder embed, ComponentBuilder? components)
     {
         try
         {
@@ -194,20 +211,22 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                 var message = await channel.GetMessageAsync(messageId) as IUserMessage;
                 if (message != null)
                 {
-                    await message.ReplyAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components.Build().Components.Count() > 0 ? components.Build() : null);
+                    await message.ReplyAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null);
+                    if (IsDebug)
+                        Perform_SendConsoleMessage($"[Discord Utilities] Respond message was sent to channel ID '{channelId}' and responded to message ID '{messageId}'", ConsoleColor.Cyan);
                 }
                 else
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] Message with ID '{messageId}' was not found!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"[Discord Utilities] Message with ID '{messageId}' was not found! (SendRespondToMessage)", ConsoleColor.Red);
                 }
             }
             else
                 throw new Exception("Failed to send respond to message because BOT is not connected!");
         }
-        catch (HttpException ex)
+        catch (Exception ex)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] SendRespondToMessage ERROR: {ex.Message}", ConsoleColor.Red);
-            throw new Exception($"SendRespondToMessage ERROR: {ex.Message}");
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while sending a response message: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred while sending a response message: {ex.Message}");
         }
     }
 
@@ -224,10 +243,10 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             componentsToBuild = GetComponentsBuilder(components);
         }
-        _ = Perform_UpdateMessage(messageId, channelId, content != null ? content : "", embedToBuild, componentsToBuild);
+        _ = UpdateMessageAsync(messageId, channelId, content, embedToBuild, componentsToBuild);
     }
 
-    public async Task Perform_UpdateMessage(ulong messageId, ulong channelId, string content, EmbedBuilder embed, ComponentBuilder components)
+    public async Task UpdateMessageAsync(ulong messageId, ulong channelId, string? content, EmbedBuilder embed, ComponentBuilder? components)
     {
         try
         {
@@ -246,21 +265,23 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                     {
                         msg.Content = string.IsNullOrEmpty(content) ? "" : content;
                         msg.Embed = IsEmbedValid(embed) ? embed.Build() : null;
-                        msg.Components = components.Build().Components.Count() > 0 ? components.Build() : null;
+                        msg.Components = components != null ? components.Build() : null;
                     });
+                    if (IsDebug)
+                        Perform_SendConsoleMessage($"[Discord Utilities] Message with ID '{messageId}' has been successfully updated", ConsoleColor.Cyan);
                 }
                 else
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] Message with ID '{messageId}' was not found!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"[Discord Utilities] Message with ID '{messageId}' was not found! (UpdateMessage)", ConsoleColor.Red);
                 }
             }
             else
                 throw new Exception("Failed to update message because BOT is not connected!");
         }
-        catch (HttpException ex)
+        catch (Exception ex)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] UpdateMessage ERROR: {ex.Message}", ConsoleColor.Red);
-            throw new Exception($"UpdateMessage ERROR: {ex.Message}");
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while updating message: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred while updating message: {ex.Message}");
         }
     }
 
@@ -279,9 +300,23 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         }
         if (savedInteractions.ContainsKey(interactionId))
         {
+            _ = SendRespondMessageToInteractionAsync(interactionId, content, embedToBuild, componentsToBuild);
+        }
+    }
+    public async Task SendRespondMessageToInteractionAsync(int interactionId, string? content, EmbedBuilder embed, ComponentBuilder? components, bool silent = true)
+    {
+        try
+        {
             var interaction = savedInteractions[interactionId];
-            _ = interaction.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embedToBuild) ? embedToBuild.Build() : null, components: componentsToBuild != null ? componentsToBuild.Build() : null, ephemeral: silent);
-            savedInteractions.Remove(interactionId);
+            await interaction.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null, ephemeral: silent);
+            savedCommandInteractions.Remove(interactionId);
+            if (IsDebug)
+                Perform_SendConsoleMessage($"[Discord Utilities] Respond message to Interaction was sent to interaction with ID '{interactionId}'", ConsoleColor.Cyan);
+        }
+        catch (Exception ex)
+        {
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while sending a Response message to Interaction: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred while sending a Response message to Interaction: {ex.Message}");
         }
     }
 
@@ -300,9 +335,23 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         }
         if (savedCommandInteractions.ContainsKey(interactionId))
         {
+            _ = SendRespondMessageToSlashCommandAsync(interactionId, content, embedToBuild, componentsToBuild);
+        }
+    }
+    public async Task SendRespondMessageToSlashCommandAsync(int interactionId, string? content, EmbedBuilder embed, ComponentBuilder? components, bool silent = true)
+    {
+        try
+        {
             var interaction = savedCommandInteractions[interactionId];
-            _ = interaction.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embedToBuild) ? embedToBuild.Build() : null, components: componentsToBuild != null ? componentsToBuild.Build() : null, ephemeral: silent);
+            await interaction.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null, ephemeral: silent);
             savedCommandInteractions.Remove(interactionId);
+            if (IsDebug)
+                Perform_SendConsoleMessage($"[Discord Utilities] Respond message to Slash Command was sent to interaction with ID '{interactionId}'", ConsoleColor.Cyan);
+        }
+        catch (Exception ex)
+        {
+            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while sending a Response message to Slash Command: {ex.Message}", ConsoleColor.Red);
+            throw new Exception($"An error occurred while sending a Response message to Slash Command: {ex.Message}");
         }
     }
 
