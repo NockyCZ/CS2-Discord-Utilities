@@ -51,7 +51,7 @@ namespace EventNotifications
                 ServerData = true
             };
 
-            MapChangedEmbed config = new MapChangedEmbed();
+            var config = Config.MapChanged.MapChangedEmbed;
             var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
             var content = DiscordUtilities!.ReplaceVariables(Config.MapChanged.MapChangedEmbed.Content, replaceVariablesBuilder);
             DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.MapChanged.ChannelID), content, embedBuider, null);
@@ -74,7 +74,7 @@ namespace EventNotifications
                     PlayerData = player
                 };
 
-                DisconnectdEmbed config = new DisconnectdEmbed();
+                var config = Config.Disconnect.DisconnectdEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities!.ReplaceVariables(Config.Disconnect.DisconnectdEmbed.Content, replaceVariablesBuilder);
                 DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.Disconnect.ChannelID), content, embedBuider, null);
@@ -95,7 +95,7 @@ namespace EventNotifications
                     ServerData = true,
                     PlayerData = player
                 };
-                ConnectedEmbed config = new ConnectedEmbed();
+                var config = Config.Connect.ConnectedEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities!.ReplaceVariables(Config.Connect.ConnectedEmbed.Content, replaceVariablesBuilder);
                 DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.Connect.ChannelID), content, embedBuider, null);
