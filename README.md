@@ -25,7 +25,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
    - `DiscordUtilities.zip` file includes only the main plugin without available modules
    - `DiscordUtilitiesWithModules.zip` file includes all available modules, if you don't want to use some modules, just remove them from `/plugins/` folder
-3. Unzip into your servers csgo/addons/counterstrikesharp/plugins/ dir
+3. Unzip into your servers `csgo/addons/counterstrikesharp/plugins/` dir
 4. Restart the server
 5. Configure the config file
 6. After any configuration changes, you must restart the server
