@@ -53,7 +53,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when creating players database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when creating linked players database: {ex.Message}", ConsoleColor.Red);
             }
         }
 
@@ -65,14 +65,14 @@ namespace DiscordUtilities
                     @"CREATE TABLE IF NOT EXISTS Discord_Utilities_Codes (
                 steamid VARCHAR(32) UNIQUE NOT NULL,
                 code VARCHAR(32) NOT NULL,
-                created DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE (`steamid`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;", connection);
                 await cmd.ExecuteNonQueryAsync();
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when creating link database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when creating link codes database: {ex.Message}", ConsoleColor.Red);
             }
         }
 
