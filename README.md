@@ -4,7 +4,7 @@ Discord Utilities is a server API plugin for communication between the CS2 serve
 Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) framework | Minimum CSS API Version: 202
 
 ## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities)
-## [Discord Support Server](https://discord.gg/sourcefactory)
+## [Discord Support Server](https://discord.gg/Tzmq98gwqF)
 
 # Main Features
 • These features are already implemented in the main plugin.
