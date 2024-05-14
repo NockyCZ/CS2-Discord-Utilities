@@ -19,12 +19,7 @@ public class Commands
         public required string Description { get; set; }
         public required SlashCommandOptionsType Type;
         public bool Required = false;
-        public List<SlashCommandOptionChoices>? Choices { get; set; } = null;
-        /*public List<SlashCommandOptionChoices> Choices
-        {
-            get => choices;
-            set => choices = value;
-        }*/
+        public List<SlashCommandOptionChoices>? Choices { get; set; }
     }
 
     public class Builder

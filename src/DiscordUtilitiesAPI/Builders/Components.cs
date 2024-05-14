@@ -28,8 +28,8 @@ public interface Components
     {
         public required string Label { get; set; }
         public required string Value { get; set; }
-        public string? Description { get; set; } = null;
-        public string? Emote { get; set; } = null;
+        public string? Description { get; set; }
+        public string? Emote { get; set; }
     }
     public class InteractiveMenusBuilder
     {
@@ -42,9 +42,9 @@ public interface Components
 
     public class Builder
     {
-        public List<InteractiveButtonsBuilder>? InteractiveButtons { get; set; } = null;
-        public List<LinkButtonsBuilder>? LinkButtons { get; set; } = null;
-        public List<InteractiveMenusBuilder>? InteractiveMenus { get; set; } = null;
+        public List<InteractiveButtonsBuilder>? InteractiveButtons { get; set; }
+        public List<LinkButtonsBuilder>? LinkButtons { get; set; }
+        public List<InteractiveMenusBuilder>? InteractiveMenus { get; set; }
     }
 }
 

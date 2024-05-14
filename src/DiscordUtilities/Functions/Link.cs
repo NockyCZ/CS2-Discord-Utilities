@@ -101,7 +101,13 @@ namespace DiscordUtilities
             if (IsDebug)
                 Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Slash command '{command.CommandName}' has been successfully logged", ConsoleColor.Cyan);
 
-            ulong guildId = command.GuildId!.Value;
+            if (command.GuildId == null)
+            {
+                await command.RespondAsync(text: "This command cannot be used in a private message!");
+                return;
+            }
+            
+            ulong guildId = command.GuildId.Value;
             var guild = BotClient!.GetGuild(guildId);
 
             if (guild == null)

@@ -10,5 +10,7 @@ namespace DiscordUtilities
         public static Dictionary<CCSPlayerController, PlayerData> playerData = new();
         public static Dictionary<ulong, ulong> linkedPlayers = new();
         public static Dictionary<string, string> linkCodes = new();
+        public static Dictionary<string, List<ConditionData>> customConditions = new();
+        public static Dictionary<string, replaceDataType> customVariables = new();
     }
 }

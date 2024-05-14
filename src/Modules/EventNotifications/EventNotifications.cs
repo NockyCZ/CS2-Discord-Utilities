@@ -26,21 +26,12 @@ namespace EventNotifications
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers -= DiscordUtilitiesEventHandler;
         }
-        public override void Load(bool hotReload)
-        {
-            RegisterListener<Listeners.OnMapStart>(mapName =>
-            {
-                if (Config.MapChanged.Enabled)
-                {
-                    AddTimer(3.0f, () =>
-                    {
-                        PerformMapStart();
-                    }, TimerFlags.STOP_ON_MAPCHANGE);
-                }
-            });
-        }
+
         public void PerformMapStart()
         {
+            if (!Config.MapChanged.Enabled)
+                return;
+
             if (string.IsNullOrEmpty(Config.MapChanged.ChannelID))
             {
                 DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Discord Event Notifications (Map Changed) ERROR: Can't send a message to Discord because the Channel ID is empty!", MessageType.Error);
@@ -108,6 +99,9 @@ namespace EventNotifications
             {
                 case PlayerDataLoaded playerData:
                     OnPlayerDataLoaded(playerData.player);
+                    break;
+                case ServerDataLoaded:
+                    PerformMapStart();
                     break;
                 default:
                     break;

@@ -82,7 +82,7 @@ namespace DiscordUtilities
                         if (!string.IsNullOrEmpty(embed.Description))
                             EmbedBuilder.Description = embed.Description;
 
-                        if (embed.Fields.Count() > 0)
+                        if (EmbedBuilder.Fields != null && embed.Fields.Count() > 0)
                         {
                             EmbedBuilder.Fields.AddRange(embed.Fields.Select(field => new Embeds.FieldsData
                             {
@@ -123,6 +123,10 @@ namespace DiscordUtilities
                         .WithCustomId(buttonData.CustomId)
                         .WithLabel(buttonData.Label)
                         .WithStyle((ButtonStyle)buttonData.Color);
+
+                    if (!string.IsNullOrEmpty(buttonData.Emoji))
+                        buttonBuilder.WithEmote(Emote.Parse(buttonData.Emoji));
+
                     component.WithButton(buttonBuilder);
                 }
             }
@@ -134,6 +138,10 @@ namespace DiscordUtilities
                         .WithLabel(buttonData.Label)
                         .WithStyle(ButtonStyle.Link)
                         .WithUrl(buttonData.URL);
+
+                    if (!string.IsNullOrEmpty(buttonData.Emoji))
+                        buttonBuilder.WithEmote(Emote.Parse(buttonData.Emoji));
+
                     component.WithButton(buttonBuilder);
                 }
             }
@@ -171,12 +179,12 @@ namespace DiscordUtilities
                 embed.WithDescription(embedBuilder.Description);
                 //Console.WriteLine("WithDescription");
             }
-            if (embedBuilder.ThumbnailUrl.Contains(".jpg") || embedBuilder.ThumbnailUrl.Contains(".png") || embedBuilder.ThumbnailUrl.Contains(".gif"))
+            if (!string.IsNullOrEmpty(embedBuilder.ThumbnailUrl) && (embedBuilder.ThumbnailUrl.Contains(".jpg") || embedBuilder.ThumbnailUrl.Contains(".png") || embedBuilder.ThumbnailUrl.Contains(".gif")))
             {
                 embed.WithThumbnailUrl(embedBuilder.ThumbnailUrl);
                 //Console.WriteLine("WithThumbnailUrl");
             }
-            if (embedBuilder.ImageUrl.Contains(".jpg") || embedBuilder.ImageUrl.Contains(".png") || embedBuilder.ImageUrl.Contains(".gif"))
+            if (!string.IsNullOrEmpty(embedBuilder.ImageUrl) && (embedBuilder.ImageUrl.Contains(".jpg") || embedBuilder.ImageUrl.Contains(".png") || embedBuilder.ImageUrl.Contains(".gif")))
             {
                 embed.WithImageUrl(embedBuilder.ImageUrl);
                 //Console.WriteLine("WithImageUrl");
@@ -192,9 +200,9 @@ namespace DiscordUtilities
                 //Console.WriteLine("WithCurrentTimestamp");
             }
 
-            if (embedBuilder.fields.Count() > 0)
+            if (embedBuilder.Fields != null && embedBuilder.Fields.Count() > 0)
             {
-                foreach (var field in embedBuilder.fields)
+                foreach (var field in embedBuilder.Fields)
                 {
                     embed.AddField(field.Title, field.Description, field.Inline);
                 }
@@ -233,7 +241,7 @@ namespace DiscordUtilities
             return keyBuilder.ToString();
         }
 
-        public static string ReplacePlayerDataVariables(string replacedString, CCSPlayerController target, bool isTarget = false)
+        public static string ReplacePlayerDataVariables(string replacedString, CCSPlayerController target, bool isTarget = false, bool checkCustomVariables = true)
         {
             PlayerData? selectedPlayer = null;
             if (playerData.ContainsKey(target))
@@ -257,6 +265,9 @@ namespace DiscordUtilities
                     { $"{{{player}.SteamID64}}", selectedPlayer.SteamId64},
                     { $"{{{player}.IpAddress}}", selectedPlayer.IpAddress},
                     { $"{{{player}.CommunityUrl}}", selectedPlayer.CommunityUrl},
+                    { $"{{{player}.PlayedTime}}", (selectedPlayer.PlayedTime / 60).ToString()},
+                    { $"{{{player}.FirstJoin}}", selectedPlayer.FirstJoin.ToString(DateFormat)},
+                    { $"{{{player}.LastSeen}}", selectedPlayer.LastSeen.ToString(DateFormat)},
                     { $"{{{player}.TeamShortName}}", GetTeamShortName(team)},
                     { $"{{{player}.TeamLongName}}", GetTeamLongName(team)},
                     { $"{{{player}.TeamNumber}}", team.ToString()},
@@ -281,15 +292,31 @@ namespace DiscordUtilities
                         replacedString = replacedString.Replace(item.Key, item.Value);
                     }
                 }
+
+                if (UseCustomVariables && checkCustomVariables)
+                {
+                    foreach (var item in customVariables.Where(x => x.Value == (isTarget ? replaceDataType.Target : replaceDataType.Player)))
+                    {
+                        if (replacedString.Contains(item.Key))
+                        {
+                            var replaceData = new replaceData()
+                            {
+                                Player = target,
+                                Target = target,
+                            };
+                            replacedString = replacedString.Replace(item.Key, ReplaceConditions(item.Key, replaceData, isTarget ? replaceDataType.Target : replaceDataType.Player));
+                        }
+                    }
+                }
             }
             return replacedString;
         }
 
-        public static string ReplaceServerDataVariables(string replacedString)
+        public static string ReplaceServerDataVariables(string replacedString, bool checkCustomVariables = true)
         {
             var replacedData = new Dictionary<string, string>
             {
-                { "{Server.Name}", serverData!.Name },
+                { "{Server.Name}", serverData.Name },
                 { "{Server.MaxPlayers}", serverData.MaxPlayers },
                 { "{Server.MapName}", serverData.MapName },
                 { "{Server.Timeleft}", serverData.Timeleft },
@@ -306,35 +333,82 @@ namespace DiscordUtilities
                     replacedString = replacedString.Replace(item.Key, item.Value);
                 }
             }
-            return replacedString;
-        }
-        public static string ReplaceDiscordUserVariables(UserData user, string replacedString)
-        {
-            var replacedData = new Dictionary<string, string>
+
+            if (UseCustomVariables && checkCustomVariables)
             {
-                { "{Discord.UserDisplayName}", user.DisplayName },
-                { "{Discord.UserGlobalName}", user.GlobalName },
-                { "{Discord.UserID}", user.ID.ToString() }
-            };
-            foreach (var item in replacedData)
-            {
-                if (replacedString.Contains(item.Key))
-                    replacedString = replacedString.Replace(item.Key, item.Value);
+                foreach (var item in customVariables.Where(x => x.Value == replaceDataType.Server))
+                {
+                    if (replacedString.Contains(item.Key))
+                    {
+                        var replaceData = new replaceData()
+                        {
+                            Server = true,
+                        };
+                        replacedString = replacedString.Replace(item.Key, ReplaceConditions(item.Key, replaceData, replaceDataType.Server));
+                    }
+                }
             }
             return replacedString;
         }
-        public static string ReplaceDiscordChannelVariables(MessageData channel, string replacedString)
+        public static string ReplaceDiscordUserVariables(UserData user, string replacedString, bool checkCustomVariables = true)
         {
             var replacedData = new Dictionary<string, string>
             {
-                { "{Discord.ChannelName}", channel.ChannelName },
-                { "{Discord.ChannelID}", channel.ChannelID.ToString() },
-                { "{Discord.Message}", channel.Text }
+                { "{DiscordUser.DisplayName}", user.DisplayName },
+                { "{DiscordUser.GlobalName}", user.GlobalName },
+                { "{DiscordUser.ID}", user.ID.ToString() }
             };
             foreach (var item in replacedData)
             {
                 if (replacedString.Contains(item.Key))
+                {
                     replacedString = replacedString.Replace(item.Key, item.Value);
+                }
+            }
+            if (UseCustomVariables && checkCustomVariables)
+            {
+                foreach (var item in customVariables.Where(x => x.Value == replaceDataType.DiscordUser))
+                {
+                    if (replacedString.Contains(item.Key))
+                    {
+                        var replaceData = new replaceData()
+                        {
+                            DiscordUser = user,
+                        };
+                        replacedString = replacedString.Replace(item.Key, ReplaceConditions(item.Key, replaceData, replaceDataType.DiscordUser));
+                    }
+                }
+            }
+            return replacedString;
+        }
+        public static string ReplaceDiscordChannelVariables(MessageData channel, string replacedString, bool checkCustomVariables = true)
+        {
+            var replacedData = new Dictionary<string, string>
+            {
+                { "{DiscordChannel.Name}", channel.ChannelName },
+                { "{DiscordChannel.ID}", channel.ChannelID.ToString() },
+                { "{DiscordChannel.Message}", channel.Text }
+            };
+            foreach (var item in replacedData)
+            {
+                if (replacedString.Contains(item.Key))
+                {
+                    replacedString = replacedString.Replace(item.Key, item.Value);
+                }
+            }
+            if (UseCustomVariables && checkCustomVariables)
+            {
+                foreach (var item in customVariables.Where(x => x.Value == replaceDataType.DiscordChannel))
+                {
+                    if (replacedString.Contains(item.Key))
+                    {
+                        var replaceData = new replaceData()
+                        {
+                            DiscordChannel = channel,
+                        };
+                        replacedString = replacedString.Replace(item.Key, ReplaceConditions(item.Key, replaceData, replaceDataType.DiscordChannel));
+                    }
+                }
             }
             return replacedString;
         }

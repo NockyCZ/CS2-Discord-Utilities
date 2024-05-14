@@ -146,13 +146,14 @@ namespace ManageRolesAndPermissions
                         DiscordUtilities!.SendConsoleMessage($"[Discord Utilities] Invalid permission '{item.Key}'!", MessageType.Error);
                     }
                 }
-                if (Config.removeRolesOnPermissionLoss && rolesToRemove.Count() > 0)
-                    PerformRemoveRole(user, rolesToRemove);
-                if (rolesList.Count() > 0)
-                    PerformPermissionToRole(user, rolesList);
-                if (permissionsList.Count() > 0)
-                    PerformRoleToPermission(player, permissionsList);
             }
+
+            if (Config.removeRolesOnPermissionLoss && rolesToRemove.Count() > 0)
+                PerformRemoveRole(user, rolesToRemove);
+            if (rolesList.Count() > 0)
+                PerformPermissionToRole(user, rolesList);
+            if (permissionsList.Count() > 0)
+                PerformRoleToPermission(player, permissionsList);
         }
 
         public void PerformPermissionToRole(UserData user, List<string> rolesIds)

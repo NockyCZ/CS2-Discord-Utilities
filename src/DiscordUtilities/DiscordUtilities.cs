@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.2";
+        public override string ModuleVersion => "2.0.3";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
@@ -55,14 +55,20 @@ namespace DiscordUtilities
             Capabilities.RegisterPluginCapability(DiscordUtilitiesAPI, () => DUApi);
 
             CreateCustomCommands();
+            if (Config.UseCustomVariables)
+                LoadCustomConditions();
+
             IsDbConnected = false;
             IsBotConnected = false;
             IsDebug = Config.Debug;
             ServerId = Config.ServerID;
+            UseCustomVariables = Config.UseCustomVariables;
+            DateFormat = Config.DateFormat;
             savedInteractions.Clear();
 
-            serverData = new ServerData
+            /*serverData = new ServerData
             {
+                ModuleDirectory = ModuleDirectory,
                 GameDirectory = Server.GameDirectory,
                 Name = "Counter-Strike Server",
                 MaxPlayers = 10.ToString(),
@@ -72,10 +78,11 @@ namespace DiscordUtilities
                 OnlineBots = 0.ToString(),
                 Timeleft = 60.ToString(),
                 IP = Config.ServerIP
-            };
+            };*/
 
             int debugCounter = 0;
-            AddTimer(10.0f, () =>
+
+            updateTimer = AddTimer(10.0f, () =>
             {
                 debugCounter++;
                 UpdateServerData();
@@ -99,6 +106,7 @@ namespace DiscordUtilities
                 playerData.Clear();
                 serverData = new ServerData
                 {
+                    ModuleDirectory = ModuleDirectory,
                     GameDirectory = Server.GameDirectory,
                     Name = ConVar.Find("hostname")!.StringValue,
                     MaxPlayers = Server.MaxPlayers.ToString(),
@@ -110,6 +118,15 @@ namespace DiscordUtilities
                     IP = Config.ServerIP
                 };
                 Server.ExecuteCommand("sv_hibernate_when_empty false");
+                ServerDataLoaded();
+
+                AddTimer(60.0f, () =>
+                {
+                    foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.AuthorizedSteamID != null && playerData.ContainsKey(p)))
+                    {
+                        playerData[player].PlayedTime++;
+                    }
+                }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
             });
         }
         private async Task LoadDiscordBOT()
@@ -146,8 +163,19 @@ namespace DiscordUtilities
             IsBotConnected = true;
             BotLoaded();
 
+            if (string.IsNullOrEmpty(ServerId))
+                Perform_SendConsoleMessage("[Discord Utilities] You do not have a completed Server ID!", ConsoleColor.Red);
+            else
+            {
+                var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
+                if (guild == null)
+                    Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+            }
+
             string ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
-            await BotClient!.SetGameAsync(ActivityFormat, null, (ActivityType)Config.BotStatus.ActivityType);
+            //await BotClient!.SetGameAsync(ActivityFormat, null, (ActivityType)Config.BotStatus.ActivityType);
+
+            await BotClient!.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType, ActivityProperties.None));
             await BotClient.SetStatusAsync((UserStatus)Config.BotStatus.Status);
 
             var linkCommand = new SlashCommandBuilder()
@@ -192,9 +220,9 @@ namespace DiscordUtilities
         }
         private Task InteractionCreatedHandler(SocketInteraction interaction)
         {
-            if (interaction is SocketMessageComponent component)
+            if (interaction is SocketMessageComponent MessageComponent)
             {
-                IDiscordInteractionData data = component.Data;
+                IDiscordInteractionData data = MessageComponent.Data;
                 if (data is IComponentInteractionData componentData)
                 {
                     Event_InteractionCreated(interaction, componentData);
@@ -221,6 +249,9 @@ namespace DiscordUtilities
 
         public override void Unload(bool hotReload)
         {
+            if (updateTimer != null)
+                updateTimer.Kill();
+
             if (IsBotConnected && BotClient != null)
             {
                 BotClient.SlashCommandExecuted -= SlashCommandHandler;

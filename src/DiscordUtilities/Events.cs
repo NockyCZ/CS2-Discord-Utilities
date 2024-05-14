@@ -19,13 +19,9 @@ namespace DiscordUtilities
                     SteamId64 = player.AuthorizedSteamID.SteamId64.ToString(),
                     IpAddress = player.IpAddress != null ? player.IpAddress.ToString() : "Invalid",
                     CommunityUrl = player.AuthorizedSteamID.ToCommunityUrl().ToString(),
-                    /*TeamShortName = GetTeamShortName(player.TeamNum),
-                    TeamLongName = GetTeamLongName(player.TeamNum),
-                    TeamNumber = player.TeamNum.ToString(),
-                    Kills = 0.ToString(),
-                    Deaths = 0.ToString(),
-                    Assists = 0.ToString(),
-                    Points = 0.ToString(),*/
+                    PlayedTime = 0,
+                    FirstJoin = DateTime.Now,
+                    LastSeen = DateTime.Now,
                     CountryShort = "Undefined",
                     CountryLong = "Undefined",
                     CountryEmoji = ":flag_white:",
@@ -38,15 +34,9 @@ namespace DiscordUtilities
                 };
                 playerData.Add(player, newPlayer);
                 PlayerDataLoaded(player);
-                if (IsDbConnected && Config.Link.Enabled)
+                if (IsDbConnected)
                 {
-                    if (linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
-                    {
-                        if (playerData.ContainsKey(player))
-                            playerData[player].IsLinked = true;
-
-                        _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), linkedPlayers[player.AuthorizedSteamID.SteamId64]);
-                    }
+                    _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), 0);
                 }
 
                 string IpAddress = player.IpAddress!.Split(":")[0];
@@ -60,8 +50,12 @@ namespace DiscordUtilities
         {
             var player = @event.Userid;
 
-            if (player != null && player.IsValid && playerData.ContainsKey(player))
+            if (player != null && player.IsValid && playerData.ContainsKey(player) && player.AuthorizedSteamID != null)
+            {
+                if (IsDbConnected)
+                    _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), playerData[player].PlayedTime, false);
                 playerData.Remove(player);
+            }
 
             return HookResult.Continue;
         }

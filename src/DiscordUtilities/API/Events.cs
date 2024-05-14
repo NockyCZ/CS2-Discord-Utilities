@@ -30,7 +30,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var userData = new UserData
         {
             GlobalName = user.GlobalName,
-            DisplayName = user.Username,
+            DisplayName = user.DisplayName,
             ID = user.Id,
             RolesIds = userRoles,
         };
@@ -39,6 +39,15 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new LinkedUserDataLoaded(userData, player));
             if (IsDebug)
                 Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: LinkedUserDataLoaded", ConsoleColor.Cyan);
+        });
+    }
+    public void ServerDataLoaded()
+    {
+        Server.NextFrame(() =>
+        {
+            DiscordUtilitiesAPI.Get()?.TriggerEvent(new ServerDataLoaded());
+            if (IsDebug)
+                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: ServerDataLoaded", ConsoleColor.Cyan);
         });
     }
     public void BotLoaded()
@@ -61,20 +70,29 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             Type = (SlashCommandOptionsType)option.Type
         }).ToList();
 
+        ulong? guildId = command.GuildId != null ? command.GuildId.Value : null;
+
         var commandData = new CommandData
         {
-            GuildId = command.GuildId!.Value,
+            GuildId = guildId,
             InteractionId = interactionId,
             CommandName = command.CommandName,
             OptionsData = optionsData
         };
-        var user = command.User as SocketGuildUser;
-        var userRoles = user!.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
 
+        var user = command.User as SocketGuildUser;
+        if (user == null)
+        {
+            if (IsDebug)
+                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Event_SlashCommand - User was not found!", ConsoleColor.Cyan);
+            return;
+        }
+
+        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
             GlobalName = user.GlobalName,
-            DisplayName = user.Username,
+            DisplayName = user.DisplayName,
             ID = user.Id,
             RolesIds = userRoles,
         };
@@ -92,22 +110,32 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 
     public void Event_CustomMessageReceived(string customId, IUserMessage message)
     {
+        var guildChannel = message.Channel as SocketGuildChannel;
+        ulong? guildId = guildChannel != null ? guildChannel.Guild.Id : null;
+
         var messageData = new MessageData
         {
             ChannelName = message.Channel.Name,
             ChannelID = message.Channel.Id,
             MessageID = message.Id,
             Text = message.Content,
-            GuildId = (message.Channel as SocketGuildChannel)?.Guild.Id ?? 0,
+            GuildId = guildId,
             Builders = GetMessageBuilders(message)
         };
 
-        var user = message.Author;
-        var userRoles = (user as SocketGuildUser)?.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
+        var user = message.Author as SocketGuildUser;
+        if (user == null)
+        {
+            if (IsDebug)
+                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Event_CustomMessageReceived - User was not found!", ConsoleColor.Cyan);
+            return;
+        }
+
+        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
             GlobalName = user.GlobalName,
-            DisplayName = user.Username,
+            DisplayName = user.DisplayName,
             ID = user.Id,
             RolesIds = userRoles
         };
@@ -122,22 +150,32 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 
     public void Event_MessageReceived(SocketMessage message)
     {
+        var guildChannel = message.Channel as SocketGuildChannel;
+        ulong? guildId = guildChannel != null ? guildChannel.Guild.Id : null;
+
         var messageData = new MessageData
         {
             ChannelName = message.Channel.Name,
             ChannelID = message.Channel.Id,
             MessageID = message.Id,
             Text = message.Content,
-            GuildId = (message.Channel as SocketGuildChannel)?.Guild.Id ?? 0,
+            GuildId = guildId,
             Builders = GetMessageBuilders(message as IUserMessage)
         };
 
-        var user = message.Author;
-        var userRoles = (user as SocketGuildUser)?.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
+        var user = message.Author as SocketGuildUser;
+        if (user == null)
+        {
+            if (IsDebug)
+                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Event_MessageReceived - User was not found!", ConsoleColor.Cyan);
+            return;
+        }
+
+        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
             GlobalName = user.GlobalName,
-            DisplayName = user.Username,
+            DisplayName = user.DisplayName,
             ID = user.Id,
             RolesIds = userRoles
         };
@@ -158,23 +196,34 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             message = messageComponent.Message;
         }
 
+        ulong? guildId = interaction.GuildId != null ? interaction.GuildId.Value : null;
+        ulong? messageId = message != null ? message.Id : null;
+
         var interactionData = new InteractionData
         {
             ChannelName = interaction.Channel.Name,
             ChannelID = interaction.Channel.Id,
-            GuildId = interaction.GuildId!.Value,
+            MessageId = messageId,
+            GuildId = guildId,
             CustomId = componentData.CustomId,
             SelectedValues = componentData.Values,
             InteractionId = interactionId,
             Builders = message == null ? null : GetMessageBuilders(message)
         };
 
-        var user = interaction.User;
-        var userRoles = (user as SocketGuildUser)?.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
+        var user = interaction.User as SocketGuildUser;
+        if (user == null)
+        {
+            if (IsDebug)
+                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: interactionData - User was not found!", ConsoleColor.Cyan);
+            return;
+        }
+
+        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
             GlobalName = user.GlobalName,
-            DisplayName = user.Username,
+            DisplayName = user.DisplayName,
             ID = user.Id,
             RolesIds = userRoles
         };

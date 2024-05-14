@@ -41,7 +41,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var userData = new UserData
         {
             GlobalName = user.GlobalName,
-            DisplayName = user.Username,
+            DisplayName = user.DisplayName,
             ID = user.Id,
             RolesIds = userRoles
         };

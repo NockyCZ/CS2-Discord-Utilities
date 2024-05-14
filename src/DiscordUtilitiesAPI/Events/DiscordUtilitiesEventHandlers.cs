@@ -9,3 +9,4 @@ public record InteractionCreated(InteractionData Interaction, UserData User) : I
 public record LinkedUserDataLoaded(UserData User, CCSPlayerController player) : IDiscordUtilitiesEvent;
 public record PlayerDataLoaded(CCSPlayerController player) : IDiscordUtilitiesEvent;
 public record BotLoaded() : IDiscordUtilitiesEvent;
+public record ServerDataLoaded() : IDiscordUtilitiesEvent;

@@ -87,7 +87,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                                     Description = ReplaceVariables(fieldData[1], replacedVariables),
                                     Inline = bool.Parse(fieldData[2])
                                 };
-                                Builder.Fields.Add(fieldBuilder);
+                                Builder.Fields!.Add(fieldBuilder);
                             }
                             else
                             {

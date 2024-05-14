@@ -33,7 +33,7 @@ public class CommandOptionsData
 }
 public class CommandData
 {
-    public required ulong GuildId { get; set; }
+    public ulong? GuildId { get; set; }
     public required int InteractionId { get; set; }
     public required string CommandName { get; set; }
     public required List<CommandOptionsData> OptionsData { get; set; }
@@ -53,7 +53,7 @@ public class MessageData
     public required ulong ChannelID { get; set; }
     public required ulong MessageID { get; set; }
     public required string Text { get; set; }
-    public required ulong GuildId { get; set; }
+    public ulong? GuildId { get; set; }
     public required MessageBuilders? Builders { get; set; }
 }
 
@@ -61,7 +61,8 @@ public class InteractionData
 {
     public required string ChannelName { get; set; }
     public required ulong ChannelID { get; set; }
-    public required ulong GuildId { get; set; }
+    public ulong? MessageId { get; set; }
+    public ulong? GuildId { get; set; }
     public required string CustomId { get; set; }
     public required int InteractionId { get; set; }
     public required IReadOnlyCollection<string> SelectedValues { get; set; }

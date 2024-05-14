@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using System.Text.Json.Serialization;
+using static DiscordUtilities.DiscordUtilities;
 
 namespace DiscordUtilities;
 
@@ -8,9 +9,46 @@ public class DUConfig : BasePluginConfig
     [JsonPropertyName("Bot Token")] public string Token { get; set; } = "";
     [JsonPropertyName("Discord Server ID")] public string ServerID { get; set; } = "";
     [JsonPropertyName("Server IP")] public string ServerIP { get; set; } = "0.0.0.0:00000";
+    [JsonPropertyName("Use Custom Variables")] public bool UseCustomVariables { get; set; } = true;
+    [JsonPropertyName("Date Format")] public string DateFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";
     [JsonPropertyName("Database Connection")] public Database Database { get; set; } = new Database();
     [JsonPropertyName("BOT Status")] public BotStatus BotStatus { get; set; } = new BotStatus();
     [JsonPropertyName("Link System")] public Link Link { get; set; } = new Link();
+
+    [JsonPropertyName("Custom Variables")]
+    public Dictionary<string, List<ConditionData>> customConditions { get; set; } = new()
+    {
+        {
+            "Player.DiscordNameWithPing", new List<ConditionData>
+            {
+                new ConditionData { Value = "{Player.DiscordDisplayName}", Operator = "==", ValueToCheck = "", ReplacementValue = "Not Linked" },
+                new ConditionData { Value = "{Player.DiscordDisplayName}", Operator = "!=", ValueToCheck = "", ReplacementValue = "{Player.DiscordDisplayName} ({Player.DiscordPing})" }
+            }
+        },
+        {
+            "Player.PlayedTimeNames", new List<ConditionData>
+            {
+                new ConditionData { Value = "{Player.PlayedTime}", Operator = ">", ValueToCheck = "100", ReplacementValue = "Active Player ({Player.PlayedTime}h)" },
+                new ConditionData { Value = "{Player.PlayedTime}", Operator = ">", ValueToCheck = "75", ReplacementValue = "Advanced ({Player.PlayedTime}h)" },
+                new ConditionData { Value = "{Player.PlayedTime}", Operator = ">=", ValueToCheck = "50", ReplacementValue = "Beginner ({Player.PlayedTime}h)" },
+                new ConditionData { Value = "{Player.PlayedTime}", Operator = "<", ValueToCheck = "50", ReplacementValue = "Newbie ({Player.PlayedTime}h)" }
+            }
+        },
+        {
+            "Server.RemoveMapPrefix", new List<ConditionData>
+            {
+                new ConditionData { Value = "{Server.MapName}", Operator = "~", ValueToCheck = "de_", ReplacementValue = "{Replace(de_)()}" },
+                new ConditionData { Value = "{Server.MapName}", Operator = "~", ValueToCheck = "cs_", ReplacementValue = "{Replace(cs_)()}" }
+            }
+        },
+        {
+            "Server.CustomOnlinePlayers", new List<ConditionData>
+            {
+                new ConditionData { Value = "{Server.OnlinePlayers}", Operator = "==", ValueToCheck = "0", ReplacementValue = "Server Is Empty" },
+                new ConditionData { Value = "{Server.OnlinePlayers}", Operator = "!=", ValueToCheck = "0", ReplacementValue = "({Server.OnlinePlayers}/{Server.MaxPlayers})" }
+            }
+        }
+    };
     [JsonPropertyName("Debug Messages")] public bool Debug { get; set; } = false;
 }
 

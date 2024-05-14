@@ -155,6 +155,10 @@ namespace Report
 
             reportCooldowns.Add(sender, (int)Server.CurrentTime);
             sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportSend", target.PlayerName, reason]}");
+            foreach (var admin in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, Config.AdminFlag)))
+            {
+                admin.PrintToChat(Localizer["Chat.ReportSend", sender.PlayerName, target.PlayerName, reason]);
+            }
         }
         public void CustomReasonReport(CCSPlayerController sender, CCSPlayerController target)
         {

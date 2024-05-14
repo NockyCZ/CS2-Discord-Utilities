@@ -1,4 +1,6 @@
 
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using MySqlConnector;
 
 namespace DiscordUtilities
@@ -27,11 +29,11 @@ namespace DiscordUtilities
             {
                 await connection.OpenAsync();
                 await CreateTable(connection);
-                await CreateLinkCodesTable(connection);
                 IsDbConnected = true;
                 await LoadLinkCodes();
                 await LoadLinkedPlayers();
                 Perform_SendConsoleMessage("[Discord Utilities] The database has been connected!", ConsoleColor.Green);
+                await connection.CloseAsync();
             }
             catch (Exception ex)
             {
@@ -44,10 +46,22 @@ namespace DiscordUtilities
             try
             {
                 using var cmd = new MySqlCommand(
-                    @"CREATE TABLE IF NOT EXISTS Discord_Utilities (
-                    steamid VARCHAR(32) UNIQUE NOT NULL,
-                    discordid VARCHAR(32) NOT NULL,
-                    UNIQUE (`steamid`)
+                @"CREATE TABLE IF NOT EXISTS Discord_Utilities (
+                    steamid VARCHAR(32) PRIMARY KEY UNIQUE NOT NULL,
+                    discordid VARCHAR(32) NOT NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+                CREATE TABLE IF NOT EXISTS Discord_Utilities_Codes (
+                    steamid VARCHAR(32) PRIMARY KEY UNIQUE NOT NULL,
+                    code VARCHAR(32) NOT NULL,
+                    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+                
+                CREATE TABLE IF NOT EXISTS DU_time (
+                    steamid VARCHAR(32) PRIMARY KEY UNIQUE NOT NULL,
+                    firstjoin TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    lastseen TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    playedtime INT NOT NULL DEFAULT 0
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;", connection);
                 await cmd.ExecuteNonQueryAsync();
             }
@@ -57,22 +71,93 @@ namespace DiscordUtilities
             }
         }
 
-        public static async Task CreateLinkCodesTable(MySqlConnection connection)
+        public async Task UpdateOrLoadPlayerData(CCSPlayerController player, string SteamID, int playedTime, bool load = true)
         {
             try
             {
-                using var cmd = new MySqlCommand(
-                    @"CREATE TABLE IF NOT EXISTS Discord_Utilities_Codes (
-                steamid VARCHAR(32) UNIQUE NOT NULL,
-                code VARCHAR(32) NOT NULL,
-                created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE (`steamid`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;", connection);
-                await cmd.ExecuteNonQueryAsync();
+                using (var connection = GetConnection())
+                {
+                    await connection.OpenAsync();
+                    string sqlLoad = @"
+                                INSERT INTO `DU_time` (`steamid`, `lastseen`)
+                                VALUES (
+                                    @steamid,
+                                    @lastseen
+                                )
+                                ON DUPLICATE KEY UPDATE
+                                    `steamid` = @steamid,
+                                    `lastseen` = @lastseen;
+
+                                SELECT
+                                    `firstjoin`,
+                                    `lastseen`,
+                                    `playedtime`
+                                FROM
+                                    `DU_time`
+                                WHERE
+                                    `steamid` = @steamid;
+                            ";
+
+                    string sqlUpdate = @"
+                                INSERT INTO `DU_time` (`steamid`, `lastseen`, `playedtime`)
+                                VALUES (
+                                    @steamid,
+                                    @lastseen,
+                                    @playedtime
+                                )
+                                ON DUPLICATE KEY UPDATE
+                                    `lastseen` = @lastseen,
+                                    `playedtime` = @playedtime;
+                            ";
+
+                    using (var cmd = new MySqlCommand(load ? sqlLoad : sqlUpdate, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@steamid", SteamID);
+                        cmd.Parameters.AddWithValue("@lastseen", DateTime.Now);
+                        cmd.Parameters.AddWithValue("@playedtime", playedTime);
+
+                        if (load)
+                        {
+                            using (var reader = await cmd.ExecuteReaderAsync())
+                            {
+                                if (await reader.ReadAsync())
+                                {
+                                    var time = reader.GetInt32("playedtime");
+                                    var firstJoin = reader.GetDateTime("firstjoin");
+                                    var lastSeen = reader.GetDateTime("lastseen");
+
+                                    Server.NextFrame(() =>
+                                    {
+                                        if (playerData.ContainsKey(player))
+                                        {
+                                            playerData[player].PlayedTime = time;
+                                            playerData[player].FirstJoin = firstJoin;
+                                            playerData[player].LastSeen = lastSeen;
+
+                                            if (Config.Link.Enabled)
+                                            {
+                                                if (linkedPlayers.ContainsKey(player.AuthorizedSteamID!.SteamId64))
+                                                {
+                                                    if (playerData.ContainsKey(player))
+                                                        playerData[player].IsLinked = true;
+                                                    _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), linkedPlayers[player.AuthorizedSteamID.SteamId64]);
+                                                }
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                        else
+                        {
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when creating link codes database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when loading/updating player data: {ex.Message}", ConsoleColor.Red);
             }
         }
 

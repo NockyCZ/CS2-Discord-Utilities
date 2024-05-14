@@ -71,5 +71,5 @@ public class DiscordRelay
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
-    [JsonPropertyName("Ingame Message Format")] public string MessageFormat { get; set; } = "{Blue}[{Discord.ChannelName}] {Green}{Discord.UserDisplayName}: {Default}{Discord.Message}";
+    [JsonPropertyName("Ingame Message Format")] public string MessageFormat { get; set; } = "{Blue}[{DiscordChannel.Name}] {Green}{DiscordUser.DisplayName}: {Default}{DiscordChannel.Message}";
 }

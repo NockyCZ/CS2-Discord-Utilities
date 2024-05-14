@@ -14,5 +14,6 @@
     "Chat.InvalidReportUsage": "Invalid report usage! {green}/report <player> <reason>",
     "Chat.TargetNotFound": "A player named {green}{0}{default} was not found!",
     "Chat.TargetNotConnected": "Player {green}{0}{default} is no longer connected!",
-    "Chat.MultipleTargetFound": "Multiple players were found with the name {green}{0}{default}!"
+    "Chat.MultipleTargetFound": "Multiple players were found with the name {green}{0}{default}!",
+    "Chat.AdminReportSend": "{darkred}[REPORTS] Player {green}{0}{default} reported player {darkblue}{1}{default} (Reason: {darkred}{2}{default})"
 }

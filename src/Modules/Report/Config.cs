@@ -6,6 +6,7 @@ namespace Report;
 public class Config : BasePluginConfig
 {
     [JsonPropertyName("Report Commands")] public string ReportCommands { get; set; } = "report,calladmin";
+    [JsonPropertyName("Admin Flag")] public string AdminFlag { get; set; } = "@discord_utilities/report";
     [JsonPropertyName("Unreportable Flag")] public string UnreportableFlag { get; set; } = "@discord_utilities/antireport";
     [JsonPropertyName("Report Cooldown")] public int ReportCooldown { get; set; } = 60;
     [JsonPropertyName("Report Command Method")] public int ReportMethod { get; set; } = 1;
