@@ -6,6 +6,12 @@ using DiscordUtilitiesAPI.Builders;
 namespace DiscordUtilities;
 public partial class DiscordUtilities : IDiscordUtilitiesAPI
 {
+    public void RemoveSavedCustomMessage(ulong messageId)
+    {
+        if (savedMessages.ContainsKey(messageId))
+            savedMessages.Remove(messageId);
+    }
+
     public void RemoveAllUsersFromRole(string roleId)
     {
         if (!string.IsNullOrEmpty(roleId))
@@ -138,7 +144,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         }
     }
 
-    public void SendCustomMessageToChannel(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components)
+    public void SendCustomMessageToChannel(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components, bool saveMessage = false)
     {
         EmbedBuilder? embedToBuild = new();
         ComponentBuilder? componentsToBuild = new();
@@ -151,10 +157,10 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             componentsToBuild = GetComponentsBuilder(components);
         }
-        _ = SendCustomMessageToChannelAsync(customId, channelId, content, embedToBuild, componentsToBuild);
-
+        _ = SendCustomMessageToChannelAsync(customId, channelId, content, embedToBuild, componentsToBuild, saveMessage);
     }
-    public async Task SendCustomMessageToChannelAsync(string customId, ulong channelId, string? content, EmbedBuilder embed, ComponentBuilder? components)
+
+    public async Task SendCustomMessageToChannelAsync(string customId, ulong channelId, string? content, EmbedBuilder embed, ComponentBuilder? components, bool saveMessage = false)
     {
         try
         {
@@ -168,7 +174,14 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 
                 var message = await channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null);
                 if (message != null)
+                {
                     Event_CustomMessageReceived(customId, message);
+                    if (saveMessage)
+                    {
+                        if (!savedMessages.ContainsKey(message.Id))
+                            savedMessages.Add(message.Id, message);
+                    }
+                }
             }
             else
                 throw new Exception("Failed to send a custom message to channel because BOT is not connected!");

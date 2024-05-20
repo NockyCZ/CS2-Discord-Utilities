@@ -4,7 +4,7 @@
     "Menu.ReportSelectReason": "Select a Reason",
     "Menu.ReportCustomReason": "Custom Reason",
     "Menu.Back": "Back",
-    "Chat.ReportSend": "Player {0} has been reported! (Reason: {1})",
+    "Chat.ReportSend": "Player {green}{0}{default} has been reported! (Reason: {darkred}{2}{default})",
     "Chat.ReportCancelled": "Your report has been successfully cancelled.",
     "Chat.ReportShortReason": "Insufficient length of reason",
     "Chat.ReportNoTargetsFound": "No targets found! Only you are on the server!",
@@ -15,5 +15,15 @@
     "Chat.TargetNotFound": "A player named {green}{0}{default} was not found!",
     "Chat.TargetNotConnected": "Player {green}{0}{default} is no longer connected!",
     "Chat.MultipleTargetFound": "Multiple players were found with the name {green}{0}{default}!",
-    "Chat.AdminReportSend": "{darkred}[REPORTS] Player {green}{0}{default} reported player {darkblue}{1}{default} (Reason: {darkred}{2}{default})"
+    "Chat.AdminReportSend": "{darkred}[REPORTS]{default} Player {green}{0}{default} reported player {darkblue}{1}{default} (Reason: {darkred}{2}{default})",
+    "Chat.ReportSolved": "The report has been set as resolved.",
+    "Chat.NoReportsFound": "No Reports Found!",
+    "Menu.ReportsList": "List of Reports ({0})",
+    "Menu.ReportInfo": "{0} (Reason: {1})",
+    "Menu.ReportDetails": "Details of the Report",
+    "Menu.MarkAsSolved": "Mark as solved",
+    "Menu.ReportInfo.Sender": "From: {0}",
+    "Menu.ReportInfo.Reason": "Reason: {0}",
+    "Menu.ReportInfo.Target": "Target: {0}",
+    "Menu.ReportInfo.Time": "Created: {0}"
 }

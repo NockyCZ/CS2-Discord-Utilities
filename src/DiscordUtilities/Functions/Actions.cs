@@ -176,12 +176,22 @@ namespace DiscordUtilities
         }
         public async Task UpdateBotStatus()
         {
-            if (BotClient == null || !IsBotConnected)
-                return;
+            try
+            {
+                if (BotClient == null || !IsBotConnected)
+                    return;
 
-            int activityType = Config.BotStatus.ActivityType == 0 ? 1 : Config.BotStatus.ActivityType;
-            string ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
-            await BotClient.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType, ActivityProperties.None));
+                string ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
+                if (LastBotActivityText == ActivityFormat)
+                    return;
+
+                LastBotActivityText = ActivityFormat;
+                await BotClient.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType));
+            }
+            catch (Exception ex)
+            {
+                Perform_SendConsoleMessage($"Error: {ex.Message}", ConsoleColor.Red);
+            }
         }
     }
 }

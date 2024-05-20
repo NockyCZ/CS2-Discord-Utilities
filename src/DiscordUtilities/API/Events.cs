@@ -123,7 +123,17 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             Builders = GetMessageBuilders(message)
         };
 
-        var user = message.Author as SocketGuildUser;
+        var user = message.Author;
+        var userRoles = (user as SocketGuildUser)?.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
+        var userData = new UserData
+        {
+            GlobalName = user.GlobalName,
+            DisplayName = user.Username,
+            ID = user.Id,
+            RolesIds = userRoles
+        };
+
+        /*var user = message.Author;
         if (user == null)
         {
             if (IsDebug)
@@ -138,11 +148,11 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             DisplayName = user.DisplayName,
             ID = user.Id,
             RolesIds = userRoles
-        };
+        };*/
 
         Server.NextFrame(() =>
         {
-            DiscordUtilitiesAPI.Get()?.TriggerEvent(new CustomMessageReceived(customId, messageData, userData));
+            DiscordUtilitiesAPI.Get()?.TriggerEvent(new CustomMessageReceived(customId, messageData, userData, savedMessages.ContainsKey(message.Id)));
             if (IsDebug)
                 Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: CustomMessageReceived", ConsoleColor.Cyan);
         });

@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.3";
+        public override string ModuleVersion => "2.0.4";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
@@ -82,7 +82,7 @@ namespace DiscordUtilities
 
             int debugCounter = 0;
 
-            updateTimer = AddTimer(10.0f, () =>
+            updateTimer = AddTimer(30.0f, () =>
             {
                 debugCounter++;
                 UpdateServerData();
@@ -149,6 +149,7 @@ namespace DiscordUtilities
                 await BotClient.StartAsync();
 
                 BotClient.Ready += ReadyAsync;
+
                 await Task.Delay(-1);
             }
             catch (Exception ex)
@@ -156,7 +157,6 @@ namespace DiscordUtilities
                 Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while initializing the Discord BOT: {ex.Message}", ConsoleColor.Red);
             }
         }
-
         private async Task ReadyAsync()
         {
             Perform_SendConsoleMessage("[Discord Utilities] Discord BOT has been connected!", ConsoleColor.Green);

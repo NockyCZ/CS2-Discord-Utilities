@@ -1,14 +1,11 @@
 ﻿
-using System.Drawing;
-using System.Net.Mime;
+using System.Text;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Timers;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Builders;
 using DiscordUtilitiesAPI.Events;
@@ -21,18 +18,24 @@ namespace Report
         public override string ModuleName => "[Discord Utilities] Report System";
         public override string ModuleAuthor => "SourceFactory.eu";
         public override string ModuleVersion => "1.0.0";
-        private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
-        public Config Config { get; set; } = null!;
-        public void OnConfigParsed(Config config) { Config = config; }
+        public IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
+        public Config Config { get; set; } = new();
         public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new();
         public Dictionary<CCSPlayerController, int> reportCooldowns = new();
         public Dictionary<string, ReportData> reportsList = new();
         public class ReportData
         {
-            public required CCSPlayerController sender;
-            public CCSPlayerController? target;
+            public required int sender;
+            public required string senderName;
+            public required int target;
+            public required string targetName;
             public required string reason;
             public required ulong messageId;
+            public required DateTime time;
+        }
+        public void OnConfigParsed(Config config)
+        {
+            Config = config;
         }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
@@ -49,6 +52,42 @@ namespace Report
             AddCommandListener("say", OnPlayerSay, HookMode.Pre);
             AddCommandListener("say_team", OnPlayerSayTeam, HookMode.Pre);
         }
+
+        [GameEventHandler]
+        public HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
+        {
+            if (reportsList.Count == 0 || Config.ReportExpiration == 0)
+                return HookResult.Continue;
+
+            foreach (var report in reportsList)
+            {
+                var data = report.Value;
+                TimeSpan difference = DateTime.Now - data.time;
+
+                if (difference.TotalMinutes > Config.ReportExpiration)
+                {
+                    PerformReportSolved(report.Key, 1, null);
+                }
+            }
+            return HookResult.Continue;
+        }
+
+        [GameEventHandler(HookMode.Pre)]
+        public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+        {
+            var player = @event.Userid;
+            if (player != null && player.IsValid)
+            {
+                if (performReport.ContainsKey(player))
+                    performReport.Remove(player);
+                if (reportCooldowns.ContainsKey(player))
+                    reportCooldowns.Remove(player);
+            }
+
+            return HookResult.Continue;
+        }
+
+
         private HookResult OnPlayerSay(CCSPlayerController? player, CommandInfo info)
         {
             if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
@@ -73,6 +112,7 @@ namespace Report
             }
             return HookResult.Continue;
         }
+
         private HookResult OnPlayerSayTeam(CCSPlayerController? player, CommandInfo info)
         {
             if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
@@ -97,6 +137,7 @@ namespace Report
             }
             return HookResult.Continue;
         }
+
         public void SendReport(CCSPlayerController sender, CCSPlayerController target, string reason)
         {
             if (reportCooldowns.ContainsKey(sender))
@@ -116,10 +157,13 @@ namespace Report
                     sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.TargetNotConnected"]}");
                     return;
                 }
-                if (target == sender)
+                if (!Config.SelfReport)
                 {
-                    sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.SelfReport"]}");
-                    return;
+                    if (target == sender)
+                    {
+                        sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.SelfReport"]}");
+                        return;
+                    }
                 }
             }
 
@@ -139,25 +183,24 @@ namespace Report
 
             var reportData = new ReportData()
             {
-                sender = sender,
-                target = Config.ReportMethod != 3 ? target : sender,
+                sender = sender.Slot,
+                senderName = sender.PlayerName,
+                target = Config.ReportMethod != 3 ? target.Slot : sender.Slot,
+                targetName = Config.ReportMethod != 3 ? target.PlayerName : sender.PlayerName,
                 reason = reason,
-                messageId = 0
+                messageId = 0,
+                time = DateTime.Now
             };
 
-            string reportId = reportsList.Count() + 1.ToString();
+            string reportId = GetRandomChars();
             reportsList.Add(reportId, reportData);
-
-            if (Config.ReportEmbed.ReportButton.Enabled)
-                DiscordUtilities!.SendCustomMessageToChannel($"report_{reportId}", ulong.Parse(Config.ChannelID), content, embedBuider, null);
-            else
-                DiscordUtilities!.SendMessageToChannel(ulong.Parse(Config.ChannelID), content, embedBuider, null);
+            DiscordUtilities.SendCustomMessageToChannel($"report_{reportId}", ulong.Parse(Config.ChannelID), content, embedBuider, null, true);
 
             reportCooldowns.Add(sender, (int)Server.CurrentTime);
             sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportSend", target.PlayerName, reason]}");
             foreach (var admin in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, Config.AdminFlag)))
             {
-                admin.PrintToChat(Localizer["Chat.ReportSend", sender.PlayerName, target.PlayerName, reason]);
+                admin.PrintToChat(Localizer["Chat.AdminReportSend", sender.PlayerName, target.PlayerName, reason]);
             }
         }
         public void CustomReasonReport(CCSPlayerController sender, CCSPlayerController target)
@@ -212,8 +255,11 @@ namespace Report
                     var messageBuilders = interaction.Builders;
                     if (messageBuilders != null && messageBuilders.Embeds != null && messageBuilders.Embeds.Count() > 0)
                     {
-                        if (reportsList.ContainsKey(CustomId))
-                            reportsList.Remove(CustomId);
+                        if (!reportsList.ContainsKey(CustomId))
+                            return;
+
+                        var messageId = reportsList[CustomId].messageId;
+                        reportsList.Remove(CustomId);
 
                         var replaceVariablesBuilder = new ReplaceVariables.Builder
                         {
@@ -223,18 +269,18 @@ namespace Report
                         var embedsBuilder = messageBuilders.Embeds.FirstOrDefault();
                         if (embedsBuilder != null)
                         {
-                            embedsBuilder.Title = string.IsNullOrEmpty(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Title) ? embedsBuilder.Title : DiscordUtilities!.ReplaceVariables(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Title, replaceVariablesBuilder);
-                            embedsBuilder.ThumbnailUrl = string.IsNullOrEmpty(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Thumbnail) ? embedsBuilder.ThumbnailUrl : Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Thumbnail;
-                            embedsBuilder.ImageUrl = string.IsNullOrEmpty(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Image) ? embedsBuilder.ImageUrl : Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Image;
-                            embedsBuilder.Color = Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Color;
-                            embedsBuilder.Footer = string.IsNullOrEmpty(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Footer) ? embedsBuilder.Footer : DiscordUtilities!.ReplaceVariables(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Footer, replaceVariablesBuilder);
-                            embedsBuilder.FooterTimestamp = Config.ReportEmbed.ReportButton.UpdatedReportEmbed.FooterTimestamp;
+                            embedsBuilder.Title = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Title) ? embedsBuilder.Title : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Title, replaceVariablesBuilder);
+                            embedsBuilder.ThumbnailUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Thumbnail) ? embedsBuilder.ThumbnailUrl : Config.SolvedEmbeds.SolvedReportEmbed.Thumbnail;
+                            embedsBuilder.ImageUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Image) ? embedsBuilder.ImageUrl : Config.SolvedEmbeds.SolvedReportEmbed.Image;
+                            embedsBuilder.Color = Config.SolvedEmbeds.SolvedReportEmbed.Color;
+                            embedsBuilder.Footer = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Footer) ? embedsBuilder.Footer : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Footer, replaceVariablesBuilder);
+                            embedsBuilder.FooterTimestamp = Config.SolvedEmbeds.SolvedReportEmbed.FooterTimestamp;
                         }
                         var content = messageBuilders.Content;
                         if (content != null)
-                            content = string.IsNullOrEmpty(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Content) ? content : DiscordUtilities!.ReplaceVariables(Config.ReportEmbed.ReportButton.UpdatedReportEmbed.Content, replaceVariablesBuilder);
+                            content = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Content) ? content : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Content, replaceVariablesBuilder);
 
-                        DiscordUtilities!.UpdateMessage(ulong.Parse(CustomId), interaction.ChannelID, content, embedsBuilder, null);
+                        DiscordUtilities!.UpdateMessage(messageId, interaction.ChannelID, content, embedsBuilder, null);
 
                         var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces;
                         embedsBuilder = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
@@ -252,6 +298,63 @@ namespace Report
             }
         }
 
+        public void PerformReportSolved(string reportId, int solvedType, CCSPlayerController? player)
+        {
+            if (!reportsList.ContainsKey(reportId))
+                return;
+
+            var data = reportsList[reportId];
+            reportsList.Remove(reportId);
+            if (DiscordUtilities!.IsCustomMessageSaved(data.messageId))
+            {
+                var message = DiscordUtilities.GetMessageDataFromCustomMessage(data.messageId);
+                DiscordUtilities.RemoveSavedCustomMessage(data.messageId);
+                if (message == null)
+                    return;
+
+                var messageBuilders = message.Builders;
+                if (messageBuilders != null && messageBuilders.Embeds != null && messageBuilders.Embeds.Count() > 0)
+                {
+                    var replaceVariablesBuilder = new ReplaceVariables.Builder
+                    {
+                        ServerData = true,
+                        PlayerData = solvedType == 0 ? player : null,
+                    };
+
+                    var embedsBuilder = messageBuilders.Embeds.FirstOrDefault();
+                    var content = messageBuilders.Content;
+                    if (embedsBuilder != null)
+                    {
+                        if (solvedType == 0)
+                        {
+                            embedsBuilder.Title = string.IsNullOrEmpty(Config.SolvedEmbeds.IngameSolvedReportEmbed.Title) ? embedsBuilder.Title : DiscordUtilities.ReplaceVariables(Config.SolvedEmbeds.IngameSolvedReportEmbed.Title, replaceVariablesBuilder);
+                            embedsBuilder.ThumbnailUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.IngameSolvedReportEmbed.Thumbnail) ? embedsBuilder.ThumbnailUrl : Config.SolvedEmbeds.IngameSolvedReportEmbed.Thumbnail;
+                            embedsBuilder.ImageUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.IngameSolvedReportEmbed.Image) ? embedsBuilder.ImageUrl : Config.SolvedEmbeds.IngameSolvedReportEmbed.Image;
+                            embedsBuilder.Color = Config.SolvedEmbeds.IngameSolvedReportEmbed.Color;
+                            embedsBuilder.Footer = string.IsNullOrEmpty(Config.SolvedEmbeds.IngameSolvedReportEmbed.Footer) ? embedsBuilder.Footer : DiscordUtilities.ReplaceVariables(Config.SolvedEmbeds.IngameSolvedReportEmbed.Footer, replaceVariablesBuilder);
+                            embedsBuilder.FooterTimestamp = Config.SolvedEmbeds.IngameSolvedReportEmbed.FooterTimestamp;
+
+                            if (content != null)
+                                content = string.IsNullOrEmpty(Config.SolvedEmbeds.IngameSolvedReportEmbed.Content) ? "" : DiscordUtilities.ReplaceVariables(Config.SolvedEmbeds.IngameSolvedReportEmbed.Content, replaceVariablesBuilder);
+                        }
+                        else
+                        {
+                            embedsBuilder.Title = string.IsNullOrEmpty(Config.SolvedEmbeds.ExpiredReportEmbed.Title) ? embedsBuilder.Title : DiscordUtilities.ReplaceVariables(Config.SolvedEmbeds.ExpiredReportEmbed.Title, replaceVariablesBuilder);
+                            embedsBuilder.ThumbnailUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.ExpiredReportEmbed.Thumbnail) ? embedsBuilder.ThumbnailUrl : Config.SolvedEmbeds.ExpiredReportEmbed.Thumbnail;
+                            embedsBuilder.ImageUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.ExpiredReportEmbed.Image) ? embedsBuilder.ImageUrl : Config.SolvedEmbeds.ExpiredReportEmbed.Image;
+                            embedsBuilder.Color = Config.SolvedEmbeds.ExpiredReportEmbed.Color;
+                            embedsBuilder.Footer = string.IsNullOrEmpty(Config.SolvedEmbeds.ExpiredReportEmbed.Footer) ? embedsBuilder.Footer : DiscordUtilities.ReplaceVariables(Config.SolvedEmbeds.ExpiredReportEmbed.Footer, replaceVariablesBuilder);
+                            embedsBuilder.FooterTimestamp = Config.SolvedEmbeds.ExpiredReportEmbed.FooterTimestamp;
+
+                            if (content != null)
+                                content = string.IsNullOrEmpty(Config.SolvedEmbeds.ExpiredReportEmbed.Content) ? "" : DiscordUtilities.ReplaceVariables(Config.SolvedEmbeds.ExpiredReportEmbed.Content, replaceVariablesBuilder);
+                        }
+                    }
+                    DiscordUtilities.UpdateMessage(message.MessageID, ulong.Parse(Config.ChannelID), content, embedsBuilder, null);
+                }
+            }
+        }
+
         private void DiscordUtilitiesEventHandler(object? _, IDiscordUtilitiesEvent @event)
         {
             switch (@event)
@@ -260,13 +363,13 @@ namespace Report
                     OnInteractionCreated(interaction.Interaction, interaction.User);
                     break;
                 case CustomMessageReceived message:
-                    OnCustomMessageReceived(message.CustomID, message.Message);
+                    OnCustomMessageReceived(message.CustomID, message.Message, message.isStored);
                     break;
                 default:
                     break;
             }
         }
-        private void OnCustomMessageReceived(string customID, MessageData message)
+        private void OnCustomMessageReceived(string customID, MessageData message, bool isStored)
         {
             if (customID.Contains("report_"))
             {
@@ -275,28 +378,24 @@ namespace Report
                     return;
 
                 var reportData = reportsList[reportId];
-                var newReportData = new ReportData()
-                {
-                    sender = reportData.sender,
-                    target = Config.ReportMethod != 3 ? reportData.target : reportData.sender,
-                    reason = reportData.reason,
-                    messageId = message.MessageID
-                };
+                reportData.messageId = message.MessageID;
+
+                if (!Config.ReportEmbed.ReportButton.Enabled)
+                    return;
+
                 var replaceVariablesBuilder = new ReplaceVariables.Builder
                 {
                     ServerData = true,
-                    PlayerData = reportData.sender,
-                    TargetData = reportData.target,
+                    PlayerData = Utilities.GetPlayerFromSlot(reportData.sender),
+                    TargetData = Utilities.GetPlayerFromSlot(reportData.target),
                     CustomVariables = new Dictionary<string, string>{
                         { "{REASON}", reportData.reason }
                     },
                 };
-                reportsList.Remove(reportId);
-                reportsList.Add(message.MessageID.ToString(), newReportData);
 
                 var config = Config.ReportEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
-                var content = DiscordUtilities!.ReplaceVariables(Config.ReportEmbed.Content, replaceVariablesBuilder);
+                var content = DiscordUtilities.ReplaceVariables(Config.ReportEmbed.Content, replaceVariablesBuilder);
 
                 var componentsBuilder = new Components.Builder
                 {
@@ -304,14 +403,14 @@ namespace Report
                     {
                         new Components.InteractiveButtonsBuilder
                         {
-                            CustomId = $"report_{message.MessageID}",
+                            CustomId = $"report_{reportId}",
                             Label = Config.ReportEmbed.ReportButton.Text,
                             Color = (Components.ButtonColor)Config.ReportEmbed.ReportButton.Color,
-                            Emoji = DiscordUtilities!.IsValidEmoji(Config.ReportEmbed.ReportButton.Emoji) ? Config.ReportEmbed.ReportButton.Emoji : "",
+                            Emoji = DiscordUtilities.IsValidEmoji(Config.ReportEmbed.ReportButton.Emoji) ? Config.ReportEmbed.ReportButton.Emoji : "",
                         }
                     }
                 };
-                DiscordUtilities!.UpdateMessage(message.MessageID, message.ChannelID, content, embedBuider, componentsBuilder);
+                DiscordUtilities.UpdateMessage(message.MessageID, message.ChannelID, content, embedBuider, componentsBuilder);
             }
         }
         private IDiscordUtilitiesAPI GetDiscordUtilitiesEventSender()
@@ -329,6 +428,22 @@ namespace Report
 
             DiscordUtilities = DUApi;
             return DUApi;
+        }
+
+        private string GetRandomChars()
+        {
+            int length = 15;
+
+            string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            var keyBuilder = new StringBuilder(length);
+
+            for (int i = 0; i < length; i++)
+            {
+                keyBuilder.Append(chars[random.Next(chars.Length)]);
+            }
+
+            return keyBuilder.ToString();
         }
     }
 }

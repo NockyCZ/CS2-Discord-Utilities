@@ -1,11 +1,42 @@
 using System.Dynamic;
+using Discord;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Builders;
+using DiscordUtilitiesAPI.Helpers;
 using static DiscordUtilitiesAPI.Builders.Components;
 
 namespace DiscordUtilities;
 public partial class DiscordUtilities : IDiscordUtilitiesAPI
 {
+    public bool IsCustomMessageSaved(ulong messageId)
+    {
+        return savedMessages.ContainsKey(messageId);
+    }
+
+    public MessageData? GetMessageDataFromCustomMessage(ulong messageId)
+    {
+        if (!savedMessages.ContainsKey(messageId))
+            return null;
+
+        var message = savedMessages[messageId];
+        if (message == null)
+        {
+            Perform_SendConsoleMessage($"[Discord Utilities] Message with ID '{messageId}' was not found! (GetMessageData)", ConsoleColor.Red);
+            return null;
+        }
+
+        var messageData = new MessageData
+        {
+            ChannelName = message.Channel.Name,
+            ChannelID = message.Channel.Id,
+            MessageID = message.Id,
+            Text = message.Content,
+            GuildId = null,
+            Builders = GetMessageBuilders(message)
+        };
+        return messageData;
+    }
+
     public bool IsValidEmoji(string emoji)
     {
         if (string.IsNullOrEmpty(emoji))
@@ -87,7 +118,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                                     Description = ReplaceVariables(fieldData[1], replacedVariables),
                                     Inline = bool.Parse(fieldData[2])
                                 };
-                                Builder.Fields!.Add(fieldBuilder);
+                                Builder.Fields.Add(fieldBuilder);
                             }
                             else
                             {

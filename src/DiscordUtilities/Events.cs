@@ -33,14 +33,8 @@ namespace DiscordUtilities
                     IsLinked = false,
                 };
                 playerData.Add(player, newPlayer);
-                PlayerDataLoaded(player);
                 if (IsDbConnected)
-                {
                     _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), 0);
-                }
-
-                string IpAddress = player.IpAddress!.Split(":")[0];
-                LoadPlayerCountry(IpAddress, player.AuthorizedSteamID.SteamId64);
             }
             return HookResult.Continue;
         }

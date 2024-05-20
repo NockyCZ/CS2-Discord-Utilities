@@ -82,7 +82,7 @@ namespace DiscordUtilities
                         if (!string.IsNullOrEmpty(embed.Description))
                             EmbedBuilder.Description = embed.Description;
 
-                        if (EmbedBuilder.Fields != null && embed.Fields.Count() > 0)
+                        if (embed.Fields.Count() > 0)
                         {
                             EmbedBuilder.Fields.AddRange(embed.Fields.Select(field => new Embeds.FieldsData
                             {
@@ -111,7 +111,7 @@ namespace DiscordUtilities
             }
             return messageBuilders;
         }
-
+        
         public ComponentBuilder GetComponentsBuilder(Components.Builder componentBuilder)
         {
             var component = new ComponentBuilder();
@@ -179,12 +179,12 @@ namespace DiscordUtilities
                 embed.WithDescription(embedBuilder.Description);
                 //Console.WriteLine("WithDescription");
             }
-            if (!string.IsNullOrEmpty(embedBuilder.ThumbnailUrl) && (embedBuilder.ThumbnailUrl.Contains(".jpg") || embedBuilder.ThumbnailUrl.Contains(".png") || embedBuilder.ThumbnailUrl.Contains(".gif")))
+            if (embedBuilder.ThumbnailUrl.Contains(".jpg") || embedBuilder.ThumbnailUrl.Contains(".png") || embedBuilder.ThumbnailUrl.Contains(".gif"))
             {
                 embed.WithThumbnailUrl(embedBuilder.ThumbnailUrl);
                 //Console.WriteLine("WithThumbnailUrl");
             }
-            if (!string.IsNullOrEmpty(embedBuilder.ImageUrl) && (embedBuilder.ImageUrl.Contains(".jpg") || embedBuilder.ImageUrl.Contains(".png") || embedBuilder.ImageUrl.Contains(".gif")))
+            if (embedBuilder.ImageUrl.Contains(".jpg") || embedBuilder.ImageUrl.Contains(".png") || embedBuilder.ImageUrl.Contains(".gif"))
             {
                 embed.WithImageUrl(embedBuilder.ImageUrl);
                 //Console.WriteLine("WithImageUrl");
@@ -200,9 +200,9 @@ namespace DiscordUtilities
                 //Console.WriteLine("WithCurrentTimestamp");
             }
 
-            if (embedBuilder.Fields != null && embedBuilder.Fields.Count() > 0)
+            if (embedBuilder.fields.Count() > 0)
             {
-                foreach (var field in embedBuilder.Fields)
+                foreach (var field in embedBuilder.fields)
                 {
                     embed.AddField(field.Title, field.Description, field.Inline);
                 }
@@ -217,6 +217,7 @@ namespace DiscordUtilities
             }
             return embed;
         }
+
         private CCSPlayerController? GetTargetBySteamID64(ulong steamid)
         {
             foreach (var p in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.AuthorizedSteamID != null))

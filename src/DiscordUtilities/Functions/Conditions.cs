@@ -94,6 +94,7 @@ namespace DiscordUtilities
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
                             break;
                         default:
+                            condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
                             break;
                     }
                 }

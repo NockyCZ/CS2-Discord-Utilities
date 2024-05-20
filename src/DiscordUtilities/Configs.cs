@@ -22,7 +22,7 @@ public class DUConfig : BasePluginConfig
             "Player.DiscordNameWithPing", new List<ConditionData>
             {
                 new ConditionData { Value = "{Player.DiscordDisplayName}", Operator = "==", ValueToCheck = "", ReplacementValue = "Not Linked" },
-                new ConditionData { Value = "{Player.DiscordDisplayName}", Operator = "!=", ValueToCheck = "", ReplacementValue = "{Player.DiscordDisplayName} ({Player.DiscordPing})" }
+                new ConditionData { Value = "{Player.DiscordDisplayName}", ReplacementValue = "{Player.DiscordDisplayName} ({Player.DiscordPing})" }
             }
         },
         {
@@ -31,7 +31,7 @@ public class DUConfig : BasePluginConfig
                 new ConditionData { Value = "{Player.PlayedTime}", Operator = ">", ValueToCheck = "100", ReplacementValue = "Active Player ({Player.PlayedTime}h)" },
                 new ConditionData { Value = "{Player.PlayedTime}", Operator = ">", ValueToCheck = "75", ReplacementValue = "Advanced ({Player.PlayedTime}h)" },
                 new ConditionData { Value = "{Player.PlayedTime}", Operator = ">=", ValueToCheck = "50", ReplacementValue = "Beginner ({Player.PlayedTime}h)" },
-                new ConditionData { Value = "{Player.PlayedTime}", Operator = "<", ValueToCheck = "50", ReplacementValue = "Newbie ({Player.PlayedTime}h)" }
+                new ConditionData { Value = "{Player.PlayedTime}", ReplacementValue = "Newbie ({Player.PlayedTime}h)" }
             }
         },
         {
@@ -126,5 +126,5 @@ public class BotStatus
     [JsonPropertyName("Update Status")] public bool UpdateStatus { get; set; } = true;
     [JsonPropertyName("Status")] public int Status { get; set; } = 1;
     [JsonPropertyName("Activity Type")] public int ActivityType { get; set; } = 0;
-    [JsonPropertyName("Activity Text")] public string ActivityFormat { get; set; } = "{Server.MapName} ({Server.OnlinePlayers}/{Server.MaxPlayers})";
+    [JsonPropertyName("Activity Text")] public string ActivityFormat { get; set; } = "{Server.MapName} [Server.CustomOnlinePlayers]";
 }

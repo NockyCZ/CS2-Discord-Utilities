@@ -10,7 +10,7 @@ using DiscordUtilitiesAPI.Helpers;
 
 namespace EventNotifications
 {
-    public class ConnectedPlayersRole : BasePlugin, IPluginConfig<Config>
+    public class EventNotifications : BasePlugin, IPluginConfig<Config>
     {
         public override string ModuleName => "[Discord Utilities] Event Notifications";
         public override string ModuleAuthor => "SourceFactory.eu";

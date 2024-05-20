@@ -8,11 +8,14 @@ public interface IDiscordUtilitiesAPI
 {
     public void RegisterNewSlashCommand(Commands.Builder command);
     public void SendMessageToChannel(ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components);
-    public void SendCustomMessageToChannel(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components);
+    public void SendCustomMessageToChannel(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components, bool saveMessage = false);
     public void SendRespondToMessage(ulong messageId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components);
     public void UpdateMessage(ulong messageId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components);
     public void SendRespondMessageToInteraction(int interactionId, string? content, Embeds.Builder? embed, Components.Builder? components, bool silent = true);
     public void SendRespondMessageToSlashCommand(int interactionId, string? content, Embeds.Builder? embed, Components.Builder? components, bool silent = true);
+    public void RemoveSavedCustomMessage(ulong messageId);
+    public bool IsCustomMessageSaved(ulong messageId);
+    public MessageData? GetMessageDataFromCustomMessage(ulong messageId);
     public Embeds.Builder GetEmbedBuilderFromConfig<T>(T obj, ReplaceVariables.Builder? replacedVariables = null);
     public void AddRolesToUser(UserData user, List<string> rolesIds);
     public void RemoveRolesFromUser(UserData user, List<string> rolesIds);

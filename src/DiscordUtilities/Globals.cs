@@ -21,5 +21,6 @@ namespace DiscordUtilities
         public static bool UseCustomVariables;
         public static string ServerId = "";
         public static string DateFormat = "";
+        public static string LastBotActivityText = "";
     }
 }

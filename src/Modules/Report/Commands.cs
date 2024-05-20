@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 
 namespace Report
@@ -11,8 +12,28 @@ namespace Report
             string[] Commands = Config.ReportCommands.Split(',');
             foreach (var cmd in Commands)
                 AddCommand($"css_{cmd}", $"Report Players ({cmd})", ReportPlayers_CMD);
+
+            if (Config.ReportsListMenu)
+            {
+                string[] adminCommands = Config.ReportsListCommands.Split(',');
+                foreach (var cmd in adminCommands)
+                    AddCommand($"css_{cmd}", $"Reports List ({cmd})", ReportsList_CMD);
+            }
         }
 
+        public void ReportsList_CMD(CCSPlayerController? player, CommandInfo info)
+        {
+            if (player == null || !player.IsValid || !AdminManager.PlayerHasPermissions(player, Config.AdminFlag))
+                return;
+
+            if (DiscordUtilities == null || !DiscordUtilities.IsBotLoaded())
+            {
+                player.PrintToChat("Discord BOT is not connected! Contact the Administrator.");
+                return;
+            }
+
+            OpenReportsList_Menu(player);
+        }
         public void ReportPlayers_CMD(CCSPlayerController? player, CommandInfo info)
         {
             if (player == null || !player.IsValid)
@@ -34,11 +55,13 @@ namespace Report
                 }
                 reportCooldowns.Remove(player);
             }
-
-            if (GetTargetsForReportCount(player) == 0)
+            if (!Config.SelfReport)
             {
-                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportNoTargetsFound"]}");
-                return;
+                if (GetTargetsForReportCount(player) == 0)
+                {
+                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportNoTargetsFound"]}");
+                    return;
+                }
             }
             var arg1 = info.GetArg(1);
             var arg2 = info.GetArg(2);

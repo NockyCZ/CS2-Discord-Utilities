@@ -143,6 +143,9 @@ namespace DiscordUtilities
                                                     _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), linkedPlayers[player.AuthorizedSteamID.SteamId64]);
                                                 }
                                             }
+                                            string IpAddress = player.IpAddress!.Split(":")[0];
+                                            LoadPlayerCountry(IpAddress, player.AuthorizedSteamID!.SteamId64);
+                                            PlayerDataLoaded(player);
                                         }
                                     });
                                 }

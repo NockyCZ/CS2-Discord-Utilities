@@ -1,4 +1,5 @@
 using CounterStrikeSharp.API.Core;
+using Discord;
 using Discord.WebSocket;
 
 namespace DiscordUtilities
@@ -7,6 +8,7 @@ namespace DiscordUtilities
     {
         public static Dictionary<int, SocketSlashCommand> savedCommandInteractions = new();
         public static Dictionary<int, SocketInteraction> savedInteractions = new();
+        public static Dictionary<ulong, IUserMessage> savedMessages = new();
         public static Dictionary<CCSPlayerController, PlayerData> playerData = new();
         public static Dictionary<ulong, ulong> linkedPlayers = new();
         public static Dictionary<string, string> linkCodes = new();
