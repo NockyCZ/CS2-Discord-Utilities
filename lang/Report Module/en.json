@@ -16,7 +16,7 @@
     "Chat.TargetNotConnected": "Player {green}{0}{default} is no longer connected!",
     "Chat.MultipleTargetFound": "Multiple players were found with the name {green}{0}{default}!",
     "Chat.AdminReportSend": "{darkred}[REPORTS]{default} Player {green}{0}{default} reported player {darkblue}{1}{default} (Reason: {darkred}{2}{default})",
-    "Chat.ReportSolved": "The report has been set as resolved.",
+    "Chat.ReportSolved": "The report has been set as solved.",
     "Chat.NoReportsFound": "No Reports Found!",
     "Menu.ReportsList": "List of Reports ({0})",
     "Menu.ReportInfo": "{0} (Reason: {1})",
