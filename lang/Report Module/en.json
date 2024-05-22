@@ -4,7 +4,7 @@
     "Menu.ReportSelectReason": "Select a Reason",
     "Menu.ReportCustomReason": "Custom Reason",
     "Menu.Back": "Back",
-    "Chat.ReportSend": "Player {green}{0}{default} has been reported! (Reason: {darkred}{2}{default})",
+    "Chat.ReportSend": "Player {green}{0}{default} has been reported! (Reason: {darkred}{1}{default})",
     "Chat.ReportCancelled": "Your report has been successfully cancelled.",
     "Chat.ReportShortReason": "Insufficient length of reason",
     "Chat.ReportNoTargetsFound": "No targets found! Only you are on the server!",
