@@ -32,7 +32,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 6. After any configuration changes, you must restart the server
 
 # Requirements
-- MySQL Database (Only if you want to use the Link System)
+- MySQL Database
 - [Created Discord Bot](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/setting-up-a-discord-bot)
 
 # Preview Images from available modules
