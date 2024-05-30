@@ -16,8 +16,8 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 • These modules are separate plugins that have their own configuration and work only with the main plugin.
 - [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/report-calladmin)
 - [x] [Server Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-status)
-- [x] [Server Chatlog](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-chatlog)
-- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/discord-chat-relay)
+- [x] [RCON](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/rcon) (Execute Commands from your Discord)
+- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/chat-relay)
 - [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/connected-players-role)
 - [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
 - [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/manage-roles-and-permissions)
