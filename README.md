@@ -9,18 +9,18 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 
 # Main Features
 • These features are already implemented in the main plugin.
-- [x] [Linking System](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/linking-system)
-- [x] [Custom Bot Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/custom-bot-status)
+- [x] [Linking System](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/main-configuration/linking-system)
+- [x] [Custom Bot Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/main-configuration/custom-bot-status)
 
 # Addons/Modules
 • These modules are separate plugins that have their own configuration and work only with the main plugin.
-- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/report-calladmin)
-- [x] [Server Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/server-status)
-- [x] [Server Chatlog](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/server-chatlog)
-- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/discord-chat-relay)
-- [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/connected-players-role)
-- [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/event-notifications)
-- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/manage-roles-and-permissions)
+- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/report-calladmin)
+- [x] [Server Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-status)
+- [x] [Server Chatlog](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-chatlog)
+- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/discord-chat-relay)
+- [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/connected-players-role)
+- [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
+- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/manage-roles-and-permissions)
 
 # Installation
 1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
