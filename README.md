@@ -3,24 +3,24 @@
 Discord Utilities is a server API plugin for communication between the CS2 server and the Discord server. With this plugin you can install/create modules that will run through the main plugin.<br>
 Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) framework | Minimum CSS API Version: 202
 
-## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities)
+## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities)
 ### Discord Support Server
 [<img src="https://discordapp.com/api/guilds/1149315368465211493/widget.png?style=banner2">](https://discord.gg/Tzmq98gwqF)
 
 # Main Features
 • These features are already implemented in the main plugin.
-- [x] [Linking System](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/linking-system)
-- [x] [Custom Bot Status](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/custom-bot-status)
+- [x] [Linking System](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/linking-system)
+- [x] [Custom Bot Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/custom-bot-status)
 
 # Addons/Modules
 • These modules are separate plugins that have their own configuration and work only with the main plugin.
-- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/report-calladmin)
-- [x] [Server Status](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/server-status)
-- [x] [Server Chatlog](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/server-chatlog)
-- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/discord-chat-relay)
-- [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/connected-players-role)
-- [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/event-notifications)
-- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/manage-roles-and-permissions)
+- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/report-calladmin)
+- [x] [Server Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/server-status)
+- [x] [Server Chatlog](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/server-chatlog)
+- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/discord-chat-relay)
+- [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/connected-players-role)
+- [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/event-notifications)
+- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/configuration/manage-roles-and-permissions)
 
 # Installation
 1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
@@ -33,7 +33,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 
 # Requirements
 - MySQL Database
-- [Created Discord Bot](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/setting-up-a-discord-bot)
+- [Created Discord Bot](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/setting-up-a-discord-bot)
 
 # Preview Images from available modules
 **• Link System** <br>
