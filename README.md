@@ -3,37 +3,37 @@
 Discord Utilities is a server API plugin for communication between the CS2 server and the Discord server. With this plugin you can install/create modules that will run through the main plugin.<br>
 Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) framework | Minimum CSS API Version: 202
 
-## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities)
+## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities)
 ### Discord Support Server
 [<img src="https://discordapp.com/api/guilds/1149315368465211493/widget.png?style=banner2">](https://discord.gg/Tzmq98gwqF)
 
 # Main Features
 • These features are already implemented in the main plugin.
-- [x] [Linking System](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/linking-system)
-- [x] [Custom Bot Status](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/custom-bot-status)
+- [x] [Linking System](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/main-configuration/linking-system)
+- [x] [Custom Bot Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/main-configuration/custom-bot-status)
 
 # Addons/Modules
 • These modules are separate plugins that have their own configuration and work only with the main plugin.
-- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/report-calladmin)
-- [x] [Server Status](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/server-status)
-- [x] [Server Chatlog](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/server-chatlog)
-- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/discord-chat-relay)
-- [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/connected-players-role)
-- [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/event-notifications)
-- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/configuration/manage-roles-and-permissions)
+- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/report-calladmin)
+- [x] [Server Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-status)
+- [x] [RCON](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/rcon) (Execute Commands from your Discord)
+- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/chat-relay)
+- [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/connected-players-role)
+- [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
+- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/manage-roles-and-permissions)
 
 # Installation
 1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
    - `DiscordUtilities.zip` file includes only the main plugin without available modules
    - `DiscordUtilitiesWithModules.zip` file includes all available modules, if you don't want to use some modules, just remove them from `/plugins/` folder
-3. Unzip into your servers `csgo/addons/counterstrikesharp/plugins/` dir
+3. Unzip into your servers `csgo/addons/counterstrikesharp/` dir
 4. Restart the server
 5. Configure the config file
 6. After any configuration changes, you must restart the server
 
 # Requirements
-- MySQL Database (Only if you want to use the Link System)
-- [Created Discord Bot](https://docs.sourcefactory.eu/cs2-free-plugins/discord-utilities/setting-up-a-discord-bot)
+- MySQL Database
+- [Created Discord Bot](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/setting-up-a-discord-bot)
 
 # Preview Images from available modules
 **• Link System** <br>
