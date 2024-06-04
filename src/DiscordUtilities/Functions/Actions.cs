@@ -185,8 +185,12 @@ namespace DiscordUtilities
                 if (LastBotActivityText == ActivityFormat)
                     return;
 
+                //Console.WriteLine(ActivityFormat);
                 LastBotActivityText = ActivityFormat;
-                await BotClient.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType));
+                if ((ActivityType)Config.BotStatus.ActivityType == ActivityType.CustomStatus)
+                    await BotClient.SetCustomStatusAsync(ActivityFormat);
+                else
+                    await BotClient.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType));
             }
             catch (Exception ex)
             {

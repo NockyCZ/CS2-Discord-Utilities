@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.4";
+        public override string ModuleVersion => "2.0.5";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
@@ -36,6 +36,18 @@ namespace DiscordUtilities
                 };
                 _ = CreateDatabaseConnection();
             }
+            else
+            {
+                Perform_SendConsoleMessage($"[Discord Utilities] Database connection information is missing!", ConsoleColor.Red);
+                throw new Exception("Database connection information is missing!");
+            }
+
+            if (string.IsNullOrEmpty(Config.ServerID))
+            {
+                Perform_SendConsoleMessage($"[Discord Utilities] Invalid Discord Server ID!", ConsoleColor.Red);
+                throw new Exception("Invalid Discord Server ID");
+            }
+
             int counter = 0;
             while (!IsBotConnected)
             {

@@ -63,44 +63,71 @@ namespace DiscordUtilities
                         }
                     }
 
+                    bool conditionMet = false;
                     switch (data.Operator)
                     {
                         case "~":
                             if (Value.Contains(ValueToCheck))
+                            {
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                                conditionMet = true;
+                            }
                             break;
                         case "==":
                             if (Value.Equals(ValueToCheck))
+                            {
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                                conditionMet = true;
+                            }
                             break;
                         case "!=":
                             if (Value != ValueToCheck)
+                            {
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                                conditionMet = true;
+                            }
                             break;
                         case ">=":
                             if (IsComparable(Value, ValueToCheck) && Comparer(Value, ValueToCheck) >= 0)
+                            {
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                                conditionMet = true;
+                            }
                             break;
                         case "<=":
                             if (IsComparable(Value, ValueToCheck) && Comparer(Value, ValueToCheck) <= 0)
+                            {
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                                conditionMet = true;
+                            }
                             break;
                         case ">":
                             if (IsComparable(Value, ValueToCheck) && Comparer(Value, ValueToCheck) > 0)
+                            {
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                                conditionMet = true;
+                            }
                             break;
                         case "<":
                             if (IsComparable(Value, ValueToCheck) && Comparer(Value, ValueToCheck) < 0)
+                            {
                                 condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                                conditionMet = true;
+                            }
                             break;
                         default:
                             condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                            conditionMet = true;
                             break;
                     }
+
+                    if (conditionMet)
+                        break;
                 }
             }
             return condition;
         }
+
 
         private static bool IsComparable(string value1, string value2)
         {
