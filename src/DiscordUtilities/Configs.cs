@@ -22,7 +22,7 @@ public class DUConfig : BasePluginConfig
             "Player.DiscordNameWithPing", new List<ConditionData>
             {
                 new ConditionData { Value = "{Player.DiscordDisplayName}", Operator = "==", ValueToCheck = "", ReplacementValue = "Not Linked" },
-                new ConditionData { Value = "{Player.DiscordDisplayName}", ReplacementValue = "{Player.DiscordDisplayName} ({Player.DiscordPing})" }
+                new ConditionData { ReplacementValue = "{Player.DiscordDisplayName} ({Player.DiscordPing})" }
             }
         },
         {
@@ -31,7 +31,7 @@ public class DUConfig : BasePluginConfig
                 new ConditionData { Value = "{Player.PlayedTime}", Operator = ">", ValueToCheck = "100", ReplacementValue = "Active Player ({Player.PlayedTime}h)" },
                 new ConditionData { Value = "{Player.PlayedTime}", Operator = ">", ValueToCheck = "75", ReplacementValue = "Advanced ({Player.PlayedTime}h)" },
                 new ConditionData { Value = "{Player.PlayedTime}", Operator = ">=", ValueToCheck = "50", ReplacementValue = "Beginner ({Player.PlayedTime}h)" },
-                new ConditionData { Value = "{Player.PlayedTime}", ReplacementValue = "Newbie ({Player.PlayedTime}h)" }
+                new ConditionData { ReplacementValue = "Newbie ({Player.PlayedTime}h)" }
             }
         },
         {
@@ -44,8 +44,8 @@ public class DUConfig : BasePluginConfig
         {
             "Server.CustomOnlinePlayers", new List<ConditionData>
             {
-                new ConditionData { Value = "{Server.OnlinePlayers}", Operator = "==", ValueToCheck = "0", ReplacementValue = "Server Is Empty" },
-                new ConditionData { Value = "{Server.OnlinePlayers}", Operator = "!=", ValueToCheck = "0", ReplacementValue = "({Server.OnlinePlayers}/{Server.MaxPlayers})" }
+                new ConditionData { Value = "{Server.OnlinePlayers}", Operator = "!=", ValueToCheck = "0", ReplacementValue = "({Server.OnlinePlayers}/{Server.MaxPlayers})" },
+                new ConditionData { ReplacementValue = "(Server Is Empty)" }
             }
         }
     };

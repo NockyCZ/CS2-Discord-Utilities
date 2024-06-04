@@ -116,7 +116,7 @@ namespace DiscordUtilities
                             }
                             break;
                         default:
-                            condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
+                            condition = ReplaceCustomFunctions(data, Value, null, dataType);
                             conditionMet = true;
                             break;
                     }
@@ -153,14 +153,21 @@ namespace DiscordUtilities
             return int.TryParse(value, out _);
         }
 
-        private static string ReplaceCustomFunctions(ConditionData data, string input, replaceData replaceData, replaceDataType dataType)
+        private static string ReplaceCustomFunctions(ConditionData data, string input, replaceData? replaceData, replaceDataType dataType)
         {
-            if (data.ReplacementValue.Contains("{Replace("))
-                input = ReplaceFunction(input, data.ReplacementValue);
+            if (string.IsNullOrEmpty(input))
+            {
+                input = data.ReplacementValue;
+            }
             else
-                input = input.Replace(input, data.ReplacementValue);
+            {
+                if (data.ReplacementValue.Contains("{Replace("))
+                    input = ReplaceFunction(input, data.ReplacementValue);
+                else
+                    input = input.Replace(input, data.ReplacementValue);
+            }
 
-            if (Regex.IsMatch(input, @"\{([^{}]*)\}"))// || Regex.IsMatch(input, @"\[([^\[\]]*)\]"))
+            if (replaceData != null && Regex.IsMatch(input, @"\{([^{}]*)\}"))// || Regex.IsMatch(input, @"\[([^\[\]]*)\]"))
             {
                 switch (dataType)
                 {
