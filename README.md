@@ -21,6 +21,9 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 - [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/connected-players-role)
 - [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
 - [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/manage-roles-and-permissions)
+- [x] ⭐ [Player Stats](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/player-stats)
+- [x] ⭐ [Server Status Plus](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-status-plus)
+- [x] ⭐ [Commands Blocker](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/commands-blocker)
 
 # Installation
 1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
