@@ -1,0 +1,130 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\Modules\\Report\\DU_Report.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\DiscordUtilitiesAPI\\DiscordUtilitiesAPI.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\DiscordUtilitiesAPI\\DiscordUtilitiesAPI.csproj",
+        "projectName": "DiscordUtilitiesAPI",
+        "projectPath": "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\DiscordUtilitiesAPI\\DiscordUtilitiesAPI.csproj",
+        "packagesPath": "C:\\Users\\Mates-PC\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\DiscordUtilitiesAPI\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Mates-PC\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "CounterStrikeSharp.API": {
+              "target": "Package",
+              "version": "[1.0.202, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.101/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\Modules\\Report\\DU_Report.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\Modules\\Report\\DU_Report.csproj",
+        "projectName": "DU_Report",
+        "projectPath": "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\Modules\\Report\\DU_Report.csproj",
+        "packagesPath": "C:\\Users\\Mates-PC\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\Modules\\Report\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\Mates-PC\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\DiscordUtilitiesAPI\\DiscordUtilitiesAPI.csproj": {
+                "projectPath": "C:\\Users\\Mates-PC\\Desktop\\SourceFactory\\Github\\CS2-Discord-Utilities\\src\\DiscordUtilitiesAPI\\DiscordUtilitiesAPI.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "CounterStrikeSharp.API": {
+              "target": "Package",
+              "version": "[1.0.233, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.101/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
