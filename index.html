@@ -4,12 +4,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Utilities</title>
+    <title>Discord Utilities - Map Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #181818; /* Černé pozadí */
+            color: #e63946; /* Červený text */
+            margin: 0;
+            padding: 0;
+        }
+
+        main {
+            padding: 2rem;
+        }
+
+        h1, h2 {
+            color: #e63946; /* Červená barva */
+        }
+
+        ol {
+            background-color: #282828; /* Tmavě šedé pozadí */
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        li {
+            margin-bottom: 1rem;
+        }
+
+        code {
+            background-color: #181818;
+            padding: 2px 4px;
+            border-radius: 4px;
+            color: #e63946; /* Červený text v kódu */
+        }
+
+        pre {
+            background-color: #282828;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            color: #e63946; /* Červený text v kódu */
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Welcome to Discord Utilities</h1>
-    <p>This is a GitHub Pages site for the Discord Utilities project.</p>
+    <main>
+        <h2>How to Add Your Own Map Images</h2>
+        <p>Follow these steps to add your own map images to the project:</p>
+        <ol>
+            <li>Fork the repository by clicking the "Fork" button on the top right of the repository page.</li>
+            <li>Clone your forked repository to your local machine using the command:
+                <pre><code>git clone https://github.com/YOUR-USERNAME/discord-utilities.git</code></pre>
+            </li>
+            <li>Navigate to the cloned repository directory:
+                <pre><code>cd discord-utilities</code></pre>
+            </li>
+            <li>Add your map image in the appropriate directory. The image should be in PNG format and named appropriately, e.g., `nazev_mapy.png`.</li>
+            <li>Edit the `map_images.json` file to include your new map image entry. Add a new object to the JSON array with the name of your map image. For example:
+                <pre><code>{
+    "name": "nazev_mapy",
+    "file": "nazev_mapy.png"
+}</code></pre>
+            </li>
+            <li>Commit your changes:
+                <pre><code>git add .</code></pre>
+                <pre><code>git commit -m "Added nazev_mapy.png and updated map_images.json"</code></pre>
+            </li>
+            <li>Push the changes to your forked repository:
+                <pre><code>git push origin main</code></pre>
+            </li>
+            <li>Create a pull request to the original repository. Go to your forked repository on GitHub and click the "New pull request" button.</li>
+        </ol>
+        <p>Once your pull request is reviewed and merged, your map image will be added to the project.</p>
+    </main>
 </body>
 
 </html>
