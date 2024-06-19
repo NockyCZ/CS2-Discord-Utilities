@@ -1,0 +1,114 @@
+{
+    "Bayonet": {
+        "WeaponName": "weapon_bayonet",
+        "DefIndex": "500"
+    },
+    "M9 Bayonet": {
+        "WeaponName": "weapon_knife_m9_bayonet",
+        "DefIndex": "508"
+    },
+    "Karambit": {
+        "WeaponName": "weapon_knife_karambit",
+        "DefIndex": "507"
+    },
+    "Gut Knife": {
+        "WeaponName": "weapon_knife_gut",
+        "DefIndex": "506"
+    },
+    "Flip Knife": {
+        "WeaponName": "weapon_knife_flip",
+        "DefIndex": "505"
+    },
+    "Butterfly Knife": {
+        "WeaponName": "weapon_knife_butterfly",
+        "DefIndex": "515"
+    },
+    "Shadow Daggers": {
+        "WeaponName": "weapon_knife_push",
+        "DefIndex": "516"
+    },
+    "Navaja Knife": {
+        "WeaponName": "weapon_knife_gypsy_jackknife",
+        "DefIndex": "520"
+    },
+    "Stiletto Knife": {
+        "WeaponName": "weapon_knife_stiletto",
+        "DefIndex": "522"
+    },
+    "Talon Knife": {
+        "WeaponName": "weapon_knife_widowmaker",
+        "DefIndex": "523"
+    },
+    "Survival Knife": {
+        "WeaponName": "weapon_knife_survival_bowie",
+        "DefIndex": "514"
+    },
+    "Paracord Knife": {
+        "WeaponName": "weapon_knife_cord",
+        "DefIndex": "517"
+    },
+    "Classic Knife": {
+        "WeaponName": "weapon_knife_css",
+        "DefIndex": "503"
+    },
+    "Falchion Knife": {
+        "WeaponName": "weapon_knife_falchion",
+        "DefIndex": "512"
+    },
+    "Nomad Knife": {
+        "WeaponName": "weapon_knife_canis",
+        "DefIndex": "518"
+    },
+    "Skeleton Knife": {
+        "WeaponName": "weapon_knife_skeleton",
+        "DefIndex": "525"
+    },
+    "Bowie Knife": {
+        "WeaponName": "weapon_knife_survival_bowie",
+        "DefIndex": "514"
+    },
+    "Huntsman Knife": {
+        "WeaponName": "weapon_knife_tactical",
+        "DefIndex": "509"
+    },
+    "Ursus Knife": {
+        "WeaponName": "weapon_knife_ursus",
+        "DefIndex": "519"
+    },
+    "Kukri Knife": {
+        "WeaponName": "weapon_knife_kukri",
+        "DefIndex": "526"
+    },
+    "Sport Gloves": {
+        "WeaponName": "sporty_gloves",
+        "DefIndex": "5030"
+    },
+    "Driver Gloves": {
+        "WeaponName": "slick_gloves",
+        "DefIndex": "5031"
+    },
+    "Hand Wraps": {
+        "WeaponName": "leather_handwraps",
+        "DefIndex": "5032"
+    },
+    "Moto Gloves": {
+        "WeaponName": "motorcycle_gloves",
+        "DefIndex": "5033"
+    },
+    "Specialist Gloves": {
+        "WeaponName": "specialist_gloves",
+        "DefIndex": "5034"
+    },
+    "Hydra Gloves": {
+        "WeaponName": "studded_hydra_gloves",
+        "DefIndex": "5035"
+    },
+    "Bloodhound Gloves": {
+        "WeaponName": "studded_bloodhound_gloves",
+        "DefIndex": "5027"
+    },
+    "Broken Fang Gloves": {
+        "WeaponName": "studded_brokenfang_gloves",
+        "DefIndex": "4725"
+    }
+}

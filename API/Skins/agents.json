@@ -1,0 +1,447 @@
+{
+  "T": {
+    "Sir Bloody Miami Darryl | The Professionals": {
+      "AgentId": "agent-4726",
+      "Model": "tm_professional/tm_professional_varf",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varf_png.png"
+    },
+    "Sir Bloody Silent Darryl | The Professionals": {
+      "AgentId": "agent-4733",
+      "Model": "tm_professional/tm_professional_varf1",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varf1_png.png"
+    },
+    "Sir Bloody Skullhead Darryl | The Professionals": {
+      "AgentId": "agent-4734",
+      "Model": "tm_professional/tm_professional_varf2",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varf2_png.png"
+    },
+    "Sir Bloody Darryl Royale | The Professionals": {
+      "AgentId": "agent-4735",
+      "Model": "tm_professional/tm_professional_varf3",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varf3_png.png"
+    },
+    "Sir Bloody Loudmouth Darryl | The Professionals": {
+      "AgentId": "agent-4736",
+      "Model": "tm_professional/tm_professional_varf4",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varf4_png.png"
+    },
+    "Crasswater The Forgotten | Guerrilla Warfare": {
+      "AgentId": "agent-4774",
+      "Model": "tm_jungle_raider/tm_jungle_raider_variantb",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_variantb_png.png"
+    },
+    "Vypa Sista of the Revolution | Guerrilla Warfare": {
+      "AgentId": "agent-4777",
+      "Model": "tm_jungle_raider/tm_jungle_raider_variante",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_variante_png.png"
+    },
+    "'Medium Rare' Crasswater | Guerrilla Warfare": {
+      "AgentId": "agent-4780",
+      "Model": "tm_jungle_raider/tm_jungle_raider_variantb2",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_variantb2_png.png"
+    },
+    "The Elite Mr. Muhlik | Elite Crew": {
+      "AgentId": "agent-5108",
+      "Model": "tm_leet/tm_leet_variantf",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_leet_variantf_png.png"
+    },
+    "'The Doctor' Romanov | Sabre": {
+      "AgentId": "agent-5504",
+      "Model": "tm_balkan/tm_balkan_varianth",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_balkan_varianth_png.png"
+    },
+    "Bloody Darryl The Strapped | The Professionals": {
+      "AgentId": "agent-4613",
+      "Model": "tm_professional/tm_professional_varf5",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varf5_png.png"
+    },
+    "Rezan the Redshirt | Sabre": {
+      "AgentId": "agent-4718",
+      "Model": "tm_balkan/tm_balkan_variantk",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_balkan_variantk_png.png"
+    },
+    "Safecracker Voltzmann | The Professionals": {
+      "AgentId": "agent-4727",
+      "Model": "tm_professional/tm_professional_varg",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varg_png.png"
+    },
+    "Number K | The Professionals": {
+      "AgentId": "agent-4732",
+      "Model": "tm_professional/tm_professional_vari",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_vari_png.png"
+    },
+    "Elite Trapper Solman | Guerrilla Warfare": {
+      "AgentId": "agent-4773",
+      "Model": "tm_jungle_raider/tm_jungle_raider_varianta",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_varianta_png.png"
+    },
+    "Arno The Overgrown | Guerrilla Warfare": {
+      "AgentId": "agent-4775",
+      "Model": "tm_jungle_raider/tm_jungle_raider_variantc",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_variantc_png.png"
+    },
+    "Prof. Shahmat | Elite Crew": {
+      "AgentId": "agent-5107",
+      "Model": "tm_leet/tm_leet_varianti",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_leet_varianti_png.png"
+    },
+    "Rezan The Ready | Sabre": {
+      "AgentId": "agent-5502",
+      "Model": "tm_balkan/tm_balkan_variantg",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_balkan_variantg_png.png"
+    },
+    "Blackwolf | Sabre": {
+      "AgentId": "agent-5503",
+      "Model": "tm_balkan/tm_balkan_variantj",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_balkan_variantj_png.png"
+    },
+    "Little Kev | The Professionals": {
+      "AgentId": "agent-4728",
+      "Model": "tm_professional/tm_professional_varh",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varh_png.png"
+    },
+    "Getaway Sally | The Professionals": {
+      "AgentId": "agent-4730",
+      "Model": "tm_professional/tm_professional_varj",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_professional_varj_png.png"
+    },
+    "Col. Mangos Dabisi | Guerrilla Warfare": {
+      "AgentId": "agent-4776",
+      "Model": "tm_jungle_raider/tm_jungle_raider_variantd",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_variantd_png.png"
+    },
+    "Trapper | Guerrilla Warfare": {
+      "AgentId": "agent-4781",
+      "Model": "tm_jungle_raider/tm_jungle_raider_variantf2",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_variantf2_png.png"
+    },
+    "Osiris | Elite Crew": {
+      "AgentId": "agent-5106",
+      "Model": "tm_leet/tm_leet_varianth",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_leet_varianth_png.png"
+    },
+    "Slingshot | Phoenix": {
+      "AgentId": "agent-5207",
+      "Model": "tm_phoenix/tm_phoenix_variantg",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_phoenix_variantg_png.png"
+    },
+    "Dragomir | Sabre": {
+      "AgentId": "agent-5500",
+      "Model": "tm_balkan/tm_balkan_variantf",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_balkan_variantf_png.png"
+    },
+    "Maximus | Sabre": {
+      "AgentId": "agent-5501",
+      "Model": "tm_balkan/tm_balkan_varianti",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_balkan_varianti_png.png"
+    },
+    "Trapper Aggressor | Guerrilla Warfare": {
+      "AgentId": "agent-4778",
+      "Model": "tm_jungle_raider/tm_jungle_raider_variantf",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_jungle_raider_variantf_png.png"
+    },
+    "Ground Rebel  | Elite Crew": {
+      "AgentId": "agent-5105",
+      "Model": "tm_leet/tm_leet_variantg",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_leet_variantg_png.png"
+    },
+    "Jungle Rebel | Elite Crew": {
+      "AgentId": "agent-5109",
+      "Model": "tm_leet/tm_leet_variantj",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_leet_variantj_png.png"
+    },
+    "Soldier | Phoenix": {
+      "AgentId": "agent-5205",
+      "Model": "tm_phoenix/tm_phoenix_varianth",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_phoenix_varianth_png.png"
+    },
+    "Enforcer | Phoenix": {
+      "AgentId": "agent-5206",
+      "Model": "tm_phoenix/tm_phoenix_variantf",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_phoenix_variantf_png.png"
+    },
+    "Street Soldier | Phoenix": {
+      "AgentId": "agent-5208",
+      "Model": "tm_phoenix/tm_phoenix_varianti",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_phoenix_varianti_png.png"
+    },
+    "Dragomir | Sabre Footsoldier": {
+      "AgentId": "agent-5505",
+      "Model": "tm_balkan/tm_balkan_variantl",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_tm_balkan_variantl_png.png"
+    }
+  },
+  "CT": {
+    "Cmdr. Mae 'Dead Cold' Jamison | SWAT": {
+      "AgentId": "agent-4711",
+      "Model": "ctm_swat/ctm_swat_variante",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_swat_variante_png.png"
+    },
+    "Chef d'Escadron Rouchard | Gendarmerie Nationale": {
+      "AgentId": "agent-4751",
+      "Model": "ctm_gendarmerie/ctm_gendarmerie_variantc",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_gendarmerie_variantc_png.png"
+    },
+    "Cmdr. Davida 'Goggles' Fernandez | SEAL Frogman": {
+      "AgentId": "agent-4757",
+      "Model": "ctm_diver/ctm_diver_varianta",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_diver_varianta_png.png"
+    },
+    "Cmdr. Frank 'Wet Sox' Baroud | SEAL Frogman": {
+      "AgentId": "agent-4771",
+      "Model": "ctm_diver/ctm_diver_variantb",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_diver_variantb_png.png"
+    },
+    "Special Agent Ava | FBI": {
+      "AgentId": "agent-5308",
+      "Model": "ctm_fbi/ctm_fbi_variantb",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_fbi_variantb_png.png"
+    },
+    "Lt. Commander Ricksaw | NSWC SEAL": {
+      "AgentId": "agent-5404",
+      "Model": "ctm_st6/ctm_st6_varianti",
+      "RarityColor": "#eb4b4b",
+      "RarityName": "Master",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_varianti_png.png"
+    },
+    "'Two Times' McCoy | TACP Cavalry": {
+      "AgentId": "agent-4680",
+      "Model": "ctm_st6/ctm_st6_variantl",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_variantl_png.png"
+    },
+    "1st Lieutenant Farlow | SWAT": {
+      "AgentId": "agent-4712",
+      "Model": "ctm_swat/ctm_swat_variantf",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_swat_variantf_png.png"
+    },
+    "Chem-Haz Capitaine | Gendarmerie Nationale": {
+      "AgentId": "agent-4750",
+      "Model": "ctm_gendarmerie/ctm_gendarmerie_variantb",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_gendarmerie_variantb_png.png"
+    },
+    "Lieutenant Rex Krikey | SEAL Frogman": {
+      "AgentId": "agent-4772",
+      "Model": "ctm_diver/ctm_diver_variantc",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_diver_variantc_png.png"
+    },
+    "Michael Syfers  | FBI Sniper": {
+      "AgentId": "agent-5307",
+      "Model": "ctm_fbi/ctm_fbi_varianth",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_fbi_varianth_png.png"
+    },
+    "'Two Times' McCoy | USAF TACP": {
+      "AgentId": "agent-5403",
+      "Model": "ctm_st6/ctm_st6_variantm",
+      "RarityColor": "#d32ce6",
+      "RarityName": "Superior",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_variantm_png.png"
+    },
+    "'Blueberries' Buckshot | NSWC SEAL": {
+      "AgentId": "agent-4619",
+      "Model": "ctm_st6/ctm_st6_variantj",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_variantj_png.png"
+    },
+    "John 'Van Healen' Kask | SWAT": {
+      "AgentId": "agent-4713",
+      "Model": "ctm_swat/ctm_swat_variantg",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_swat_variantg_png.png"
+    },
+    "Sergeant Bombson | SWAT": {
+      "AgentId": "agent-4715",
+      "Model": "ctm_swat/ctm_swat_varianti",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_swat_varianti_png.png"
+    },
+    "Sous-Lieutenant Medic | Gendarmerie Nationale": {
+      "AgentId": "agent-4749",
+      "Model": "ctm_gendarmerie/ctm_gendarmerie_varianta",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_gendarmerie_varianta_png.png"
+    },
+    "Officer Jacques Beltram | Gendarmerie Nationale": {
+      "AgentId": "agent-4753",
+      "Model": "ctm_gendarmerie/ctm_gendarmerie_variante",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_gendarmerie_variante_png.png"
+    },
+    "Lieutenant 'Tree Hugger' Farlow | SWAT": {
+      "AgentId": "agent-4756",
+      "Model": "ctm_swat/ctm_swat_variantk",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_swat_variantk_png.png"
+    },
+    "Markus Delrow | FBI HRT": {
+      "AgentId": "agent-5306",
+      "Model": "ctm_fbi/ctm_fbi_variantg",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_fbi_variantg_png.png"
+    },
+    "Buckshot | NSWC SEAL": {
+      "AgentId": "agent-5402",
+      "Model": "ctm_st6/ctm_st6_variantg",
+      "RarityColor": "#8847ff",
+      "RarityName": "Exceptional",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_variantg_png.png"
+    },
+    "Bio-Haz Specialist | SWAT": {
+      "AgentId": "agent-4714",
+      "Model": "ctm_swat/ctm_swat_varianth",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_swat_varianth_png.png"
+    },
+    "Chem-Haz Specialist | SWAT": {
+      "AgentId": "agent-4716",
+      "Model": "ctm_swat/ctm_swat_variantj",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_swat_variantj_png.png"
+    },
+    "Aspirant | Gendarmerie Nationale": {
+      "AgentId": "agent-4752",
+      "Model": "ctm_gendarmerie/ctm_gendarmerie_variantd",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_gendarmerie_variantd_png.png"
+    },
+    "Operator | FBI SWAT": {
+      "AgentId": "agent-5305",
+      "Model": "ctm_fbi/ctm_fbi_variantf",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_fbi_variantf_png.png"
+    },
+    "3rd Commando Company | KSK": {
+      "AgentId": "agent-5400",
+      "Model": "ctm_st6/ctm_st6_variantk",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_variantk_png.png"
+    },
+    "Seal Team 6 Soldier | NSWC SEAL": {
+      "AgentId": "agent-5401",
+      "Model": "ctm_st6/ctm_st6_variante",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_variante_png.png"
+    },
+    "Primeiro Tenente | Brazilian 1st Battalion": {
+      "AgentId": "agent-5405",
+      "Model": "ctm_st6/ctm_st6_variantn",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_st6_variantn_png.png"
+    },
+    "B Squadron Officer | SAS": {
+      "AgentId": "agent-5601",
+      "Model": "ctm_sas/ctm_sas_variantf",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_sas_variantf_png.png"
+    },
+    "D Squadron Officer | NZSAS": {
+      "AgentId": "agent-5602",
+      "Model": "ctm_sas/ctm_sas_variantg",
+      "RarityColor": "#4b69ff",
+      "RarityName": "Distinguished",
+      "Image": "https://raw.githubusercontent.com/ByMykel/counter-strike-image-tracker/main/static/panorama/images/econ/characters/customplayer_ctm_sas_variantg_png.png"
+    }
+  }
+}

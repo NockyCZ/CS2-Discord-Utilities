@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Utilities - Map Images</title>
+    <title>DU - Map Images</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #181818; /* Černé pozadí */
-            color: #e63946; /* Červený text */
+            background-color: #181818;
+            color: #afafaf;
             margin: 0;
             padding: 0;
         }
@@ -18,15 +18,23 @@
             padding: 2rem;
         }
 
-        h1, h2 {
-            color: #e63946; /* Červená barva */
+        h1,
+        h2 {
+            color: #e63946;
+        }
+
+        p {
+            color: #39a7e6;
+            text-transform: uppercase;
+            font-weight: bold;
         }
 
         ol {
-            background-color: #282828; /* Tmavě šedé pozadí */
+            background-color: #282828;
             border-radius: 8px;
             padding: 1rem;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding-left: 2rem;
         }
 
         li {
@@ -37,49 +45,134 @@
             background-color: #181818;
             padding: 2px 4px;
             border-radius: 4px;
-            color: #e63946; /* Červený text v kódu */
+            color: #e63946;
         }
 
         pre {
             background-color: #282828;
-            padding: 1rem;
+            padding: 0.2rem;
             border-radius: 8px;
             overflow-x: auto;
-            color: #e63946; /* Červený text v kódu */
+            color: #e63946;
+        }
+
+        .map-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1rem;
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .map-list li {
+            background-color: #282828;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .map-list img {
+            width: 350px;
+            height: 200px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .display-maps {
+            margin-top: 1rem;
+            text-align: center;
+            background-color: #e63946;
+            color: #ffffff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .search-container input {
+            padding: 0.5rem;
+            border-radius: 8px;
+            border: none;
+            width: 80%;
+            max-width: 400px;
         }
     </style>
 </head>
 
 <body>
     <main>
+        <a href="#mapSection" class="display-maps">Display maps</a>
+        
         <h2>How to Add Your Own Map Images</h2>
-        <p>Follow these steps to add your own map images to the project:</p>
+        <p>1. On our Discord Server</p>
+        <ol>
+            <a href="https://discord.com/invite/Tzmq98gwqF">Discord Invite</a>
+        </ol>
+        <p>2. Or create a pull request</p>
         <ol>
             <li>Fork the repository by clicking the "Fork" button on the top right of the repository page.</li>
             <li>Clone your forked repository to your local machine using the command:
-                <pre><code>git clone https://github.com/YOUR-USERNAME/discord-utilities.git</code></pre>
+                <pre><code>git clone https://github.com/YOUR_NAME/CS2-Discord-Utilities.git</code></pre>
             </li>
             <li>Navigate to the cloned repository directory:
-                <pre><code>cd discord-utilities</code></pre>
+                <pre><code>cd CS2-Discord-Utilities</code></pre>
             </li>
-            <li>Add your map image in the appropriate directory. The image should be in PNG format and named appropriately, e.g., `nazev_mapy.png`.</li>
-            <li>Edit the `map_images.json` file to include your new map image entry. Add a new object to the JSON array with the name of your map image. For example:
-                <pre><code>{
-    "name": "nazev_mapy",
-    "file": "nazev_mapy.png"
-}</code></pre>
+            <li>Add your map image in the appropriate directory. The image should be in PNG format and named
+                appropriately, e.g., `map_name.png`.</li>
+            <li>Edit the `map_images.json` file to include your new map image entry. Add a new object to the JSON array
+                with the name of your map image.
             </li>
             <li>Commit your changes:
                 <pre><code>git add .</code></pre>
-                <pre><code>git commit -m "Added nazev_mapy.png and updated map_images.json"</code></pre>
+                <pre><code>git commit -m "Added map_name.png"</code></pre>
             </li>
             <li>Push the changes to your forked repository:
-                <pre><code>git push origin main</code></pre>
+                <pre><code>git push origin api-pages</code></pre>
             </li>
-            <li>Create a pull request to the original repository. Go to your forked repository on GitHub and click the "New pull request" button.</li>
+            <li>Create a pull request to the original repository. Go to your forked repository on GitHub and click the
+                "New pull request" button.</li>
         </ol>
-        <p>Once your pull request is reviewed and merged, your map image will be added to the project.</p>
-    </main>
-</body>
 
+        <h2 id="mapSection" style="text-align: center;">Map Images</h2>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search maps...">
+        </div>
+        <ul class="map-list" id="mapList"></ul>
+    </main>
+
+    <script>
+        function displayMaps(maps) {
+            const mapList = document.getElementById('mapList');
+            mapList.innerHTML = '';
+            maps.forEach(mapName => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <strong>${mapName}</strong><br><br>
+                    <img src="MapImages/${mapName}.png" alt="${mapName}">
+                `;
+                mapList.appendChild(listItem);
+            });
+        }
+
+        let allMaps = [];
+        fetch('MapImages/map_list.json')
+            .then(response => response.json())
+            .then(data => {
+                allMaps = data;
+                displayMaps(allMaps);
+            })
+            .catch(error => console.error('Error loading map list:', error));
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchText = e.target.value.toLowerCase();
+            const filteredMaps = allMaps.filter(mapName => mapName.toLowerCase().includes(searchText));
+            displayMaps(filteredMaps);
+        });
+    </script>
+</body>
 </html>

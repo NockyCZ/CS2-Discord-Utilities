@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steam Connect Redirect</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #181818;
+            color: #afafaf;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Minimální výška těla, aby obsah zaujal celou výšku okna prohlížeče */
+        }
+
+        main {
+            flex: 1; /* Roztáhnout obsah na maximální možnou výšku */
+            padding: 2rem; /* Přidání polštáře na vrchol a spodek obsahu */
+        }
+
+        h1,
+        p {
+            color: #e63946;
+        }
+
+        .error-message {
+            display: none;
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: auto; /* Umístění na spodek */
+            padding: 1rem; /* Polštář na vrchní a spodní části patičky */
+            background-color: #282828;
+            color: #888888;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>Redirecting to Steam server...</h1>
+        <p>If you are not redirected automatically, <a id="clickHere" href="#" style="cursor: pointer; color: #fcfcfc; text-decoration: underline;">click here</a>.</p>
+        <p id="errorMessage" class="error-message">No address specified. Please provide an address in the URL.</p>
+    </main>
+
+    <footer class="footer">
+        Powered by SourceFactory.eu
+    </footer>
+
+    <script>
+        // Function to redirect to steam connect URL
+        function redirectToSteam() {
+            // Get query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const ipPort = urlParams.get('address');
+
+            // Validate if address parameter exists
+            if (ipPort) {
+                // Create the steam connect URL
+                const steamConnectUrl = `steam://connect/${ipPort}`;
+
+                // Redirect to the steam connect URL after a slight delay
+                setTimeout(() => {
+                    window.location.href = steamConnectUrl;
+                }, 100);
+            } else {
+                // Fallback if address parameter is missing
+                document.getElementById('errorMessage').style.display = 'block';
+            }
+        }
+
+        // Call the redirect function when the page loads
+        window.onload = redirectToSteam;
+
+        // Click event listener for "click here" link
+        document.getElementById('clickHere').addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent default link behavior
+            redirectToSteam(); // Call redirect function
+        });
+    </script>
+</body>
+
+</html>
