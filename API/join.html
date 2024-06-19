@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam Connect Redirect</title>
+    <title>DU - Steam Connect Redirect</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,12 +15,12 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Minimální výška těla, aby obsah zaujal celou výšku okna prohlížeče */
+            min-height: 100vh;
         }
 
         main {
-            flex: 1; /* Roztáhnout obsah na maximální možnou výšku */
-            padding: 2rem; /* Přidání polštáře na vrchol a spodek obsahu */
+            flex: 1; 
+            padding: 2rem;
         }
 
         h1,
@@ -35,8 +35,8 @@
         }
 
         .footer {
-            margin-top: auto; /* Umístění na spodek */
-            padding: 1rem; /* Polštář na vrchní a spodní části patičky */
+            margin-top: auto; 
+            padding: 1rem;
             background-color: #282828;
             color: #888888;
         }
@@ -55,34 +55,26 @@
     </footer>
 
     <script>
-        // Function to redirect to steam connect URL
         function redirectToSteam() {
-            // Get query parameters
             const urlParams = new URLSearchParams(window.location.search);
             const ipPort = urlParams.get('address');
 
-            // Validate if address parameter exists
             if (ipPort) {
-                // Create the steam connect URL
                 const steamConnectUrl = `steam://connect/${ipPort}`;
 
-                // Redirect to the steam connect URL after a slight delay
                 setTimeout(() => {
                     window.location.href = steamConnectUrl;
                 }, 100);
             } else {
-                // Fallback if address parameter is missing
                 document.getElementById('errorMessage').style.display = 'block';
             }
         }
 
-        // Call the redirect function when the page loads
         window.onload = redirectToSteam;
 
-        // Click event listener for "click here" link
         document.getElementById('clickHere').addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent default link behavior
-            redirectToSteam(); // Call redirect function
+            event.preventDefault();
+            redirectToSteam();
         });
     </script>
 </body>
