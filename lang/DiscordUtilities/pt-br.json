@@ -1,8 +1,0 @@
-{
-  "Chat.Prefix": "{darkred}[Discord]{default}",
-  "Chat.LinkAccount": "{blue}===============\n{default}• Visite nosso servidor do Discord: {green}https://discord.gg/INVITE\n{default}• Código de link: {darkred}{0}\n {blue}===============",
-  "Chat.AccountUnliked": "Sua conta foi deslinkada com sucesso!",
-  "Chat.AlreadyLinked": "Sua conta steam foi linkada!",
-  "Chat.AccountLinked": "Sua conta steam foi linkada com uma conta Discord {green}{0}",
-  "Chat.NotLinked": "Sua conta não está linkada com uma conta Discord."
-}
