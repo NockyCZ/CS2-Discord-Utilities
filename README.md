@@ -6,7 +6,8 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 ## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities)
 ### Discord Support Server
 [<img src="https://discordapp.com/api/guilds/1149315368465211493/widget.png?style=banner2">](https://discord.gg/Tzmq98gwqF)
-
+- [Map Images API](https://nockycz.github.io/CS2-Discord-Utilities/)
+  
 # Main Features
 • These features are already implemented in the main plugin.
 - [x] [Linking System](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/main-configuration/linking-system)
