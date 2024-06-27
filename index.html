@@ -73,7 +73,7 @@
 
         .map-list img {
             width: 100%;
-            height: auto;
+            height: 180px;
             border-radius: 8px;
             object-fit: cover;
         }
@@ -106,18 +106,26 @@
 
 <body>
     <main>
+        <p>This Map Images API is designed to display preview images of individual maps for the CS2 Discord Utilities
+            plugin.
+        </p>
+        <p>This API is community-driven, allowing anyone to contribute preview images for maps.
+        </p>
+        <br>
         <a href="#mapSection" class="display-maps">Display maps</a>
-        
+
         <h2>How to Add Your Own Map Images</h2>
         <p>1. On our Discord Server</p>
         <ol>
-            <a href="https://discord.com/invite/Tzmq98gwqF">Discord Invite</a>
+            <li>Join our Discord server ( <a style="color:#e63946;"
+                    href="https://discord.com/invite/Tzmq98gwqF">Discord Invite</a> )</li>
+            <li>In any channel (e.g. #general or #suggestions), post the image and the name of the map. </li>
         </ol>
         <p>2. Or create a pull request</p>
         <ol>
             <li>Fork the repository by clicking the "Fork" button on the top right of the repository page.</li>
             <li>Clone your forked repository to your local machine using the command:
-                <pre><code>git clone https://github.com/YOUR_NAME/CS2-Discord-Utilities.git</code></pre>
+                <pre><code>git clone -b api-pages https://github.com/YOUR_NAME/CS2-Discord-Utilities.git</code></pre>
             </li>
             <li>Navigate to the cloned repository directory:
                 <pre><code>cd CS2-Discord-Utilities</code></pre>
@@ -129,7 +137,7 @@
             </li>
             <li>Commit your changes:
                 <pre><code>git add .</code></pre>
-                <pre><code>git commit -m "Added map_name.png"</code></pre>
+                <pre><code>git commit -m "Added map_name"</code></pre>
             </li>
             <li>Push the changes to your forked repository:
                 <pre><code>git push origin api-pages</code></pre>
@@ -175,4 +183,5 @@
         });
     </script>
 </body>
+
 </html>
