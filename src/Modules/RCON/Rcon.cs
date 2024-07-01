@@ -12,7 +12,7 @@ namespace RCON
     {
         public override string ModuleName => "[Discord Utilities] RCON";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleVersion => "1.1";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public DUConfig Config { get; set; } = null!;
         public void OnConfigParsed(DUConfig config) { Config = config; }
@@ -44,7 +44,24 @@ namespace RCON
             if (command.CommandName == Config.CommandName)
             {
                 if (DiscordUtilities!.Debug())
-                    DiscordUtilities.SendConsoleMessage($"[Discord Utilities] DEBUG: Slash command '{command.CommandName}' has been successfully logged", MessageType.Debug);
+                    DiscordUtilities.SendConsoleMessage($"Slash command '{command.CommandName}' has been successfully logged", MessageType.Debug);
+
+                if (!string.IsNullOrEmpty(Config.AdminRolesId))
+                {
+                    var requiredRoles = Config.AdminRolesId.Trim().Split(',').ToList();
+                    if (requiredRoles != null && requiredRoles.Count > 0)
+                    {
+                        bool hasPermission = requiredRoles.Count(role => user.RolesIds.Contains(ulong.Parse(role))) > 0;
+                        if (!hasPermission)
+                        {
+                            var failedConfig = Config.RconFailedEmbed;
+                            var embed = DiscordUtilities!.GetEmbedBuilderFromConfig(failedConfig, null);
+                            var failedContent = Config.RconReplyEmbed.Content;
+                            DiscordUtilities!.SendRespondMessageToSlashCommand(command.InteractionId, failedContent, embed, null, Config.RconFailedEmbed.SilentResponse);
+                            return;
+                        }
+                    }
+                }
 
                 var options = command.OptionsData;
                 string[] data = new string[2];
@@ -64,35 +81,26 @@ namespace RCON
                     if (!data[1].Equals("All"))
                     {
                         if (DiscordUtilities!.Debug())
-                            DiscordUtilities.SendConsoleMessage($"[Discord Utilities] DEBUG: This server is not '{data[1]}'!", MessageType.Debug);
+                            DiscordUtilities.SendConsoleMessage($"This server is not '{data[1]}'! (RCON)", MessageType.Debug);
                         return;
                     }
                 }
-                var userRoles = user.RolesIds;
-                if (userRoles.Contains(ulong.Parse(Config.AdminRoleId)))
+
+                var replaceVariablesBuilder = new ReplaceVariables.Builder
                 {
-                    var replaceVariablesBuilder = new ReplaceVariables.Builder
-                    {
-                        CustomVariables = new Dictionary<string, string>{
+                    CustomVariables = new Dictionary<string, string>{
                             { "{COMMAND}", data[0] },
                             { "{SERVER}", data[1] },
                         },
-                    };
-                    var config = Config.RconReplyEmbed;
-                    var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
-                    var content = DiscordUtilities.ReplaceVariables(Config.RconReplyEmbed.Content, replaceVariablesBuilder);
-                    content = DiscordUtilities.ReplaceVariables(content, replaceVariablesBuilder);
+                };
+                var config = Config.RconReplyEmbed;
+                var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
+                var content = DiscordUtilities.ReplaceVariables(Config.RconReplyEmbed.Content, replaceVariablesBuilder);
+                content = DiscordUtilities.ReplaceVariables(content, replaceVariablesBuilder);
 
-                    Server.ExecuteCommand(data[0]);
-                    DiscordUtilities.SendRespondMessageToSlashCommand(command.InteractionId, content, embedBuider, null);
-                }
-                else
-                {
-                    var config = Config.RconFailedEmbed;
-                    var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
-                    var content = Config.RconReplyEmbed.Content;
-                    DiscordUtilities!.SendRespondMessageToSlashCommand(command.InteractionId, content, embedBuider, null);
-                }
+                Server.ExecuteCommand(data[0]);
+                DiscordUtilities.SendRespondMessageToSlashCommand(command.InteractionId, content, embedBuider, null, Config.RconReplyEmbed.SilentResponse);
+
             }
         }
 
@@ -105,7 +113,7 @@ namespace RCON
             };
 
             var optionChoices = new List<Commands.SlashCommandOptionChoices>();
-            string[] Servers = Config.ServerList.Split(',');
+            string[] Servers = Config.ServerList.Trim().Split(',');
             foreach (var server in Servers)
             {
                 var choice = new Commands.SlashCommandOptionChoices

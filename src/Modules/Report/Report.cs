@@ -6,10 +6,12 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Builders;
 using DiscordUtilitiesAPI.Events;
 using DiscordUtilitiesAPI.Helpers;
+using static CounterStrikeSharp.API.Core.Listeners;
 
 namespace Report
 {
@@ -17,12 +19,13 @@ namespace Report
     {
         public override string ModuleName => "[Discord Utilities] Report System";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleVersion => "1.1";
         public IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new();
         public Dictionary<CCSPlayerController, int> reportCooldowns = new();
         public Dictionary<string, ReportData> reportsList = new();
+        public List<int> solvedPlayers = new();
         public class ReportData
         {
             public required int sender;
@@ -51,6 +54,10 @@ namespace Report
             CreateCustomCommands();
             AddCommandListener("say", OnPlayerSay, HookMode.Pre);
             AddCommandListener("say_team", OnPlayerSayTeam, HookMode.Pre);
+            RegisterListener<OnMapStart>(mapName =>
+            {
+                solvedPlayers.Clear();
+            });
         }
 
         [GameEventHandler]
@@ -149,6 +156,11 @@ namespace Report
                     return;
                 }
                 reportCooldowns.Remove(sender);
+            }
+            if (Config.AntiSpamReport && solvedPlayers.Contains(target.Slot))
+            {
+                sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ThisPlayerCannotBeReported", target.PlayerName]}");
+                return;
             }
             if (Config.ReportMethod != 3)
             {
@@ -249,52 +261,76 @@ namespace Report
             var CustomId = interaction.CustomId;
             if (CustomId.Contains("report_"))
             {
-                if (user.RolesIds.Contains(ulong.Parse(Config.ReportEmbed.ReportButton.AdminRoleId)))
+                if (!string.IsNullOrEmpty(Config.ReportEmbed.ReportButton.AdminRolesId))
                 {
-                    CustomId = CustomId.Replace("report_", "");
-                    var messageBuilders = interaction.Builders;
-                    if (messageBuilders != null && messageBuilders.Embeds != null && messageBuilders.Embeds.Count() > 0)
+                    var requiredRoles = Config.ReportEmbed.ReportButton.AdminRolesId.Trim().Split(',').ToList();
+                    if (requiredRoles != null && requiredRoles.Count > 0)
                     {
-                        if (!reportsList.ContainsKey(CustomId))
+                        bool hasPermission = requiredRoles.Count(role => user.RolesIds.Contains(ulong.Parse(role))) > 0;
+                        if (!hasPermission)
+                        {
+                            var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed;
+                            var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
+                            string content = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed.Content;
+                            DiscordUtilities.SendRespondMessageToInteraction(interaction.InteractionId, content, embedBuider, null, false, Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed.SilentResponse);
                             return;
-
-                        var messageId = reportsList[CustomId].messageId;
-                        reportsList.Remove(CustomId);
-
-                        var replaceVariablesBuilder = new ReplaceVariables.Builder
-                        {
-                            DiscordUser = user,
-                        };
-
-                        var embedsBuilder = messageBuilders.Embeds.FirstOrDefault();
-                        if (embedsBuilder != null)
-                        {
-                            embedsBuilder.Title = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Title) ? embedsBuilder.Title : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Title, replaceVariablesBuilder);
-                            embedsBuilder.ThumbnailUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Thumbnail) ? embedsBuilder.ThumbnailUrl : Config.SolvedEmbeds.SolvedReportEmbed.Thumbnail;
-                            embedsBuilder.ImageUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Image) ? embedsBuilder.ImageUrl : Config.SolvedEmbeds.SolvedReportEmbed.Image;
-                            embedsBuilder.Color = Config.SolvedEmbeds.SolvedReportEmbed.Color;
-                            embedsBuilder.Footer = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Footer) ? embedsBuilder.Footer : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Footer, replaceVariablesBuilder);
-                            embedsBuilder.FooterTimestamp = Config.SolvedEmbeds.SolvedReportEmbed.FooterTimestamp;
                         }
-                        var content = messageBuilders.Content;
-                        if (content != null)
-                            content = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Content) ? content : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Content, replaceVariablesBuilder);
-
-                        DiscordUtilities!.UpdateMessage(messageId, interaction.ChannelID, content, embedsBuilder, null);
-
-                        var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces;
-                        embedsBuilder = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
-                        content = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces.Content;
-                        DiscordUtilities.SendRespondMessageToInteraction(interaction.InteractionId, content, embedsBuilder, null);
                     }
                 }
-                else
+
+                CustomId = CustomId.Replace("report_", "");
+                var messageBuilders = interaction.Builders;
+                if (messageBuilders != null && messageBuilders.Embeds != null && messageBuilders.Embeds.Count() > 0)
                 {
-                    var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed;
-                    var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
-                    string content = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed.Content;
-                    DiscordUtilities.SendRespondMessageToInteraction(interaction.InteractionId, content, embedBuider, null);
+                    if (!reportsList.ContainsKey(CustomId))
+                        return;
+
+                    var data = reportsList[CustomId];
+                    ReportSolvedAction(data.sender, data.targetName, data.target);
+                    var messageId = data.messageId;
+                    reportsList.Remove(CustomId);
+
+                    var replaceVariablesBuilder = new ReplaceVariables.Builder
+                    {
+                        DiscordUser = user,
+                    };
+
+                    var embedsBuilder = messageBuilders.Embeds.FirstOrDefault();
+                    if (embedsBuilder != null)
+                    {
+                        embedsBuilder.Title = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Title) ? embedsBuilder.Title : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Title, replaceVariablesBuilder);
+                        embedsBuilder.ThumbnailUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Thumbnail) ? embedsBuilder.ThumbnailUrl : Config.SolvedEmbeds.SolvedReportEmbed.Thumbnail;
+                        embedsBuilder.ImageUrl = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Image) ? embedsBuilder.ImageUrl : Config.SolvedEmbeds.SolvedReportEmbed.Image;
+                        embedsBuilder.Color = Config.SolvedEmbeds.SolvedReportEmbed.Color;
+                        embedsBuilder.Footer = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Footer) ? embedsBuilder.Footer : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Footer, replaceVariablesBuilder);
+                        embedsBuilder.FooterTimestamp = Config.SolvedEmbeds.SolvedReportEmbed.FooterTimestamp;
+                    }
+                    var content = messageBuilders.Content;
+                    if (content != null)
+                        content = string.IsNullOrEmpty(Config.SolvedEmbeds.SolvedReportEmbed.Content) ? content : DiscordUtilities!.ReplaceVariables(Config.SolvedEmbeds.SolvedReportEmbed.Content, replaceVariablesBuilder);
+
+                    DiscordUtilities!.UpdateMessage(messageId, interaction.ChannelID, content, embedsBuilder, null);
+
+                    var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces;
+                    embedsBuilder = DiscordUtilities!.GetEmbedBuilderFromConfig(config, null);
+                    content = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces.Content;
+                    DiscordUtilities.SendRespondMessageToInteraction(interaction.InteractionId, content, embedsBuilder, null, false, Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportSucces.SilentResponse);
                 }
+            }
+        }
+
+        public void ReportSolvedAction(int senderSlot, string targetName, int targetSlot)
+        {
+            if (Config.SendMessageOnSolved)
+            {
+                var sender = Utilities.GetPlayerFromSlot(senderSlot);
+                if (sender != null && sender.IsValid)
+                    sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.YourReportHasBeenSolved", targetName]}");
+            }
+            if (Config.AntiSpamReport)
+            {
+                if (!solvedPlayers.Contains(targetSlot))
+                    solvedPlayers.Add(targetSlot);
             }
         }
 
@@ -304,7 +340,10 @@ namespace Report
                 return;
 
             var data = reportsList[reportId];
-            reportsList.Remove(reportId);
+            ReportSolvedAction(data.sender, data.targetName, data.target);
+            if (player != null)
+                reportsList.Remove(reportId);
+
             if (DiscordUtilities!.IsCustomMessageSaved(data.messageId))
             {
                 var message = DiscordUtilities.GetMessageDataFromCustomMessage(data.messageId);
@@ -380,9 +419,6 @@ namespace Report
                 var reportData = reportsList[reportId];
                 reportData.messageId = message.MessageID;
 
-                if (!Config.ReportEmbed.ReportButton.Enabled)
-                    return;
-
                 var replaceVariablesBuilder = new ReplaceVariables.Builder
                 {
                     ServerData = true,
@@ -397,19 +433,38 @@ namespace Report
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities.ReplaceVariables(Config.ReportEmbed.Content, replaceVariablesBuilder);
 
-                var componentsBuilder = new Components.Builder
+                var componentsBuilder = new Components.Builder();
+                var InteractiveButtons = new List<Components.InteractiveButtonsBuilder>();
+                if (Config.ReportEmbed.ReportButton.Enabled)
                 {
-                    InteractiveButtons = new List<Components.InteractiveButtonsBuilder>
+                    InteractiveButtons.Add(
+                    new Components.InteractiveButtonsBuilder
                     {
-                        new Components.InteractiveButtonsBuilder
-                        {
-                            CustomId = $"report_{reportId}",
-                            Label = Config.ReportEmbed.ReportButton.Text,
-                            Color = (Components.ButtonColor)Config.ReportEmbed.ReportButton.Color,
-                            Emoji = DiscordUtilities.IsValidEmoji(Config.ReportEmbed.ReportButton.Emoji) ? Config.ReportEmbed.ReportButton.Emoji : "",
-                        }
+                        CustomId = $"report_{reportId}",
+                        Label = Config.ReportEmbed.ReportButton.Text,
+                        Color = (Components.ButtonColor)Config.ReportEmbed.ReportButton.Color,
+                        Emoji = Config.ReportEmbed.ReportButton.Emoji,
                     }
-                };
+                    );
+                }
+                if (Config.ReportEmbed.SearchPlayerButton.Enabled)
+                {
+                    var target = Utilities.GetPlayerFromSlot(reportData.target);
+                    if (target != null)
+                    {
+                        InteractiveButtons.Add(
+                            new Components.InteractiveButtonsBuilder
+                            {
+                                CustomId = $"playerstatssearch_{Config.ReportEmbed.SearchPlayerButton.ServerName}:{target.SteamID}",
+                                Label = Config.ReportEmbed.SearchPlayerButton.Text,
+                                Color = (Components.ButtonColor)Config.ReportEmbed.SearchPlayerButton.Color,
+                                Emoji = Config.ReportEmbed.SearchPlayerButton.Emoji,
+                            }
+                        );
+                    }
+                }
+                componentsBuilder.InteractiveButtons = InteractiveButtons;
+
                 DiscordUtilities.UpdateMessage(message.MessageID, message.ChannelID, content, embedBuider, componentsBuilder);
             }
         }

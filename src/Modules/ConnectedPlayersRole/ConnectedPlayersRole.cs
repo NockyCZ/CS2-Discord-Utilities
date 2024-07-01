@@ -12,7 +12,7 @@ namespace ConnectedPlayersRole
     {
         public override string ModuleName => "[Discord Utilities] Connected Players Role";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleVersion => "1.1";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = null!;
         public void OnConfigParsed(Config config) { Config = config; }
@@ -50,7 +50,7 @@ namespace ConnectedPlayersRole
         {
             if (string.IsNullOrEmpty(Config.RoleID))
             {
-                DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Discord Connected Players Role ERROR: The role could not be added because the Role ID is empty!", MessageType.Error);
+                DiscordUtilities!.SendConsoleMessage("The role could not be added because the 'Role ID' is empty! ('Connected Players Role')", MessageType.Error);
                 return;
             }
             DiscordUtilities!.AddRolesToUser(user, new List<string>() { Config.RoleID });

@@ -26,7 +26,7 @@ namespace DiscordUtilities
             }
             else
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] Invalid permission '{Permission}'!", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Invalid permission '{Permission}'!", ConsoleColor.Red);
                 return;
             }
         }
@@ -37,7 +37,7 @@ namespace DiscordUtilities
                 var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
                 if (guild == null)
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
                     return;
                 }
                 var user = guild.GetUser(discordid);
@@ -48,7 +48,7 @@ namespace DiscordUtilities
                 var role = guild.GetRole(ulong.Parse(Config.Link.LinkRole));
                 if (role == null)
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
                     return;
                 }
                 if (user.Roles.Any(id => id == role))
@@ -58,7 +58,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while removing Link role: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while removing Link role: '{ex.Message}'", ConsoleColor.Red);
             }
         }
         public async Task PerformLinkRole(string discordid)
@@ -68,7 +68,7 @@ namespace DiscordUtilities
                 var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
                 if (guild == null)
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
                     return;
                 }
                 var user = guild.GetUser(ulong.Parse(discordid));
@@ -79,7 +79,7 @@ namespace DiscordUtilities
                 var role = guild.GetRole(ulong.Parse(Config.Link.LinkRole));
                 if (role == null)
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
                     return;
                 }
                 if (!user.Roles.Any(id => id == role))
@@ -89,7 +89,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while adding Link role: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while adding Link role: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -99,7 +99,7 @@ namespace DiscordUtilities
                 return;
 
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Slash command '{command.CommandName}' has been successfully logged", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"Slash command '{command.CommandName}' has been successfully logged", ConsoleColor.Cyan);
 
             if (command.GuildId == null)
             {
@@ -112,21 +112,21 @@ namespace DiscordUtilities
 
             if (guild == null)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] LINK Slash Command Error: Guild has not been found ('{guildId}')", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Guild has not been found ('{guildId}') (DiscordLink_CMD)", ConsoleColor.Red);
                 return;
             }
 
             var user = guild.GetUser(command.User.Id);
             if (user == null)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] LINK Slash Command Error: User was not found!", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"User was not found! (DiscordLink_CMD)", ConsoleColor.Red);
                 return;
             }
 
             var role = guild.GetRole(ulong.Parse(Config.Link.LinkRole));
             if (role == null)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] LINK Slash Command Error: Role with id '{Config.Link.LinkRole}' was not found!", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkRole}' was not found! (DiscordLink_CMD)", ConsoleColor.Red);
                 return;
             }
 
@@ -159,7 +159,7 @@ namespace DiscordUtilities
                             embed.AddField(fieldData[0], fieldData[1], bool.Parse(fieldData[2]));
                         else
                         {
-                            Perform_SendConsoleMessage($"[Discord Utilities] Invalid Fields Format! ({Config.Link.LinkEmbed.AlreadyLinked.Fields})", ConsoleColor.DarkRed);
+                            Perform_SendConsoleMessage($"Invalid Fields Format! ('{Config.Link.LinkEmbed.AlreadyLinked.Fields}')", ConsoleColor.Red);
                             return;
                         }
                     }
@@ -225,7 +225,7 @@ namespace DiscordUtilities
                             embed.AddField(fieldData[0], fieldData[1], bool.Parse(fieldData[2]));
                         else
                         {
-                            Perform_SendConsoleMessage($"[Discord Utilities] Invalid Fields Format! ({Config.Link.LinkEmbed.Success.Fields})", ConsoleColor.DarkRed);
+                            Perform_SendConsoleMessage($"Invalid Fields Format! ('{Config.Link.LinkEmbed.Success.Fields}')", ConsoleColor.Red);
                             return;
                         }
                     }
@@ -290,7 +290,7 @@ namespace DiscordUtilities
                         embed.AddField(fieldData[0], fieldData[1], bool.Parse(fieldData[2]));
                     else
                     {
-                        Perform_SendConsoleMessage($"[Discord Utilities] Invalid Fields Format! ({Config.Link.LinkEmbed.Failed.Fields})", ConsoleColor.DarkRed);
+                        Perform_SendConsoleMessage($"Invalid Fields Format! ('{Config.Link.LinkEmbed.Failed.Fields}')", ConsoleColor.Red);
                         return;
                     }
                 }

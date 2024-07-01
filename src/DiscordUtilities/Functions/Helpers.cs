@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using Discord;
 using DiscordUtilitiesAPI.Builders;
 using DiscordUtilitiesAPI.Helpers;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -63,7 +64,7 @@ namespace DiscordUtilities
                                 Label = option.Label,
                                 Value = option.Value,
                                 Description = option.Description,
-                                Emote = option.Emote.Name
+                                Emoji = option.Emote.Name
                             }));
                         }
 
@@ -111,7 +112,21 @@ namespace DiscordUtilities
             }
             return messageBuilders;
         }
-        
+
+        public ModalBuilder GetModalBuilder(DiscordUtilitiesAPI.Builders.Modal.Builder modalBuilder)
+        {
+            var modal = new ModalBuilder()
+                .WithTitle(modalBuilder.Title)
+                .WithCustomId(modalBuilder.CustomId);
+
+            foreach (var input in modalBuilder.ModalInputs)
+            {
+                modal.AddTextInput(label: input.Label, customId: input.CustomId, style: (TextInputStyle)input.InputStyle, placeholder: input.Placeholder, value: string.IsNullOrEmpty(input.Value) ? null : input.Value, minLength: input.MinLength, maxLength: input.MaxLength, required: input.Required);
+            }
+
+            return modal;
+        }
+
         public ComponentBuilder GetComponentsBuilder(Components.Builder componentBuilder)
         {
             var component = new ComponentBuilder();
@@ -125,7 +140,15 @@ namespace DiscordUtilities
                         .WithStyle((ButtonStyle)buttonData.Color);
 
                     if (!string.IsNullOrEmpty(buttonData.Emoji))
-                        buttonBuilder.WithEmote(Emote.Parse(buttonData.Emoji));
+                    {
+                        if (!IsDefaultEmoji(buttonData.Emoji))
+                        {
+                            if (IsValidCustomEmoji(buttonData.Emoji))
+                                buttonBuilder.WithEmote(Emote.Parse(buttonData.Emoji));
+                        }
+                        else
+                            buttonBuilder.WithEmote(Emoji.Parse(buttonData.Emoji));
+                    }
 
                     component.WithButton(buttonBuilder);
                 }
@@ -140,7 +163,15 @@ namespace DiscordUtilities
                         .WithUrl(buttonData.URL);
 
                     if (!string.IsNullOrEmpty(buttonData.Emoji))
-                        buttonBuilder.WithEmote(Emote.Parse(buttonData.Emoji));
+                    {
+                        if (!IsDefaultEmoji(buttonData.Emoji))
+                        {
+                            if (IsValidCustomEmoji(buttonData.Emoji))
+                                buttonBuilder.WithEmote(Emote.Parse(buttonData.Emoji));
+                        }
+                        else
+                            buttonBuilder.WithEmote(Emoji.Parse(buttonData.Emoji));
+                    }
 
                     component.WithButton(buttonBuilder);
                 }
@@ -157,7 +188,7 @@ namespace DiscordUtilities
 
                     foreach (var option in menuData.Options)
                     {
-                        menuBuilder.AddOption(label: option.Label, value: option.Value, description: option.Description, emote: string.IsNullOrEmpty(option.Emote) ? null : Emote.Parse(option.Emote));
+                        menuBuilder.AddOption(label: option.Label, value: option.Value, description: string.IsNullOrEmpty(option.Description) ? null : option.Description, emote: string.IsNullOrEmpty(option.Emoji) ? null : !IsDefaultEmoji(option.Emoji) ? (IsValidCustomEmoji(option.Emoji) ? Emote.Parse(option.Emoji) : null) : Emoji.Parse(option.Emoji));
                     }
                     component.WithSelectMenu(menuBuilder);
                 }
@@ -228,9 +259,14 @@ namespace DiscordUtilities
             return null;
         }
 
-        private string GetRandomCode(int length)
+        private string GetRandomCode(int length, bool onlyNumbers = false)
         {
-            string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            string chars;
+            if (onlyNumbers)
+                chars = "0123456789";
+            else
+                chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
             var random = new Random();
             var keyBuilder = new StringBuilder(length);
 
@@ -245,9 +281,9 @@ namespace DiscordUtilities
         public static string ReplacePlayerDataVariables(string replacedString, CCSPlayerController target, bool isTarget = false, bool checkCustomVariables = true)
         {
             PlayerData? selectedPlayer = null;
-            if (playerData.ContainsKey(target))
+            if (playerData.ContainsKey(target.Slot))
             {
-                selectedPlayer = playerData[target];
+                selectedPlayer = playerData[target.Slot];
             }
             else
             {
@@ -262,6 +298,7 @@ namespace DiscordUtilities
                 {
                     { $"{{{player}.Name}}", selectedPlayer.Name},
                     { $"{{{player}.NameWithoutEmoji}}", selectedPlayer.NameWithoutEmoji},
+                    { $"{{{player}.UserID}}", target.UserId.ToString()!},
                     { $"{{{player}.SteamID32}}", selectedPlayer.SteamId32},
                     { $"{{{player}.SteamID64}}", selectedPlayer.SteamId64},
                     { $"{{{player}.IpAddress}}", selectedPlayer.IpAddress},
@@ -315,6 +352,8 @@ namespace DiscordUtilities
 
         public static string ReplaceServerDataVariables(string replacedString, bool checkCustomVariables = true)
         {
+            var mapName = mapImagesList.Contains(serverData.MapName) ? serverData.MapName : "notfound";
+
             var replacedData = new Dictionary<string, string>
             {
                 { "{Server.Name}", serverData.Name },
@@ -324,7 +363,9 @@ namespace DiscordUtilities
                 { "{Server.OnlinePlayers}", serverData.OnlinePlayers },
                 { "{Server.OnlinePlayersAndBots}", serverData.OnlinePlayersAndBots },
                 { "{Server.OnlineBots}", serverData.OnlineBots },
-                { "{Server.IP}", serverData.IP }
+                { "{Server.IP}", serverData.IP },
+                { "{Server.MapImageUrl}", $"https://nockycz.github.io/CS2-Discord-Utilities/MapImages/{mapName}.png" },
+                { "{Server.JoinUrl}", $"https://nockycz.github.io/CS2-Discord-Utilities/API/join.html?address={serverData.IP}" }
             };
 
             foreach (var item in replacedData)
@@ -528,10 +569,41 @@ namespace DiscordUtilities
             }
         }
 
-        private static string RemoveEmoji(string text)
+        public static bool IsDefaultEmoji(string input)
         {
-            return Regex.Replace(text, @"[\uD83C-\uDBFF\uDC00-\uDFFF]+", string.Empty);
+            return input.StartsWith(":") && input.EndsWith(":");
         }
+
+        public bool IsValidCustomEmoji(string emoji)
+        {
+            if (emoji.StartsWith("<:") && emoji.EndsWith(">"))
+                return true;
+
+            Perform_SendConsoleMessage($"Invalid Emoji Format '{emoji}'! Correct format: '<:NAME:ID>'", ConsoleColor.Red);
+            return false;
+        }
+
+        private static string RemoveEmoji(string input)
+        {
+            string emojiPattern = @"[\u1F600-\u1F64F]|" +     // Emoticons
+                                  @"[\u1F300-\u1F5FF]|" +     // Miscellaneous Symbols and Pictographs
+                                  @"[\u1F680-\u1F6FF]|" +     // Transport and Map Symbols
+                                  @"[\u1F700-\u1F77F]|" +     // Alchemical Symbols
+                                  @"[\u2600-\u26FF]|" +       // Miscellaneous Symbols
+                                  @"[\u2700-\u27BF]|" +       // Dingbats
+                                  @"[\u1F900-\u1F9FF]|" +     // Supplemental Symbols and Pictographs
+                                  @"[\u1FA70-\u1FAFF]|" +     // Symbols and Pictographs Extended-A
+                                  @"[\u2300-\u23FF]|" +       // Miscellaneous Technical
+                                  @"[\u2B50-\u2B55]|" +       // Miscellaneous Symbols and Arrows
+                                  @"[\u1F1E6-\u1F1FF]|" +     // Regional Indicator Symbols
+                                  @"[\u1F000-\u1F02F]|" +     // Mahjong Tiles
+                                  @"[\u1F0A0-\u1F0FF]|" +     // Playing Cards
+                                  @"[\uD83C-\uDBFF][\uDC00-\uDFFF]|" + // Surrogate pairs
+                                  @"\u200D";                 // Zero-width joiner
+
+            return Regex.Replace(input, emojiPattern, string.Empty);
+        }
+
         private int GetPlayersCount()
         {
             return Utilities.GetPlayers().Where(p => p.IsValid && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17).Count();

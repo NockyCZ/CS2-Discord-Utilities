@@ -21,7 +21,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new PlayerDataLoaded(player));
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: PlayerDataLoaded", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'PlayerDataLoaded'", ConsoleColor.Cyan);
         });
     }
     public void LinkedUserLoaded(SocketGuildUser user, CCSPlayerController player)
@@ -38,7 +38,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new LinkedUserDataLoaded(userData, player));
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: LinkedUserDataLoaded", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'LinkedUserDataLoaded'", ConsoleColor.Cyan);
         });
     }
     public void ServerDataLoaded()
@@ -47,7 +47,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new ServerDataLoaded());
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: ServerDataLoaded", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'ServerDataLoaded'", ConsoleColor.Cyan);
         });
     }
     public void BotLoaded()
@@ -56,17 +56,17 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new BotLoaded());
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: BotLoaded", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'BotLoaded'", ConsoleColor.Cyan);
         });
     }
 
     public void Event_SlashCommand(SocketSlashCommand command)
     {
-        var interactionId = savedCommandInteractions.Count() + 1;
+        var interactionId = int.Parse(GetRandomCode(6, true));
         var optionsData = command.Data.Options.Select(option => new CommandOptionsData
         {
-            Name = option.Name,
-            Value = option.Value?.ToString() ?? "",
+            Name = option.Name.ToLower(),
+            Value = option.Value.ToString() ?? "",
             Type = (SlashCommandOptionsType)option.Type
         }).ToList();
 
@@ -84,7 +84,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         if (user == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Event_SlashCommand - User was not found!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'Event_SlashCommand' - User was not found!", ConsoleColor.Cyan);
             return;
         }
 
@@ -97,14 +97,14 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             RolesIds = userRoles,
         };
 
-        if (!savedCommandInteractions.ContainsKey(interactionId))
-            savedCommandInteractions.Add(interactionId, command);
+        if (!savedInteractions.ContainsKey(interactionId))
+            savedInteractions.Add(interactionId, command);
 
         Server.NextFrame(() =>
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new SlashCommandExecuted(commandData, userData));
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: SlashCommandExecuted", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'SlashCommandExecuted'", ConsoleColor.Cyan);
         });
     }
 
@@ -137,7 +137,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         if (user == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Event_CustomMessageReceived - User was not found!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"DEBUG: Event_CustomMessageReceived - User was not found!", ConsoleColor.Cyan);
             return;
         }
 
@@ -154,7 +154,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new CustomMessageReceived(customId, messageData, userData, savedMessages.ContainsKey(message.Id)));
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: CustomMessageReceived", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'CustomMessageReceived'", ConsoleColor.Cyan);
         });
     }
 
@@ -177,7 +177,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         if (user == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: Event_MessageReceived - User was not found!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'Event_MessageReceived' - User was not found!", ConsoleColor.Cyan);
             return;
         }
 
@@ -193,19 +193,65 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new MessageReceived(messageData, userData));
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: MessageReceived", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'MessageReceived'", ConsoleColor.Cyan);
         });
     }
 
-    public void Event_InteractionCreated(SocketInteraction interaction, IComponentInteractionData componentData)
+    public void Event_ModalSubmited(SocketInteraction interaction)
     {
-        var interactionId = savedInteractions.Count() + 1;
-        IUserMessage? message = null;
-        if (interaction is SocketMessageComponent messageComponent)
+        var modalInteraction = (SocketModal)interaction;
+        var interactionId = int.Parse(GetRandomCode(6, true));
+
+        ulong? guildId = interaction.GuildId != null ? interaction.GuildId.Value : null;
+
+        var InputValues = new Dictionary<string, string>();
+        var modalInputs = modalInteraction.Data.Components;
+        foreach (var input in modalInputs)
         {
-            message = messageComponent.Message;
+            InputValues.Add(input.CustomId, input.Value);
         }
 
+        var modalData = new ModalData
+        {
+            ChannelName = interaction.Channel.Name,
+            ChannelID = interaction.Channel.Id,
+            GuildId = guildId,
+            CustomId = modalInteraction.Data.CustomId,
+            InputValues = InputValues,
+            InteractionId = interactionId,
+        };
+
+        var user = interaction.User as SocketGuildUser;
+        if (user == null)
+        {
+            if (IsDebug)
+                Perform_SendConsoleMessage($"'ModalSubmited' - User was not found!", ConsoleColor.Cyan);
+            return;
+        }
+
+        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
+        var userData = new UserData
+        {
+            GlobalName = user.GlobalName,
+            DisplayName = user.DisplayName,
+            ID = user.Id,
+            RolesIds = userRoles
+        };
+        if (!savedInteractions.ContainsKey(interactionId))
+            savedInteractions.Add(interactionId, modalInteraction);
+
+        Server.NextFrame(() =>
+        {
+            DiscordUtilitiesAPI.Get()?.TriggerEvent(new ModalSubmited(modalData, userData));
+            if (IsDebug)
+                Perform_SendConsoleMessage("New Event Triggered: 'InteractionCreated'", ConsoleColor.Cyan);
+        });
+    }
+
+    public void Event_InteractionCreated(SocketInteraction interaction, SocketMessageComponent component)
+    {
+        var interactionId = int.Parse(GetRandomCode(6, true));
+        var message = component.Message;
         ulong? guildId = interaction.GuildId != null ? interaction.GuildId.Value : null;
         ulong? messageId = message != null ? message.Id : null;
 
@@ -215,8 +261,8 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             ChannelID = interaction.Channel.Id,
             MessageId = messageId,
             GuildId = guildId,
-            CustomId = componentData.CustomId,
-            SelectedValues = componentData.Values,
+            CustomId = component.Data.CustomId,
+            SelectedValues = component.Data.Values,
             InteractionId = interactionId,
             Builders = message == null ? null : GetMessageBuilders(message)
         };
@@ -225,7 +271,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         if (user == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: interactionData - User was not found!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'InteractionCreated' - User was not found!", ConsoleColor.Cyan);
             return;
         }
 
@@ -245,7 +291,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new InteractionCreated(interactionData, userData));
             if (IsDebug)
-                Perform_SendConsoleMessage("[Discord Utilities] New Event Triggered: InteractionCreated", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'InteractionCreated'", ConsoleColor.Cyan);
         });
     }
 }

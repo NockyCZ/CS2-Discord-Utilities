@@ -14,7 +14,7 @@ namespace EventNotifications
     {
         public override string ModuleName => "[Discord Utilities] Event Notifications";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleVersion => "1.1";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = null!;
         public void OnConfigParsed(Config config) { Config = config; }
@@ -34,7 +34,7 @@ namespace EventNotifications
 
             if (string.IsNullOrEmpty(Config.MapChanged.ChannelID))
             {
-                DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Discord Event Notifications (Map Changed) ERROR: Can't send a message to Discord because the Channel ID is empty!", MessageType.Error);
+                DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! ('Event Notifications (Map Changed)')", MessageType.Error);
                 return;
             }
             var replaceVariablesBuilder = new ReplaceVariables.Builder
@@ -56,7 +56,7 @@ namespace EventNotifications
             {
                 if (string.IsNullOrEmpty(Config.Disconnect.ChannelID))
                 {
-                    DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Discord Event Notifications (Disconnect) ERROR: Can't send a message to Discord because the Channel ID is empty!", MessageType.Error);
+                    DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! ('Event Notifications (Disconnect)')", MessageType.Error);
                     return HookResult.Continue;
                 }
                 var replaceVariablesBuilder = new ReplaceVariables.Builder
@@ -78,7 +78,7 @@ namespace EventNotifications
             {
                 if (string.IsNullOrEmpty(Config.Connect.ChannelID))
                 {
-                    DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Discord Event Notifications (Connect) ERROR: Can't send a message to Discord because the Channel ID is empty!", MessageType.Error);
+                    DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! ('Event Notifications (Connect)')", MessageType.Error);
                     return;
                 }
                 var replaceVariablesBuilder = new ReplaceVariables.Builder
@@ -95,6 +95,7 @@ namespace EventNotifications
 
         private void DiscordUtilitiesEventHandler(object? _, IDiscordUtilitiesEvent @event)
         {
+            
             switch (@event)
             {
                 case PlayerDataLoaded playerData:

@@ -11,8 +11,10 @@ public interface IDiscordUtilitiesAPI
     public void SendCustomMessageToChannel(string customId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components, bool saveMessage = false);
     public void SendRespondToMessage(ulong messageId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components);
     public void UpdateMessage(ulong messageId, ulong channelId, string? content, Embeds.Builder? embed, Components.Builder? components);
-    public void SendRespondMessageToInteraction(int interactionId, string? content, Embeds.Builder? embed, Components.Builder? components, bool silent = true);
+    public void SendRespondMessageToInteraction(int interactionId, string? content, Embeds.Builder? embed, Components.Builder? components, bool deleteOriginalInteraction = false, bool silent = true);
+    public void SendRespondModalToInteraction(int interactionId, Modal.Builder Modal);
     public void SendRespondMessageToSlashCommand(int interactionId, string? content, Embeds.Builder? embed, Components.Builder? components, bool silent = true);
+    public void SendRespondModalToSlashCommand(int interactionId, Modal.Builder Modal);
     public void RemoveSavedCustomMessage(ulong messageId);
     public bool IsCustomMessageSaved(ulong messageId);
     public MessageData? GetMessageDataFromCustomMessage(ulong messageId);
@@ -28,7 +30,6 @@ public interface IDiscordUtilitiesAPI
     public bool Debug();
     public void SendConsoleMessage(string text, MessageType type);
     public string ReplaceVariables(string text, ReplaceVariables.Builder replacedVariables);
-    public bool IsValidEmoji(string emoji);
     public void RemoveAllUsersFromRole(string roleId);
     public bool IsBotLoaded();
     public bool IsDatabaseLoaded();

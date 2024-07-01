@@ -9,12 +9,13 @@ namespace DiscordUtilities
         public HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
         {
             var player = @event.Userid;
-            if (player != null && player.IsValid && player.AuthorizedSteamID != null && !playerData.ContainsKey(player))
+            if (player != null && player.IsValid && player.AuthorizedSteamID != null && !playerData.ContainsKey(player.Slot))
             {
                 PlayerData newPlayer = new PlayerData
                 {
                     Name = player.PlayerName,
                     NameWithoutEmoji = RemoveEmoji(player.PlayerName),
+                    UserId = player.UserId.ToString()!,
                     SteamId32 = player.AuthorizedSteamID.SteamId32.ToString(),
                     SteamId64 = player.AuthorizedSteamID.SteamId64.ToString(),
                     IpAddress = player.IpAddress != null ? player.IpAddress.ToString() : "Invalid",
@@ -32,7 +33,7 @@ namespace DiscordUtilities
                     DiscordID = "",
                     IsLinked = false,
                 };
-                playerData.Add(player, newPlayer);
+                playerData.Add(player.Slot, newPlayer);
                 if (IsDbConnected)
                     _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), 0);
             }
@@ -43,12 +44,11 @@ namespace DiscordUtilities
         public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
         {
             var player = @event.Userid;
-
-            if (player != null && player.IsValid && playerData.ContainsKey(player) && player.AuthorizedSteamID != null)
+            if (player != null && player.IsValid && playerData.ContainsKey(player.Slot) && player.AuthorizedSteamID != null)
             {
                 if (IsDbConnected)
-                    _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), playerData[player].PlayedTime, false);
-                playerData.Remove(player);
+                    _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), playerData[player.Slot].PlayedTime, false);
+                playerData.Remove(player.Slot);
             }
 
             return HookResult.Continue;

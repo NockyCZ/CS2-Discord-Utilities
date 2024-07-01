@@ -49,6 +49,7 @@ namespace DiscordUtilities
         {
             public required string Name { get; set; }
             public required string NameWithoutEmoji { get; set; }
+            public required string UserId { get; set; }
             public required string SteamId32 { get; set; }
             public required string SteamId64 { get; set; }
             public required string IpAddress { get; set; }

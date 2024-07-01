@@ -21,7 +21,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var message = savedMessages[messageId];
         if (message == null)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] Message with ID '{messageId}' was not found! (GetMessageData)", ConsoleColor.Red);
+            Perform_SendConsoleMessage($"Message with ID '{messageId}' was not found! (GetMessageData)", ConsoleColor.Red);
             return null;
         }
 
@@ -35,18 +35,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             Builders = GetMessageBuilders(message)
         };
         return messageData;
-    }
-
-    public bool IsValidEmoji(string emoji)
-    {
-        if (string.IsNullOrEmpty(emoji))
-            return false;
-
-        if (emoji.StartsWith("<:") && emoji.EndsWith(">"))
-            return true;
-
-        Perform_SendConsoleMessage($"[Discord Utilities] Invalid Emoji Format '{emoji}'! Correct format: <:NAME:ID>", ConsoleColor.Red);
-        return false;
     }
 
     public object ConvertConfigEmbedToObject<T>(T obj)
@@ -92,11 +80,11 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                         Builder.Description = ReplaceVariables(builderValue, replacedVariables);
                         break;
                     case "Thumbnail":
-                        if (builderValue.Contains(".jpg") || builderValue.Contains(".png") || builderValue.Contains(".gif"))
+                        if (builderValue.Contains("{Server.MapImageUrl}") || builderValue.Contains(".jpg") || builderValue.Contains(".png") || builderValue.Contains(".gif"))
                             Builder.ThumbnailUrl = ReplaceVariables(builderValue, replacedVariables);
                         break;
                     case "Image":
-                        if (builderValue.Contains(".jpg") || builderValue.Contains(".png") || builderValue.Contains(".gif"))
+                        if (builderValue.Contains("{Server.MapImageUrl}") || builderValue.Contains(".jpg") || builderValue.Contains(".png") || builderValue.Contains(".gif"))
                             Builder.ImageUrl = ReplaceVariables(builderValue, replacedVariables);
                         break;
                     case "Color":
@@ -122,7 +110,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                             }
                             else
                             {
-                                Perform_SendConsoleMessage($"[Discord Utilities] Invalid Fields Format! ({builderValue})", ConsoleColor.DarkRed);
+                                Perform_SendConsoleMessage($"Invalid Fields Format! ('{builderValue}')", ConsoleColor.Red);
                             }
                         }
                         break;

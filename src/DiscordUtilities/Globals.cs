@@ -22,5 +22,6 @@ namespace DiscordUtilities
         public static string ServerId = "";
         public static string DateFormat = "";
         public static string LastBotActivityText = "";
+        public static DateTime LastInteractionTime = DateTime.Now;
     }
 }

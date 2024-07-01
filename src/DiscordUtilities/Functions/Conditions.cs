@@ -116,7 +116,7 @@ namespace DiscordUtilities
                             }
                             break;
                         default:
-                            condition = ReplaceCustomFunctions(data, Value, null, dataType);
+                            condition = ReplaceCustomFunctions(data, Value, replaceData, dataType);
                             conditionMet = true;
                             break;
                     }

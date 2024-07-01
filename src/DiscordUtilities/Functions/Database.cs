@@ -32,12 +32,12 @@ namespace DiscordUtilities
                 IsDbConnected = true;
                 await LoadLinkCodes();
                 await LoadLinkedPlayers();
-                Perform_SendConsoleMessage("[Discord Utilities] The database has been connected!", ConsoleColor.Green);
+                Perform_SendConsoleMessage("The database has been connected!", ConsoleColor.Green);
                 await connection.CloseAsync();
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] Unable to connect to the database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Unable to connect to the database: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -67,7 +67,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when creating linked players database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"There was an error when creating linked players database: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -128,18 +128,18 @@ namespace DiscordUtilities
 
                                     Server.NextFrame(() =>
                                     {
-                                        if (playerData.ContainsKey(player))
+                                        if (playerData.ContainsKey(player.Slot))
                                         {
-                                            playerData[player].PlayedTime = time;
-                                            playerData[player].FirstJoin = firstJoin;
-                                            playerData[player].LastSeen = lastSeen;
+                                            playerData[player.Slot].PlayedTime = time;
+                                            playerData[player.Slot].FirstJoin = firstJoin;
+                                            playerData[player.Slot].LastSeen = lastSeen;
 
                                             if (Config.Link.Enabled)
                                             {
                                                 if (linkedPlayers.ContainsKey(player.AuthorizedSteamID!.SteamId64))
                                                 {
-                                                    if (playerData.ContainsKey(player))
-                                                        playerData[player].IsLinked = true;
+                                                    if (playerData.ContainsKey(player.Slot))
+                                                        playerData[player.Slot].IsLinked = true;
                                                     _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), linkedPlayers[player.AuthorizedSteamID.SteamId64]);
                                                 }
                                             }
@@ -160,7 +160,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when loading/updating player data: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"There was an error when loading/updating player data: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -184,7 +184,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while entering data into the database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while entering data into the database: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -208,7 +208,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while entering new code into the database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while entering new code into the database: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -237,7 +237,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] There was an error when loading the data: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"There was an error when loading the data: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -267,7 +267,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while loading code: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while loading code: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 
@@ -291,7 +291,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while removing code from the database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while removing code from the database: '{ex.Message}'", ConsoleColor.Red);
             }
         }
         public async Task RemovePlayerData(string steamid)
@@ -313,7 +313,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while removing player from the database: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while removing player from the database: '{ex.Message}'", ConsoleColor.Red);
             }
         }
     }

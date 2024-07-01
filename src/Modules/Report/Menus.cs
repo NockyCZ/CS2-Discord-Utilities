@@ -35,7 +35,6 @@ namespace Report
             Menu.PostSelectAction = PostSelectAction.Close;
 
             Menu.AddMenuOption(Localizer["Menu.MarkAsSolved"], (player, option) => ReportSolved(player, reportId));
-
             Menu.AddMenuOption(Localizer["Menu.ReportInfo.Sender", data.senderName], null!, true);
             Menu.AddMenuOption(Localizer["Menu.ReportInfo.Reason", data.reason], null!, true);
 
@@ -53,7 +52,6 @@ namespace Report
             if (reportsList.ContainsKey(reportId))
             {
                 PerformReportSolved(reportId, 0, player);
-                reportsList.Remove(reportId);
             }
         }
 
@@ -102,6 +100,11 @@ namespace Report
 
         private void OnSelectPlayer_ReportMenu(CCSPlayerController player, CCSPlayerController target)
         {
+            if (Config.AntiSpamReport && solvedPlayers.Contains(target.Slot))
+            {
+                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ThisPlayerCannotBeReported", target.PlayerName]}");
+                return;
+            }
             OpenReportMenu_Reason(player, target);
         }
     }

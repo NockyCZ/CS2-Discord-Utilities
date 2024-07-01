@@ -9,6 +9,32 @@ namespace DiscordUtilities
 {
     public partial class DiscordUtilities
     {
+        public async Task LoadMapImages()
+        {
+            mapImagesList.Clear();
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync("https://nockycz.github.io/CS2-Discord-Utilities/MapImages/map_list.json");
+                    response.EnsureSuccessStatusCode();
+
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    mapImagesList = JsonConvert.DeserializeObject<List<string>>(responseBody)!;
+                    if (Config.Debug)
+                        Perform_SendConsoleMessage($"Loaded total '{mapImagesList.Count} Map Images'", ConsoleColor.Cyan);
+                }
+                catch (HttpRequestException ex)
+                {
+                    Perform_SendConsoleMessage($"An error occurred while loading a Map Images: '{ex.Message}'", ConsoleColor.Red);
+                }
+                catch (Exception ex)
+                {
+                    Perform_SendConsoleMessage($"An error occurred while loading a Map Images: '{ex.Message}'", ConsoleColor.Red);
+                }
+            }
+        }
+
         public void LoadCustomConditions()
         {
             customConditions.Clear();
@@ -40,17 +66,17 @@ namespace DiscordUtilities
                                 customVariables.Add($"[{item.Key}]", replaceDataType.DiscordChannel);
                             else
                             {
-                                Perform_SendConsoleMessage($"[Discord Utilities] Invalid Custom Variable Name '{item.Key}'", ConsoleColor.DarkYellow);
+                                Perform_SendConsoleMessage($"Invalid Custom Variable Name '{item.Key}'", ConsoleColor.Red);
                                 customConditions.Remove(item.Key);
                             }
                         }
                     }
-
-                    Perform_SendConsoleMessage($"[Discord Utilities] Loaded {customConditions.Count} Custom Variables!", ConsoleColor.Green);
+                    if (Config.Debug)
+                        Perform_SendConsoleMessage($"Loaded total '{customConditions.Count} Custom Variables'", ConsoleColor.Cyan);
                 }
                 catch (Exception ex)
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while loading the Custom Variables: {ex.Message}", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"An error occurred while loading the Custom Variables: '{ex.Message}'", ConsoleColor.Red);
                     throw new Exception($"An error occurred while loading the Custom Variables: {ex.Message}");
                 }
             }
@@ -60,14 +86,14 @@ namespace DiscordUtilities
             var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
             if (guild == null)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
                 return;
             }
             var user = guild.GetUser(discordID);
             if (user == null)
             {
                 await RemovePlayerData(steamid);
-                Perform_SendConsoleMessage($"[Discord Utilities] User with ID '{discordID}' was not found! Players has been removed from the Linked players.", ConsoleColor.DarkYellow);
+                Perform_SendConsoleMessage($"User with ID '{discordID}' was not found! Player has been removed from the Linked players.", ConsoleColor.DarkYellow);
                 return;
             }
 
@@ -85,7 +111,7 @@ namespace DiscordUtilities
             var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
             if (guild == null)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
                 return;
             }
             var user = guild.GetUser(discordid);
@@ -95,7 +121,7 @@ namespace DiscordUtilities
             var target = GetTargetBySteamID64(steamid);
             if (target != null)
             {
-                var p = playerData[target];
+                var p = playerData[target.Slot];
                 if (p != null)
                 {
                     p.DiscordGlobalname = user.GlobalName;
@@ -122,15 +148,15 @@ namespace DiscordUtilities
             }
             catch (AddressNotFoundException ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] IP Adress '{ex}' was not found.", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"IP Adress '{ex}' was not found.", ConsoleColor.Red);
             }
             catch (GeoIP2Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while searching IP adress: {ex.Message}.", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while searching IP adress: '{ex.Message}'.", ConsoleColor.Red);
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while searching IP adress: {ex.Message}.", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while searching IP adress: '{ex.Message}'.", ConsoleColor.Red);
             }
         }
 
@@ -143,18 +169,22 @@ namespace DiscordUtilities
             var timeleft = (int)timelimit - (int)(currentTime - gameStart);
             TimeSpan time = TimeSpan.FromSeconds(timeleft);
 
-            serverData!.Timeleft = $"{time:mm\\:ss}";
+            serverData.Name = ConVar.Find("hostname")!.StringValue;
+            serverData.Timeleft = $"{time:mm\\:ss}";
             serverData.OnlinePlayers = GetPlayersCount().ToString();
             serverData.OnlinePlayersAndBots = GetPlayersCountWithBots().ToString();
             serverData.OnlineBots = GetBotsCounts().ToString();
+            if (Config.BotStatus.UpdateStatus)
+                _ = UpdateBotStatus();
         }
+
         private void UpdatePlayerCountry(ulong steamid, string[] country)
         {
             var target = GetTargetBySteamID64(steamid);
             if (target == null)
                 return;
 
-            var p = playerData[target];
+            var p = playerData[target.Slot];
             if (p != null)
             {
                 if (!string.IsNullOrWhiteSpace(country[0]))
@@ -194,7 +224,7 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"Error: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"UpdateBotStatus Error: {ex.Message}", ConsoleColor.Red);
             }
         }
     }

@@ -25,6 +25,6 @@ public class Commands
     public class Builder
     {
         public required SlashCommandData commandData { get; set; }
-        public required List<SlashCommandOptionsData> commandOptions { get; set; }
+        public List<SlashCommandOptionsData>? commandOptions { get; set; }
     }
 }

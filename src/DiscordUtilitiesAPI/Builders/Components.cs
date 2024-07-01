@@ -13,7 +13,7 @@ public interface Components
     {
         public required string CustomId { get; set; }
         public required string Label { get; set; }
-        public required string Emoji { get; set; }
+        public string Emoji { get; set; } = "";
         public required ButtonColor Color { get; set; }
     }
 
@@ -21,15 +21,15 @@ public interface Components
     {
         public required string Label { get; set; }
         public required string URL { get; set; }
-        public required string Emoji { get; set; }
+        public string Emoji { get; set; } = "";
     }
 
     public class InteractiveMenusOptions
     {
         public required string Label { get; set; }
         public required string Value { get; set; }
-        public string? Description { get; set; }
-        public string? Emote { get; set; }
+        public string Description { get; set; } = "";
+        public string Emoji { get; set; } = "";
     }
     public class InteractiveMenusBuilder
     {

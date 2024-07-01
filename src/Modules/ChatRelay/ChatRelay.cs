@@ -16,7 +16,7 @@ namespace ChatRelay
     {
         public override string ModuleName => "[Discord Utilities] Chat Relay";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleVersion => "1.1";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = null!;
         public void OnConfigParsed(Config config) { Config = config; }
@@ -100,7 +100,7 @@ namespace ChatRelay
         private void OnMessageReceived(MessageData message, UserData user)
         {
             if (DiscordUtilities!.Debug())
-                DiscordUtilities.SendConsoleMessage($"[Discord Utilities] Discord Relay DEBUG: Discord Message '{message.Text}' was logged in channel '{message.ChannelID}'", MessageType.Debug);
+                DiscordUtilities.SendConsoleMessage($"Discord Message '{message.Text}' was logged in channel '{message.ChannelID}' (Chat Relay)", MessageType.Debug);
             if (string.IsNullOrEmpty(Config.DiscordRelay.ChannelID))
                 return;
 
@@ -118,7 +118,7 @@ namespace ChatRelay
                 {
                     Server.PrintToChatAll(messageFormat);
                     if (DiscordUtilities.Debug())
-                        DiscordUtilities.SendConsoleMessage($"[Discord Utilities] Discord Relay DEBUG: Discord Message '{message.Text}' in channel '{message.ChannelID}' has been sent to the server!", MessageType.Debug);
+                        DiscordUtilities.SendConsoleMessage($"Discord Message '{message.Text}' in channel '{message.ChannelID}' has been sent to the server! (Chat Relay)", MessageType.Debug);
                 }
             }
         }
@@ -127,7 +127,7 @@ namespace ChatRelay
         {
             if (string.IsNullOrEmpty(Config.Chatlog.ChannelID))
             {
-                DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Discord Chatlog ERROR: Can't send a message to Discord because the ChannelID is empty!", MessageType.Error);
+                DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! (Chat Relay (ChatLog))", MessageType.Error);
                 return;
             }
             var replaceVariablesBuilder = new ReplaceVariables.Builder
@@ -158,7 +158,7 @@ namespace ChatRelay
         {
             if (string.IsNullOrEmpty(Config.AdminChat.ChannelID))
             {
-                DiscordUtilities!.SendConsoleMessage("[Discord Utilities] Discord Adminchat Log ERROR: Can't send a message to Discord because the ChannelID is empty!", MessageType.Error);
+                DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! (Chat Relay (Admin Chat))", MessageType.Error);
                 return;
             }
 

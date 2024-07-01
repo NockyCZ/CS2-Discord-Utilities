@@ -9,31 +9,31 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 {
     public UserData? GetUserData(CCSPlayerController player)
     {
-        if (!playerData.ContainsKey(player))
+        if (!playerData.ContainsKey(player.Slot))
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: GetUserData - Selected Player was not found on the server!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'GetUserData' - Selected Player was not found on the server!", ConsoleColor.Cyan);
             return null;
         }
 
-        if (!playerData[player].IsLinked)
+        if (!playerData[player.Slot].IsLinked)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: GetUserData - Selected Player is not linked!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'GetUserData' - Selected Player is not linked!", ConsoleColor.Cyan);
             return null;
         }
 
         var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
         if (guild == null)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
             throw new Exception($"Guild with id '{ServerId}' was not found!");
         }
-        var user = guild.GetUser(ulong.Parse(playerData[player].DiscordID));
+        var user = guild.GetUser(ulong.Parse(playerData[player.Slot].DiscordID));
         if (user == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: GetUserData - User with ID '{playerData[player].DiscordID}' was not found on the Discord server!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'GetUserData' - User with ID '{playerData[player.Slot].DiscordID}' was not found on the Discord server!", ConsoleColor.Cyan);
             return null;
         }
 
@@ -53,14 +53,14 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
         if (guild == null)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
             throw new Exception($"Guild with id '{ServerId}' was not found!");
         }
         var socketUser = guild.GetUser(user.ID);
         if (socketUser == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: GetUserData - User with ID '{user!.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"AddRolesToUser - User with ID '{user!.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
             return;
         }
 
@@ -84,13 +84,13 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                         sb.Append(", ");
                     }
                     sb.Length -= 2;
-                    Perform_SendConsoleMessage($"[Discord Utilities] Roles have been added to user '{user.DisplayName}': {sb.ToString()}", ConsoleColor.Cyan);
+                    Perform_SendConsoleMessage($"Roles have been added to user '{user.DisplayName}': {sb.ToString()}", ConsoleColor.Cyan);
                 }
             }
         }
         catch (Exception ex)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred when adding roles: {ex.Message}", ConsoleColor.Red);
+            Perform_SendConsoleMessage($"An error occurred while adding roles: '{ex.Message}'", ConsoleColor.Red);
             throw new Exception($"An error occurred when adding roles: {ex.Message}");
         }
     }
@@ -100,14 +100,14 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
         if (guild == null)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
             throw new Exception($"Guild with id '{ServerId}' was not found!");
         }
         var socketUser = guild.GetUser(user.ID);
         if (socketUser == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"[Discord Utilities] DEBUG: RemoveRolesFromUser - User with ID '{user.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'RemoveRolesFromUser' - User with ID '{user.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
             return;
         }
 
@@ -132,25 +132,25 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                         sb.Append(", ");
                     }
                     sb.Length -= 2;
-                    Perform_SendConsoleMessage($"[Discord Utilities] Roles have been removed from user '{user.DisplayName}': {sb.ToString()}", ConsoleColor.Cyan);
+                    Perform_SendConsoleMessage($"Roles have been removed from user '{user.DisplayName}': {sb.ToString()}", ConsoleColor.Cyan);
                 }
             }
         }
         catch (Exception ex)
         {
-            Perform_SendConsoleMessage($"[Discord Utilities] An error occurred when removing roles: {ex.Message}", ConsoleColor.Red);
+            Perform_SendConsoleMessage($"An error occurred while removing roles: '{ex.Message}'", ConsoleColor.Red);
             throw new Exception($"An error occurred when removing roles: {ex.Message}");
         }
     }
 
     public bool IsPlayerLinked(CCSPlayerController? player)
     {
-        return player != null && player.IsValid && !player.IsBot && !player.IsHLTV && playerData.ContainsKey(player) && playerData[player].IsLinked;
+        return player != null && player.IsValid && !player.IsBot && !player.IsHLTV && playerData.ContainsKey(player.Slot) && playerData[player.Slot].IsLinked;
     }
 
     public bool IsPlayerDataLoaded(CCSPlayerController? player)
     {
-        return player != null && player.IsValid && !player.IsBot && !player.IsHLTV && playerData.ContainsKey(player);
+        return player != null && player.IsValid && !player.IsBot && !player.IsHLTV && playerData.ContainsKey(player.Slot);
     }
 
     public Dictionary<ulong, ulong> GetLinkedPlayers()

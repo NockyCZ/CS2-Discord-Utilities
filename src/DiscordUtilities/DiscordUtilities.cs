@@ -16,7 +16,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.5";
+        public override string ModuleVersion => "2.0.6";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
@@ -38,13 +38,13 @@ namespace DiscordUtilities
             }
             else
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] Database connection information is missing!", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"You need to setup Database credentials in config", ConsoleColor.Red);
                 throw new Exception("Database connection information is missing!");
             }
 
             if (string.IsNullOrEmpty(Config.ServerID))
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] Invalid Discord Server ID!", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Invalid Discord Server ID!", ConsoleColor.Red);
                 throw new Exception("Invalid Discord Server ID");
             }
 
@@ -54,10 +54,10 @@ namespace DiscordUtilities
                 counter++;
                 if (counter > 5)
                 {
-                    Perform_SendConsoleMessage($"[Discord Utilities] Discord BOT failed to connect!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"Discord BOT failed to connect!", ConsoleColor.Red);
                     throw new Exception("Discord BOT failed to connect");
                 }
-                Perform_SendConsoleMessage($"[Discord Utilities] Loading Discord BOT...", ConsoleColor.DarkYellow);
+                Perform_SendConsoleMessage($"Loading Discord BOT...", ConsoleColor.DarkYellow);
                 Thread.Sleep(3000);
             }
         }
@@ -70,6 +70,7 @@ namespace DiscordUtilities
             if (Config.UseCustomVariables)
                 LoadCustomConditions();
 
+            _ = LoadMapImages();
             IsDbConnected = false;
             IsBotConnected = false;
             IsDebug = Config.Debug;
@@ -78,65 +79,29 @@ namespace DiscordUtilities
             DateFormat = Config.DateFormat;
             savedInteractions.Clear();
 
-            /*serverData = new ServerData
-            {
-                ModuleDirectory = ModuleDirectory,
-                GameDirectory = Server.GameDirectory,
-                Name = "Counter-Strike Server",
-                MaxPlayers = 10.ToString(),
-                MapName = "",
-                OnlinePlayers = 0.ToString(),
-                OnlinePlayersAndBots = 0.ToString(),
-                OnlineBots = 0.ToString(),
-                Timeleft = 60.ToString(),
-                IP = Config.ServerIP
-            };*/
+            serverData.ModuleDirectory = ModuleDirectory;
+            serverData.GameDirectory = Server.GameDirectory;
+            serverData.MaxPlayers = Server.MaxPlayers.ToString();
+            serverData.IP = Config.ServerIP;
 
-            int debugCounter = 0;
-
-            updateTimer = AddTimer(30.0f, () =>
-            {
-                debugCounter++;
-                UpdateServerData();
-                if (IsDebug && debugCounter < 11)
-                    Perform_SendConsoleMessage($"[Discord Utilities] Server Data has been successfully updated (Check: {debugCounter}/10)", ConsoleColor.Cyan);
-                if (Config.BotStatus.UpdateStatus)
-                {
-                    _ = UpdateBotStatus();
-                    if (IsDebug && debugCounter < 11)
-                        Perform_SendConsoleMessage($"[Discord Utilities] Bot Status has been successfully updated (Check: {debugCounter}/10)", ConsoleColor.Cyan);
-                }
-                else
-                {
-                    if (IsDebug && debugCounter < 11)
-                        Perform_SendConsoleMessage($"[Discord Utilities] Bot status has not been updated because update is not enabled (Check: {debugCounter}/10)", ConsoleColor.Cyan);
-                }
-            }, TimerFlags.REPEAT);
-
+            Server.ExecuteCommand("sv_hibernate_when_empty false");
             RegisterListener<Listeners.OnMapStart>(mapName =>
             {
-                playerData.Clear();
-                serverData = new ServerData
-                {
-                    ModuleDirectory = ModuleDirectory,
-                    GameDirectory = Server.GameDirectory,
-                    Name = ConVar.Find("hostname")!.StringValue,
-                    MaxPlayers = Server.MaxPlayers.ToString(),
-                    MapName = Server.MapName,
-                    OnlinePlayers = 0.ToString(),
-                    OnlinePlayersAndBots = 0.ToString(),
-                    OnlineBots = 0.ToString(),
-                    Timeleft = 60.ToString(),
-                    IP = Config.ServerIP
-                };
                 Server.ExecuteCommand("sv_hibernate_when_empty false");
-                ServerDataLoaded();
+                playerData.Clear();
+                AddTimer(3.0f, () =>
+                {
+                    UpdateServerData();
+                    serverData.MapName = mapName;
+                    ServerDataLoaded();
+                });
 
                 AddTimer(60.0f, () =>
                 {
-                    foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.AuthorizedSteamID != null && playerData.ContainsKey(p)))
+                    UpdateServerData();
+                    foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.AuthorizedSteamID != null && playerData.ContainsKey(p.Slot)))
                     {
-                        playerData[player].PlayedTime++;
+                        playerData[player.Slot].PlayedTime++;
                     }
                 }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
             });
@@ -148,6 +113,7 @@ namespace DiscordUtilities
                 BotClient = new DiscordSocketClient(new DiscordSocketConfig()
                 {
                     AlwaysDownloadUsers = true,
+                    UseInteractionSnowflakeDate = false,
                     GatewayIntents = GatewayIntents.MessageContent | GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.GuildMembers
                 });
 
@@ -166,22 +132,22 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while initializing the Discord BOT: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while initializing the Discord BOT: '{ex.Message}'", ConsoleColor.Red);
             }
         }
         private async Task ReadyAsync()
         {
-            Perform_SendConsoleMessage("[Discord Utilities] Discord BOT has been connected!", ConsoleColor.Green);
+            Perform_SendConsoleMessage("Discord BOT has been connected!", ConsoleColor.Green);
             IsBotConnected = true;
             BotLoaded();
 
             if (string.IsNullOrEmpty(ServerId))
-                Perform_SendConsoleMessage("[Discord Utilities] You do not have a completed Server ID!", ConsoleColor.Red);
+                Perform_SendConsoleMessage("You do not have a completed 'Server ID'!", ConsoleColor.Red);
             else
             {
                 var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
                 if (guild == null)
-                    Perform_SendConsoleMessage($"[Discord Utilities] Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
             }
 
             string ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
@@ -202,19 +168,19 @@ namespace DiscordUtilities
                     if (IsDbConnected)
                     {
                         if (IsDebug)
-                            Perform_SendConsoleMessage($"[Discord Utilities] Link Slash Command has been successfully updated/created", ConsoleColor.Cyan);
+                            Perform_SendConsoleMessage($"Link Slash Command has been successfully updated/created", ConsoleColor.Cyan);
                         await BotClient.CreateGlobalApplicationCommandAsync(linkCommand.Build());
                     }
                     else
                     {
-                        Perform_SendConsoleMessage($"[Discord Utilities] Link Slash Command was not created because you do not have a database connected", ConsoleColor.Red);
+                        Perform_SendConsoleMessage($"Link Slash Command was not created because you do not have a database connected", ConsoleColor.Red);
                         throw new Exception("Link Slash Command was not created because you do not have a database connected");
                     }
                 }
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while updating Link Slash Commands: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while updating Link Slash Commands: '{ex.Message}'", ConsoleColor.Red);
                 throw new Exception($"An error occurred while updating Link Slash Commands: {ex.Message}");
             }
 
@@ -226,19 +192,24 @@ namespace DiscordUtilities
             }
             catch (Exception ex)
             {
-                Perform_SendConsoleMessage($"[Discord Utilities] An error occurred while creating handlers: {ex.Message}", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"An error occurred while creating handlers: '{ex.Message}'", ConsoleColor.Red);
                 throw new Exception($"An error occurred while creating handlers: {ex.Message}");
             }
         }
         private Task InteractionCreatedHandler(SocketInteraction interaction)
         {
+            if ((DateTime.Now - LastInteractionTime).TotalSeconds > 60)
+            {
+                savedInteractions.Clear();
+            }
+
             if (interaction is SocketMessageComponent MessageComponent)
             {
-                IDiscordInteractionData data = MessageComponent.Data;
-                if (data is IComponentInteractionData componentData)
-                {
-                    Event_InteractionCreated(interaction, componentData);
-                }
+                Event_InteractionCreated(interaction, MessageComponent);
+            }
+            else if (interaction.Type == InteractionType.ModalSubmit)
+            {
+                Event_ModalSubmited(interaction);
             }
             return Task.CompletedTask;
         }
@@ -274,8 +245,37 @@ namespace DiscordUtilities
 
         public static void Perform_SendConsoleMessage(string text, ConsoleColor color)
         {
+            string prefix = "[Discord Utilities] ";
+            string suffix = text;
+
+            switch (color)
+            {
+                case ConsoleColor.Cyan:
+                    prefix = "[Discord Utilities] (DEBUG): ";
+                    break;
+                case ConsoleColor.Red:
+                    prefix = "[Discord Utilities] (ERROR): ";
+                    break;
+            }
+
             Console.ForegroundColor = color;
-            Console.WriteLine(text);
+            Console.Write(prefix);
+
+            Console.ForegroundColor = ConsoleColor.White;
+            bool isInQuotes = false;
+
+            foreach (char c in suffix)
+            {
+                if (c == '\'')
+                {
+                    isInQuotes = !isInQuotes;
+                    continue;
+                }
+                Console.ForegroundColor = isInQuotes ? ConsoleColor.Yellow : ConsoleColor.White;
+                Console.Write(c);
+            }
+
+            Console.WriteLine();
             Console.ResetColor();
         }
     }

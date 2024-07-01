@@ -10,6 +10,8 @@ public class Config : BasePluginConfig
     [JsonPropertyName("Allow Ingame Reports List")] public bool ReportsListMenu { get; set; } = true;
     [JsonPropertyName("Allow Self Report")] public bool SelfReport { get; set; } = false;
     [JsonPropertyName("Report Expiration")] public int ReportExpiration { get; set; } = 120;
+    [JsonPropertyName("Anti Report Spam")] public bool AntiSpamReport { get; set; } = true;
+    [JsonPropertyName("Send Message To Sender On Solved")] public bool SendMessageOnSolved { get; set; } = true;
     [JsonPropertyName("Admin Flag")] public string AdminFlag { get; set; } = "@discord_utilities/report";
     [JsonPropertyName("Unreportable Flag")] public string UnreportableFlag { get; set; } = "@discord_utilities/antireport";
     [JsonPropertyName("Report Cooldown")] public int ReportCooldown { get; set; } = 60;
@@ -41,38 +43,48 @@ public class ReportEmbed
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#ffff66";
     [JsonPropertyName("Footer")] public string Footer { get; set; } = "";
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
-    [JsonPropertyName("Button Settings")] public ReportButton ReportButton { get; set; } = new ReportButton();
+    [JsonPropertyName("Admin Button")] public ReportButton ReportButton { get; set; } = new();
+    [JsonPropertyName("Player Stats Button")] public SearchPlayerButton SearchPlayerButton { get; set; } = new();
+}
+
+public class SearchPlayerButton
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
+    [JsonPropertyName("Server Name")] public string ServerName { get; set; } = "Public";
+    [JsonPropertyName("Button Text")] public string Text { get; set; } = "Player Stats";
+    [JsonPropertyName("Button Color")] public int Color { get; set; } = 3;
+    [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = ":mag:";
 }
 
 public class ReportButton
 {
-    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
-    [JsonPropertyName("Admin Role ID")] public string AdminRoleId { get; set; } = "";
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
+    [JsonPropertyName("Admin Roles ID")] public string AdminRolesId { get; set; } = "";
     [JsonPropertyName("Button Color")] public int Color { get; set; } = 1;
-    [JsonPropertyName("Button Text")] public string Text { get; set; } = "Mark as solved";
-    [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = "";
+    [JsonPropertyName("Button Text")] public string Text { get; set; } = "Mark as resolved";
+    [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = ":white_check_mark:";
     [JsonPropertyName("Button Reply Embeds")] public ReportReplyEmbeds ReportReplyEmbeds { get; set; } = new ReportReplyEmbeds();
 }
 
 public class SolvedReportEmbed
 {
-    [JsonPropertyName("Content")] public string Content { get; set; } = "Solved by <@{DiscordUser.ID}>";
-    [JsonPropertyName("Title")] public string Title { get; set; } = "Report solved by {DiscordUser.DisplayName}!";
+    [JsonPropertyName("Content")] public string Content { get; set; } = "resolved by <@{DiscordUser.ID}>";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "Report resolved by {DiscordUser.DisplayName}!";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "";
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#00ff99";
-    [JsonPropertyName("Footer")] public string Footer { get; set; } = "Solved at";
+    [JsonPropertyName("Footer")] public string Footer { get; set; } = "Resolved at";
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = true;
 }
 
 public class IngameSolvedReportEmbed
 {
-    [JsonPropertyName("Content")] public string Content { get; set; } = "Report solved on **{Server.Name}** by {Player.DiscordPing}";
-    [JsonPropertyName("Title")] public string Title { get; set; } = "Report solved by {Player.Name}(`Discord:` {Player.DiscordDisplayName})";
+    [JsonPropertyName("Content")] public string Content { get; set; } = "Report resolved on **{Server.Name}** by {Player.DiscordPing}";
+    [JsonPropertyName("Title")] public string Title { get; set; } = "Report resolved by {Player.Name}(`Discord:` {Player.DiscordDisplayName})";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "";
     [JsonPropertyName("HEX Color")] public string Color { get; set; } = "#00ff99";
-    [JsonPropertyName("Footer")] public string Footer { get; set; } = "Solved at";
+    [JsonPropertyName("Footer")] public string Footer { get; set; } = "Resolved at";
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = true;
 }
 
@@ -95,9 +107,10 @@ public class ReportReplyEmbeds
 
 public class ReportSucces
 {
+    [JsonPropertyName("Silent Response")] public bool SilentResponse { get; set; } = true;
     [JsonPropertyName("Content")] public string Content { get; set; } = "";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
-    [JsonPropertyName("Description")] public string Description { get; set; } = "> The report has been successfully marked as solved!";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> The report has been successfully marked as resolved!";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "";
@@ -108,9 +121,10 @@ public class ReportSucces
 
 public class ReportFailed
 {
+    [JsonPropertyName("Silent Response")] public bool SilentResponse { get; set; } = true;
     [JsonPropertyName("Content")] public string Content { get; set; } = "";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
-    [JsonPropertyName("Description")] public string Description { get; set; } = "> You don't have enough permissions to mark the report as solved!";
+    [JsonPropertyName("Description")] public string Description { get; set; } = "> You don't have enough permissions to mark the report as resolved!";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
     [JsonPropertyName("Thumbnail")] public string Thumbnail { get; set; } = "";
     [JsonPropertyName("Image")] public string Image { get; set; } = "";

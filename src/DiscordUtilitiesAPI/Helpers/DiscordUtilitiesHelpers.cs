@@ -28,7 +28,7 @@ public enum SlashCommandOptionsType
 public class CommandOptionsData
 {
     public required string Name { get; set; }
-    public required string Value { get; set; }
+    public string Value { get; set; } = "";
     public required SlashCommandOptionsType Type { get; set; }
 }
 public class CommandData
@@ -67,6 +67,17 @@ public class InteractionData
     public required int InteractionId { get; set; }
     public required IReadOnlyCollection<string> SelectedValues { get; set; }
     public required MessageBuilders? Builders { get; set; }
+}
+
+public class ModalData
+{
+    public required string ChannelName { get; set; }
+    public required ulong ChannelID { get; set; }
+    public ulong? MessageId { get; set; }
+    public ulong? GuildId { get; set; }
+    public required string CustomId { get; set; }
+    public required int InteractionId { get; set; }
+    public required IReadOnlyDictionary<string, string> InputValues { get; set; }
 }
 
 public class MessageBuilders

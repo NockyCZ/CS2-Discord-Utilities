@@ -7,7 +7,7 @@ public class DUConfig : BasePluginConfig
 {
     [JsonPropertyName("Servers List")] public string ServerList { get; set; } = "Only Mirage,Public,AWP";
     [JsonPropertyName("Server")] public string Server { get; set; } = "Public";
-    [JsonPropertyName("Admin Role ID")] public string AdminRoleId { get; set; } = "";
+    [JsonPropertyName("Admin Roles ID")] public string AdminRolesId { get; set; } = "";
     [JsonPropertyName("Discord Rcon Command")] public string CommandName { get; set; } = "rcon";
     [JsonPropertyName("Discord Rcon Command Description")] public string CommandDescription { get; set; } = "Execute commands from the Discord server";
     [JsonPropertyName("Discord Server Option Name")] public string ServerOptionName { get; set; } = "server";
@@ -20,6 +20,7 @@ public class DUConfig : BasePluginConfig
 
 public class RconReplyEmbed
 {
+    [JsonPropertyName("Silent Response")] public bool SilentResponse { get; set; } = true;
     [JsonPropertyName("Content")] public string Content { get; set; } = "";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
     [JsonPropertyName("Description")] public string Description { get; set; } = "> Command `{COMMAND}` was executed on the `{SERVER}` server";
@@ -33,6 +34,7 @@ public class RconReplyEmbed
 
 public class RconFailedEmbed
 {
+    [JsonPropertyName("Silent Response")] public bool SilentResponse { get; set; } = true;
     [JsonPropertyName("Content")] public string Content { get; set; } = "";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
     [JsonPropertyName("Description")] public string Description { get; set; } = "> You do not have access to this command!";
