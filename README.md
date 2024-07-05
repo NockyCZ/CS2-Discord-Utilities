@@ -41,17 +41,38 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 - MySQL Database
 - [Created Discord Bot](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/setting-up-a-discord-bot)
 
-# Preview Images from available modules
-**• Link System** <br>
-<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FwXCGXNZxe61TcJ76BWW9%2Flinked.png?alt=media&token=5cee06d8-1dc7-452d-a195-5b019d67bc0c"/> <br>
-**• Custom Bot Status** <br>
-<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FE8kwVpDDcCqta3tVjlM2%2Fbot_status.png?alt=media&token=db215792-a9af-4912-b40d-ca3b559b59c1"/> <br>
-**• Report/Calladmin Module** <br>
-<img src="https://docs.sourcefactory.eu/~gitbook/image?url=https%3A%2F%2F799349702-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FrczaiIR8LCIvnID1U1Ty%252Fuploads%252FJzRuCyaq6LCOBSSQXEey%252FReport_DiscordInfo.png%3Falt%3Dmedia%26token%3Dc97e0540-6e62-45e9-a07e-9899b95842bc&width=768&dpr=1&quality=100&sign=fd175908&sv=1"/> <br>
-**• Server Status Module** <br>
-<img src="https://docs.sourcefactory.eu/~gitbook/image?url=https%3A%2F%2F799349702-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FrczaiIR8LCIvnID1U1Ty%252Fuploads%252F75Tj2CNGj6JnP9IIk3gY%252FServerStatusPlus.png%3Falt%3Dmedia%26token%3Dc542b07a-176b-4873-8f06-dcc6bf4f8d43&width=768&dpr=1&quality=100&sign=e24d3917&sv=1"/><br>
-**• Chat Relay Module** <br>
-<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2Fsofp76XECCqImToUlpPl%2Fchatlog.png?alt=media&token=42ab5c4d-d38b-4fcc-85f9-e7c3b3b9d0b8"/> <br>
-<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FOy5itmmNeM51qvkt1Y52%2Frelay.png?alt=media&token=1ab194e0-2fc8-4b5e-a514-0fa024bd2e8a"/> <br>
-**• Event Notifications Module** <br>
-<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FsUBC7Wwa1D9oBHp0vAgi%2Fevent_notf.png?alt=media&token=3dee848f-f330-44a2-b5f1-2aeddfaac409"/> <br>
+# Preview Images/Videos from available modules
+<details>
+<summary>Link System</summary>
+<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FwXCGXNZxe61TcJ76BWW9%2Flinked.png?alt=media&token=5cee06d8-1dc7-452d-a195-5b019d67bc0c"/>
+</details>
+
+<details>
+<summary>Custom Bot Status</summary>
+<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FE8kwVpDDcCqta3tVjlM2%2Fbot_status.png?alt=media&token=db215792-a9af-4912-b40d-ca3b559b59c1"/>
+</details>
+
+<details>
+<summary>Report/Calladmin Module</summary>
+<img src="https://docs.sourcefactory.eu/~gitbook/image?url=https%3A%2F%2F799349702-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FrczaiIR8LCIvnID1U1Ty%252Fuploads%252FJzRuCyaq6LCOBSSQXEey%252FReport_DiscordInfo.png%3Falt%3Dmedia%26token%3Dc97e0540-6e62-45e9-a07e-9899b95842bc&width=768&dpr=1&quality=100&sign=fd175908&sv=1"/>
+</details>
+
+<details>
+<summary>Skin Changer Module</summary>
+ 
+[![Skin Changer Video](https://img.youtube.com/vi/z4IX8gj4asA/0.jpg)](https://www.youtube.com/watch?v=z4IX8gj4asA)
+</details>
+
+<details>
+<summary>Server Status Module</summary>
+<img src="https://docs.sourcefactory.eu/~gitbook/image?url=https%3A%2F%2F799349702-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FrczaiIR8LCIvnID1U1Ty%252Fuploads%252F75Tj2CNGj6JnP9IIk3gY%252FServerStatusPlus.png%3Falt%3Dmedia%26token%3Dc542b07a-176b-4873-8f06-dcc6bf4f8d43&width=768&dpr=1&quality=100&sign=e24d3917&sv=1"/>
+</details>
+<details>
+<summary>Chat Relay Module</summary>
+<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2Fsofp76XECCqImToUlpPl%2Fchatlog.png?alt=media&token=42ab5c4d-d38b-4fcc-85f9-e7c3b3b9d0b8"/>
+<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FOy5itmmNeM51qvkt1Y52%2Frelay.png?alt=media&token=1ab194e0-2fc8-4b5e-a514-0fa024bd2e8a"/>
+</details>
+<details>
+<summary>Event Notifications Module</summary>
+<img src="https://2185268345-files.gitbook.io/~/files/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FrczaiIR8LCIvnID1U1Ty%2Fuploads%2FsUBC7Wwa1D9oBHp0vAgi%2Fevent_notf.png?alt=media&token=3dee848f-f330-44a2-b5f1-2aeddfaac409"/>
+</details>
