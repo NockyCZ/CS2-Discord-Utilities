@@ -8,6 +8,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using CounterStrikeSharp.API.Core.Capabilities;
+using System.Text;
 
 namespace DiscordUtilities
 {
@@ -16,7 +17,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.6";
+        public override string ModuleVersion => "2.0.7";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
@@ -80,32 +81,39 @@ namespace DiscordUtilities
             savedInteractions.Clear();
 
             serverData.ModuleDirectory = ModuleDirectory;
-            serverData.GameDirectory = Server.GameDirectory;
-            serverData.MaxPlayers = Server.MaxPlayers.ToString();
             serverData.IP = Config.ServerIP;
 
             Server.ExecuteCommand("sv_hibernate_when_empty false");
+            bool mapStarted = false;
             RegisterListener<Listeners.OnMapStart>(mapName =>
             {
-                Server.ExecuteCommand("sv_hibernate_when_empty false");
-                playerData.Clear();
-                AddTimer(3.0f, () =>
+                if (!mapStarted)
                 {
-                    UpdateServerData();
-                    serverData.MapName = mapName;
-                    ServerDataLoaded();
-                });
-
-                AddTimer(60.0f, () =>
-                {
-                    UpdateServerData();
-                    foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.AuthorizedSteamID != null && playerData.ContainsKey(p.Slot)))
+                    mapStarted = true;
+                    Server.ExecuteCommand("sv_hibernate_when_empty false");
+                    playerData.Clear();
+                    AddTimer(3.0f, () =>
                     {
-                        playerData[player.Slot].PlayedTime++;
-                    }
-                }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+                        UpdateServerData();
+                        serverData.MapName = mapName;
+                        serverData.GameDirectory = Server.GameDirectory;
+                        serverData.MaxPlayers = Server.MaxPlayers.ToString();
+                        ServerDataLoaded();
+                    });
+
+                    AddTimer(60.0f, () =>
+                    {
+                        UpdateServerData();
+                        foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.AuthorizedSteamID != null && playerData.ContainsKey(p.Slot)))
+                        {
+                            playerData[player.Slot].PlayedTime++;
+                        }
+                    }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
+                }
             });
+            RegisterListener<Listeners.OnMapEnd>(() => { mapStarted = false; });
         }
+
         private async Task LoadDiscordBOT()
         {
             try
@@ -242,7 +250,7 @@ namespace DiscordUtilities
                 BotClient.InteractionCreated -= InteractionCreatedHandler;
             }
         }
-
+        
         public static void Perform_SendConsoleMessage(string text, ConsoleColor color)
         {
             string prefix = "[Discord Utilities] ";

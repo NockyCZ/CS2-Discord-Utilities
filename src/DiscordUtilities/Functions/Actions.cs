@@ -38,7 +38,7 @@ namespace DiscordUtilities
         public void LoadCustomConditions()
         {
             customConditions.Clear();
-
+            customVariables.Clear();
             string filePath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/DiscordUtilities/DiscordUtilities.json";
             if (File.Exists(filePath))
             {

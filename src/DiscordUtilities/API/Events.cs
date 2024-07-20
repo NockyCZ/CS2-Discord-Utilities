@@ -81,20 +81,12 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         };
 
         var user = command.User as SocketGuildUser;
-        if (user == null)
-        {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'Event_SlashCommand' - User was not found!", ConsoleColor.Cyan);
-            return;
-        }
-
-        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
-            GlobalName = user.GlobalName,
-            DisplayName = user.DisplayName,
-            ID = user.Id,
-            RolesIds = userRoles,
+            GlobalName = user != null ? user.GlobalName : command.User.GlobalName,
+            DisplayName = user != null ? user.DisplayName : command.User.GlobalName,
+            ID = user != null ? user.Id : command.User.Id,
+            RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
 
         if (!savedInteractions.ContainsKey(interactionId))
@@ -123,32 +115,14 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             Builders = GetMessageBuilders(message)
         };
 
-        var user = message.Author;
-        var userRoles = (user as SocketGuildUser)?.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
+        var user = message.Author as SocketGuildUser;
         var userData = new UserData
         {
-            GlobalName = user.GlobalName,
-            DisplayName = user.Username,
-            ID = user.Id,
-            RolesIds = userRoles
+            GlobalName = user != null ? user.GlobalName : message.Author.GlobalName,
+            DisplayName = user != null ? user.DisplayName : message.Author.GlobalName,
+            ID = user != null ? user.Id : message.Author.Id,
+            RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
-
-        /*var user = message.Author;
-        if (user == null)
-        {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"DEBUG: Event_CustomMessageReceived - User was not found!", ConsoleColor.Cyan);
-            return;
-        }
-
-        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
-        var userData = new UserData
-        {
-            GlobalName = user.GlobalName,
-            DisplayName = user.DisplayName,
-            ID = user.Id,
-            RolesIds = userRoles
-        };*/
 
         Server.NextFrame(() =>
         {
@@ -174,21 +148,14 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         };
 
         var user = message.Author as SocketGuildUser;
-        if (user == null)
-        {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'Event_MessageReceived' - User was not found!", ConsoleColor.Cyan);
-            return;
-        }
-
-        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
-            GlobalName = user.GlobalName,
-            DisplayName = user.DisplayName,
-            ID = user.Id,
-            RolesIds = userRoles
+            GlobalName = user != null ? user.GlobalName : message.Author.GlobalName,
+            DisplayName = user != null ? user.DisplayName : message.Author.GlobalName,
+            ID = user != null ? user.Id : message.Author.Id,
+            RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
+
         Server.NextFrame(() =>
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new MessageReceived(messageData, userData));
@@ -222,21 +189,14 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         };
 
         var user = interaction.User as SocketGuildUser;
-        if (user == null)
-        {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'ModalSubmited' - User was not found!", ConsoleColor.Cyan);
-            return;
-        }
-
-        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
-            GlobalName = user.GlobalName,
-            DisplayName = user.DisplayName,
-            ID = user.Id,
-            RolesIds = userRoles
+            GlobalName = user != null ? user.GlobalName : interaction.User.GlobalName,
+            DisplayName = user != null ? user.DisplayName : interaction.User.GlobalName,
+            ID = user != null ? user.Id : interaction.User.Id,
+            RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
+        
         if (!savedInteractions.ContainsKey(interactionId))
             savedInteractions.Add(interactionId, modalInteraction);
 
@@ -244,7 +204,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new ModalSubmited(modalData, userData));
             if (IsDebug)
-                Perform_SendConsoleMessage("New Event Triggered: 'InteractionCreated'", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage("New Event Triggered: 'ModalSubmited'", ConsoleColor.Cyan);
         });
     }
 
@@ -268,20 +228,12 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         };
 
         var user = interaction.User as SocketGuildUser;
-        if (user == null)
-        {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'InteractionCreated' - User was not found!", ConsoleColor.Cyan);
-            return;
-        }
-
-        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
         var userData = new UserData
         {
-            GlobalName = user.GlobalName,
-            DisplayName = user.DisplayName,
-            ID = user.Id,
-            RolesIds = userRoles
+            GlobalName = user != null ? user.GlobalName : interaction.User.GlobalName,
+            DisplayName = user != null ? user.DisplayName : interaction.User.GlobalName,
+            ID = user != null ? user.Id : interaction.User.Id,
+            RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
 
         if (!savedInteractions.ContainsKey(interactionId))

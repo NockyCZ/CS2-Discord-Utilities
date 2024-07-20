@@ -12,9 +12,9 @@ namespace ConnectedPlayersRole
     {
         public override string ModuleName => "[Discord Utilities] Connected Players Role";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.1";
+        public override string ModuleVersion => "1.2";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
-        public Config Config { get; set; } = null!;
+        public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
@@ -53,7 +53,7 @@ namespace ConnectedPlayersRole
                 DiscordUtilities!.SendConsoleMessage("The role could not be added because the 'Role ID' is empty! ('Connected Players Role')", MessageType.Error);
                 return;
             }
-            DiscordUtilities!.AddRolesToUser(user, new List<string>() { Config.RoleID });
+            DiscordUtilities!.AddRolesToUser(user.ID, new List<string>() { Config.RoleID });
         }
 
         [GameEventHandler(HookMode.Pre)]
@@ -67,10 +67,10 @@ namespace ConnectedPlayersRole
             {
                 if (DiscordUtilities!.IsPlayerLinked(player))
                 {
-                    var user = DiscordUtilities!.GetUserData(player);
+                    var user = DiscordUtilities!.GetUserDataByPlayerController(player);
                     if (user != null)
                     {
-                        DiscordUtilities!.RemoveRolesFromUser(user, new List<string>() { Config.RoleID });
+                        DiscordUtilities!.RemoveRolesFromUser(user.ID, new List<string>() { Config.RoleID });
                     }
                 }
             }

@@ -15,9 +15,9 @@ namespace ManageRolesAndPermissions
     {
         public override string ModuleName => "[Discord Utilities] Manage Roles and Permissions";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.1";
+        public override string ModuleVersion => "1.2";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
-        public Config Config { get; set; } = null!;
+        public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
         public Dictionary<string, string> PermissionsToRoles = new();
         public Dictionary<string, string> RolesToPermissions = new();
@@ -159,7 +159,7 @@ namespace ManageRolesAndPermissions
 
         public void PerformPermissionToRole(UserData user, List<string> rolesIds)
         {
-            DiscordUtilities!.AddRolesToUser(user, rolesIds);
+            DiscordUtilities!.AddRolesToUser(user.ID, rolesIds);
         }
 
         public void PerformRoleToPermission(CCSPlayerController player, List<string> permissions)
@@ -182,7 +182,7 @@ namespace ManageRolesAndPermissions
 
         public void PerformRemoveRole(UserData user, List<string> rolesIds)
         {
-            DiscordUtilities!.RemoveRolesFromUser(user, rolesIds);
+            DiscordUtilities!.RemoveRolesFromUser(user.ID, rolesIds);
         }
 
         private IDiscordUtilitiesAPI GetDiscordUtilitiesEventSender()

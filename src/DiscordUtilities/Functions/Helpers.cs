@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using Discord;
 using DiscordUtilitiesAPI.Builders;
 using DiscordUtilitiesAPI.Helpers;
@@ -297,7 +298,7 @@ namespace DiscordUtilities
                 var replacedData = new Dictionary<string, string>
                 {
                     { $"{{{player}.Name}}", selectedPlayer.Name},
-                    { $"{{{player}.NameWithoutEmoji}}", selectedPlayer.NameWithoutEmoji},
+                    { $"{{{player}.NameWithoutEmoji}}", selectedPlayer.Name},
                     { $"{{{player}.UserID}}", target.UserId.ToString()!},
                     { $"{{{player}.SteamID32}}", selectedPlayer.SteamId32},
                     { $"{{{player}.SteamID64}}", selectedPlayer.SteamId64},
@@ -311,6 +312,7 @@ namespace DiscordUtilities
                     { $"{{{player}.TeamNumber}}", team.ToString()},
                     { $"{{{player}.Kills}}", target.ActionTrackingServices!.MatchStats.Kills.ToString()},
                     { $"{{{player}.Deaths}}", target.ActionTrackingServices.MatchStats.Deaths.ToString()},
+                    { $"{{{player}.KD}}", target.ActionTrackingServices!.MatchStats.Deaths != 0 ? (target.ActionTrackingServices.MatchStats.Kills / (double)target.ActionTrackingServices.MatchStats.Deaths).ToString("F2") : target.ActionTrackingServices.MatchStats.Kills.ToString()},
                     { $"{{{player}.Assists}}", target.ActionTrackingServices.MatchStats.Assists.ToString()},
                     { $"{{{player}.Points}}", target.Score.ToString()},
                     { $"{{{player}.CountryShort}}", selectedPlayer.CountryShort},
@@ -365,7 +367,9 @@ namespace DiscordUtilities
                 { "{Server.OnlineBots}", serverData.OnlineBots },
                 { "{Server.IP}", serverData.IP },
                 { "{Server.MapImageUrl}", $"https://nockycz.github.io/CS2-Discord-Utilities/MapImages/{mapName}.png" },
-                { "{Server.JoinUrl}", $"https://nockycz.github.io/CS2-Discord-Utilities/API/join.html?address={serverData.IP}" }
+                { "{Server.JoinUrl}", $"https://nockycz.github.io/CS2-Discord-Utilities/API/join.html?address={serverData.IP}" },
+                { "{Server.TeamScoreCT}", serverData.TeamScoreCT },
+                { "{Server.TeamScoreT}", serverData.TeamScoreT }
             };
 
             foreach (var item in replacedData)
@@ -454,6 +458,12 @@ namespace DiscordUtilities
             }
             return replacedString;
         }
+
+        public static int GetTeamScore(int team)
+        {
+            return Utilities.FindAllEntitiesByDesignerName<CCSTeam>("cs_team_manager").Where(x => x.TeamNum == team).Select(x => x.Score).FirstOrDefault();
+        }
+
         private bool IsEmbedValid(EmbedBuilder? Embed)
         {
             if (Embed == null)
@@ -583,25 +593,14 @@ namespace DiscordUtilities
             return false;
         }
 
-        private static string RemoveEmoji(string input)
+        public static string RemoveEmoji(string input)
         {
-            string emojiPattern = @"[\u1F600-\u1F64F]|" +     // Emoticons
-                                  @"[\u1F300-\u1F5FF]|" +     // Miscellaneous Symbols and Pictographs
-                                  @"[\u1F680-\u1F6FF]|" +     // Transport and Map Symbols
-                                  @"[\u1F700-\u1F77F]|" +     // Alchemical Symbols
-                                  @"[\u2600-\u26FF]|" +       // Miscellaneous Symbols
-                                  @"[\u2700-\u27BF]|" +       // Dingbats
-                                  @"[\u1F900-\u1F9FF]|" +     // Supplemental Symbols and Pictographs
-                                  @"[\u1FA70-\u1FAFF]|" +     // Symbols and Pictographs Extended-A
-                                  @"[\u2300-\u23FF]|" +       // Miscellaneous Technical
-                                  @"[\u2B50-\u2B55]|" +       // Miscellaneous Symbols and Arrows
-                                  @"[\u1F1E6-\u1F1FF]|" +     // Regional Indicator Symbols
-                                  @"[\u1F000-\u1F02F]|" +     // Mahjong Tiles
-                                  @"[\u1F0A0-\u1F0FF]|" +     // Playing Cards
-                                  @"[\uD83C-\uDBFF][\uDC00-\uDFFF]|" + // Surrogate pairs
-                                  @"\u200D";                 // Zero-width joiner
+            Console.WriteLine($"input: {input}");
+            string emojiPattern = @"[\p{So}]";
 
-            return Regex.Replace(input, emojiPattern, string.Empty);
+            string result = Regex.Replace(input, emojiPattern, string.Empty);
+            Console.WriteLine($"return: {result}");
+            return result;
         }
 
         private int GetPlayersCount()

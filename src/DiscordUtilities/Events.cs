@@ -14,7 +14,6 @@ namespace DiscordUtilities
                 PlayerData newPlayer = new PlayerData
                 {
                     Name = player.PlayerName,
-                    NameWithoutEmoji = RemoveEmoji(player.PlayerName),
                     UserId = player.UserId.ToString()!,
                     SteamId32 = player.AuthorizedSteamID.SteamId32.ToString(),
                     SteamId64 = player.AuthorizedSteamID.SteamId64.ToString(),
@@ -51,6 +50,22 @@ namespace DiscordUtilities
                 playerData.Remove(player.Slot);
             }
 
+            return HookResult.Continue;
+        }
+
+        [GameEventHandler]
+        public HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
+        {
+            serverData.TeamScoreCT = GetTeamScore(3).ToString();
+            serverData.TeamScoreT = GetTeamScore(2).ToString();
+            return HookResult.Continue;
+        }
+
+        [GameEventHandler]
+        public HookResult OnMatchEnd(EventCsWinPanelMatch @event, GameEventInfo info)
+        {
+            serverData.TeamScoreCT = GetTeamScore(3).ToString();
+            serverData.TeamScoreT = GetTeamScore(2).ToString();
             return HookResult.Continue;
         }
     }

@@ -422,6 +422,44 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         }
     }
 
+    public bool SendDirectMessage(ulong userId, string? content, Embeds.Builder? embed, Components.Builder? components)
+    {
+        try
+        {
+            var user = BotClient!.GetUser(userId);
+            if (user == null)
+            {
+                Perform_SendConsoleMessage($"'SendDirectMessage' - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.DarkYellow);
+                return false;
+            }
+
+            EmbedBuilder? embedToBuild = new();
+            ComponentBuilder componentsToBuild = new();
+
+            if (embed != null)
+            {
+                embedToBuild = GetEmbedBuilder(embed);
+            }
+            if (components != null)
+            {
+                componentsToBuild = GetComponentsBuilder(components);
+            }
+
+            _ = user.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embedToBuild) ? embedToBuild.Build() : null, components: components != null ? componentsToBuild.Build() : null);
+            return true;
+        }
+        catch (HttpException ex) when (ex.DiscordCode == DiscordErrorCode.CannotSendMessageToUser)
+        {
+            Perform_SendConsoleMessage($"User with ID '{userId}' has disabled or blocked direct messages.", ConsoleColor.DarkYellow);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Perform_SendConsoleMessage($"An error occurred while sending a Direct message: '{ex.Message}'", ConsoleColor.Red);
+            throw new Exception($"An error occurred while sending a Direct message: {ex.Message}");
+        }
+    }
+
     public void SendConsoleMessage(string text, DiscordUtilitiesAPI.Helpers.MessageType type)
     {
         Perform_SendConsoleMessage(text, (ConsoleColor)type);

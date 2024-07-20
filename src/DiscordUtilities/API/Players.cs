@@ -7,19 +7,17 @@ using System.Text;
 namespace DiscordUtilities;
 public partial class DiscordUtilities : IDiscordUtilitiesAPI
 {
-    public UserData? GetUserData(CCSPlayerController player)
+    public UserData? GetUserDataByPlayerController(CCSPlayerController player)
     {
         if (!playerData.ContainsKey(player.Slot))
         {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'GetUserData' - Selected Player was not found on the server!", ConsoleColor.Cyan);
+            Perform_SendConsoleMessage($"'GetUserData' - Selected Player was not found on the server!", ConsoleColor.Cyan);
             return null;
         }
 
         if (!playerData[player.Slot].IsLinked)
         {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'GetUserData' - Selected Player is not linked!", ConsoleColor.Cyan);
+            Perform_SendConsoleMessage($"'GetUserData' - Selected Player is not linked!", ConsoleColor.Cyan);
             return null;
         }
 
@@ -32,8 +30,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var user = guild.GetUser(ulong.Parse(playerData[player.Slot].DiscordID));
         if (user == null)
         {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'GetUserData' - User with ID '{playerData[player.Slot].DiscordID}' was not found on the Discord server!", ConsoleColor.Cyan);
+            Perform_SendConsoleMessage($"'GetUserData' - User with ID '{playerData[player.Slot].DiscordID}' was not found on the Discord server!", ConsoleColor.Cyan);
             return null;
         }
 
@@ -48,7 +45,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         return userData;
     }
 
-    public void AddRolesToUser(UserData user, List<string> rolesIds)
+    public UserData? GetUserDataByUserID(ulong userId)
     {
         var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
         if (guild == null)
@@ -56,11 +53,37 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
             throw new Exception($"Guild with id '{ServerId}' was not found!");
         }
-        var socketUser = guild.GetUser(user.ID);
+        var user = guild.GetUser(userId);
+        if (user == null)
+        {
+            Perform_SendConsoleMessage($"'GetUserData' - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.Cyan);
+            return null;
+        }
+
+        var userRoles = user.Roles.Select(role => role.Id).ToList() ?? new List<ulong>();
+        var userData = new UserData
+        {
+            GlobalName = user.GlobalName,
+            DisplayName = user.DisplayName,
+            ID = user.Id,
+            RolesIds = userRoles
+        };
+        return userData;
+    }
+
+    public void AddRolesToUser(ulong userId, List<string> rolesIds)
+    {
+        var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
+        if (guild == null)
+        {
+            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+            throw new Exception($"Guild with id '{ServerId}' was not found!");
+        }
+        var socketUser = guild.GetUser(userId);
         if (socketUser == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"AddRolesToUser - User with ID '{user!.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"AddRolesToUser - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.Cyan);
             return;
         }
 
@@ -95,7 +118,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         }
     }
 
-    public void RemoveRolesFromUser(UserData user, List<string> rolesIds)
+    public void RemoveRolesFromUser(ulong userId, List<string> rolesIds)
     {
         var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
         if (guild == null)
@@ -103,11 +126,11 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
             throw new Exception($"Guild with id '{ServerId}' was not found!");
         }
-        var socketUser = guild.GetUser(user.ID);
+        var socketUser = guild.GetUser(userId);
         if (socketUser == null)
         {
             if (IsDebug)
-                Perform_SendConsoleMessage($"'RemoveRolesFromUser' - User with ID '{user.ID}' was not found on the Discord server!", ConsoleColor.Cyan);
+                Perform_SendConsoleMessage($"'RemoveRolesFromUser' - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.Cyan);
             return;
         }
 

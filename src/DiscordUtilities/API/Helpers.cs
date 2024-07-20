@@ -90,6 +90,9 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                     case "Color":
                         Builder.Color = builderValue;
                         break;
+                    case "HEXColor":
+                        Builder.Color = builderValue;
+                        break;
                     case "Footer":
                         Builder.Footer = ReplaceVariables(builderValue, replacedVariables);
                         break;

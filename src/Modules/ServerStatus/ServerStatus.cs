@@ -16,9 +16,9 @@ namespace ServerStatus
     {
         public override string ModuleName => "[Discord Utilities] Server Status";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.0.0";
+        public override string ModuleVersion => "1.1";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
-        public Config Config { get; set; } = null!;
+        public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
