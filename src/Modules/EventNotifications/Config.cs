@@ -35,12 +35,14 @@ public class MapChanged
 public class PlayerConnect
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Disable On Map Change")] public bool DisabledOnMapEnding { get; set; } = true;
     [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
     [JsonPropertyName("Player Connect Embed")] public ConnectedEmbed ConnectedEmbed { get; set; } = new();
 }
 public class PlayerDisconnect
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
+    [JsonPropertyName("Disable On Map Change")] public bool DisabledOnMapEnding { get; set; } = true;
     [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
     [JsonPropertyName("Player Disconnect Embed")] public DisconnectdEmbed DisconnectdEmbed { get; set; } = new();
 }

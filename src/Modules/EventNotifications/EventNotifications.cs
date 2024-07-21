@@ -21,6 +21,7 @@ namespace EventNotifications
         public override string ModuleVersion => "1.2";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
+        public bool IsMapEnding;
         public void OnConfigParsed(Config config) { Config = config; }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
@@ -28,6 +29,19 @@ namespace EventNotifications
         }
         public override void Load(bool hotReload)
         {
+            RegisterListener<Listeners.OnMapStart>(mapName =>
+            {
+                if (Config.PlayerConnect.DisabledOnMapEnding)
+                {
+                    IsMapEnding = true;
+                    AddTimer(20.0f, () =>
+                    {
+                        IsMapEnding = false;
+                    });
+                }
+                else
+                    IsMapEnding = false;
+            });
             RegisterListener<Listeners.OnMapEnd>(() =>
             {
                 PerformMapEnd();
@@ -240,6 +254,7 @@ namespace EventNotifications
         [GameEventHandler]
         public HookResult OnMatchEnd(EventCsWinPanelMatch @event, GameEventInfo info)
         {
+            IsMapEnding = true;
             PerformMatchEnd();
             return HookResult.Continue;
         }
@@ -280,6 +295,9 @@ namespace EventNotifications
         {
             if (Config.PlayerDisconnect.Enabled)
             {
+                if (IsMapEnding && Config.PlayerDisconnect.DisabledOnMapEnding)
+                    return HookResult.Continue;
+
                 var player = @event.Userid;
                 if (player != null && player.IsValid && DiscordUtilities!.IsPlayerDataLoaded(player))
                 {
@@ -306,6 +324,9 @@ namespace EventNotifications
         {
             if (Config.PlayerConnect.Enabled)
             {
+                if (IsMapEnding && Config.PlayerConnect.DisabledOnMapEnding)
+                    return;
+
                 if (player != null && player.IsValid && DiscordUtilities!.IsPlayerDataLoaded(player))
                 {
                     if (string.IsNullOrEmpty(Config.PlayerConnect.ChannelID))
