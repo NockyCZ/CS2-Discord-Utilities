@@ -20,7 +20,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 - [x] [RCON](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/rcon) (Execute Commands from your Discord)
 - [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/chat-relay)
 - [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/connected-players-role)
-- [x] [Event Notifications (Connect, Disconnect)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
+- [x] [Event Notifications (Connect, Disconnect, Etc..)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
 - [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/manage-roles-and-permissions)
 - [x] ⭐ [Skin Changer](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/skin-changer)
 - [x] ⭐ [Player Stats](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/player-stats)
