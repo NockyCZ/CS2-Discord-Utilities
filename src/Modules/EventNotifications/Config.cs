@@ -147,13 +147,13 @@ public class PlayersFormat_Teams
 public class PlayersFormat_Teams_CT
 {
     [JsonPropertyName("Title")] public string Title { get; set; } = "CT Team (Score: {Server.TeamScoreCT})";
-    [JsonPropertyName("MVP Player Format")] public string MVPPlayerFormat { get; set; } = "> :crown: **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})**\nKills: `{Player.Kills}` | Deaths: `{Player.Deaths}` | KD: `{Player.KD}`\n";
+    [JsonPropertyName("MVP Player Format")] public string MVPPlayerFormat { get; set; } = "> :crown: **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})** (MVP)\nKills: `{Player.Kills}` | Deaths: `{Player.Deaths}` | KD: `{Player.KD}`\n";
     [JsonPropertyName("Players Format")] public string PlayersFormat { get; set; } = "> {Player.CountryEmoji} **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})**\nKills: {Player.Kills} | Deaths: {Player.Deaths} | KD: {Player.KD}\n";
 }
 public class PlayersFormat_Teams_T
 {
     [JsonPropertyName("Title")] public string Title { get; set; } = "T Team (Score: {Server.TeamScoreT})";
-    [JsonPropertyName("MVP Player Format")] public string MVPPlayerFormat { get; set; } = "> :crown: **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})**\nKills: `{Player.Kills}` | Deaths: `{Player.Deaths}` | KD: `{Player.KD}`\n";
+    [JsonPropertyName("MVP Player Format")] public string MVPPlayerFormat { get; set; } = "> :crown: **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})** (MVP)\nKills: `{Player.Kills}` | Deaths: `{Player.Deaths}` | KD: `{Player.KD}`\n";
     [JsonPropertyName("Players Format")] public string PlayersFormat { get; set; } = "> {Player.CountryEmoji} **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})**\nKills: {Player.Kills} | Deaths: {Player.Deaths} | KD: {Player.KD}\n";
 }
 
@@ -161,6 +161,6 @@ public class PlayersFormat_FFA
 {
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Title")] public string Title { get; set; } = "All Players:";
-    [JsonPropertyName("MVP Player Format")] public string MVPPlayerFormat { get; set; } = "> :crown: **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})**\nKills: `{Player.Kills}` | Deaths: `{Player.Deaths}` | KD: `{Player.KD}`\n";
+    [JsonPropertyName("MVP Player Format")] public string MVPPlayerFormat { get; set; } = "> :crown: **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})** (MVP)\nKills: `{Player.Kills}` | Deaths: `{Player.Deaths}` | KD: `{Player.KD}`\n";
     [JsonPropertyName("Players Format")] public string PlayersFormat { get; set; } = "> {Player.CountryEmoji} **[{Player.NameWithoutEmoji}]({Player.CommunityUrl})**\nKills: {Player.Kills} | Deaths: {Player.Deaths} | KD: {Player.KD}\n";
 }

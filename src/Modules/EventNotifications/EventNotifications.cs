@@ -1,4 +1,5 @@
 ﻿
+using System.Data;
 using System.Text;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -27,7 +28,10 @@ namespace EventNotifications
         }
         public override void Load(bool hotReload)
         {
-            RegisterListener<Listeners.OnMapEnd>(() => { PerformMapEnd(); });
+            RegisterListener<Listeners.OnMapEnd>(() =>
+            {
+                PerformMapEnd();
+            });
         }
 
         public override void Unload(bool hotReload)
@@ -46,15 +50,14 @@ namespace EventNotifications
                 return;
             }
 
-            var playerList = Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && (p.Team == CsTeam.Terrorist || p.Team == CsTeam.CounterTerrorist) && DiscordUtilities!.IsPlayerDataLoaded(p)).ToList();
-            if (playerList.Count == 0)
+            var playerList = Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && (p.Team == CsTeam.Terrorist || p.Team == CsTeam.CounterTerrorist) && DiscordUtilities!.IsPlayerDataLoaded(p)).ToList();
+            if (playerList.Count <= 1)
                 return;
 
             var replaceVariablesBuilder = new ReplaceVariables.Builder()
             {
                 ServerData = true
             };
-
             var config = Config.MatchEndStats.MatchEndEmbed;
             var Embed = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
             var content = DiscordUtilities!.ReplaceVariables(Config.MatchEndStats.MatchEndEmbed.Content, replaceVariablesBuilder);
