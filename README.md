@@ -23,7 +23,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 - [x] [Event Notifications (Connect, Disconnect, Etc..)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
 - [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/manage-roles-and-permissions)
 - [x] ⭐ [Skin Changer](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/skin-changer)
-- [ ] ⭐ [Automatic Store](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/automatic-store)
+- [x] ⭐ [Automatic Store](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/automatic-store)
 - [x] ⭐ [Player Stats](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/player-stats)
 - [x] ⭐ [Server Status Plus](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-status-plus)
 - [x] ⭐ [Commands Blocker](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/commands-blocker)
