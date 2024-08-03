@@ -173,7 +173,6 @@ namespace ManageRolesAndPermissions
 
         private void OnLinkedUserDataLoaded(UserData user, CCSPlayerController player)
         {
-            var permissionsList = new List<string>();
             if (RolesToPermissions.Count > 0)
             {
                 var groupData = RolesToPermissions.Where(x => user.RolesIds.Contains(ulong.Parse(x.Key))).FirstOrDefault();
@@ -256,32 +255,11 @@ namespace ManageRolesAndPermissions
                 PerformRemoveRole(user, rolesToRemove);
             if (rolesList.Count() > 0)
                 PerformPermissionToRole(user, rolesList);
-            if (permissionsList.Count() > 0)
-                PerformRoleToPermission(player, permissionsList);
         }
 
         public void PerformPermissionToRole(UserData user, List<string> rolesIds)
         {
             DiscordUtilities!.AddRolesToUser(user.ID, rolesIds);
-        }
-
-        public void PerformRoleToPermission(CCSPlayerController player, List<string> permissions)
-        {
-            var group = permissions.Where(x => x.StartsWith('#')).FirstOrDefault();
-            if (!string.IsNullOrEmpty(group))
-            {
-                if (DiscordUtilities!.Debug())
-                    DiscordUtilities.SendConsoleMessage($"Group '{group}' has been added to player '{player.PlayerName}'", MessageType.Debug);
-                //AdminManager.AddPlayerToGroup(player, group);
-                AdminManager.AddPlayerToGroup(player.AuthorizedSteamID, group);
-            }
-
-            foreach (var perm in permissions.Where(x => x.StartsWith('@')))
-            {
-                if (DiscordUtilities!.Debug())
-                    DiscordUtilities.SendConsoleMessage($"Flag '{perm}' has been added to player '{player.PlayerName}'", MessageType.Debug);
-                AdminManager.AddPlayerPermissions(player, perm);
-            }
         }
 
         public void PerformRemoveRole(UserData user, List<string> rolesIds)
