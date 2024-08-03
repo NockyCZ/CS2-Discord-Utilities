@@ -4,11 +4,14 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\..\Compiled Files\plugins\DU_ChatRelay</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\DiscordUtilitiesAPI\DiscordUtilitiesAPI.csproj" />
-  </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.202" />
+    <ProjectReference Include="..\..\DiscordUtilitiesAPI\DiscordUtilitiesAPI.csproj">
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
 </Project>

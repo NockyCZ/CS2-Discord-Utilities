@@ -14,5 +14,6 @@ namespace DiscordUtilities
         public static Dictionary<string, List<ConditionData>> customConditions = new();
         public static Dictionary<string, replaceDataType> customVariables = new();
         public static List<string> mapImagesList = new();
+        public static Dictionary<string, string> moduleVersions = new();
     }
 }

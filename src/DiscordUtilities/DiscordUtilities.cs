@@ -24,6 +24,7 @@ namespace DiscordUtilities
         }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
+            _ = LoadVersions();
             _ = LoadDiscordBOT();
             if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
             {
@@ -164,6 +165,10 @@ namespace DiscordUtilities
             await BotClient!.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType, ActivityProperties.None));
             await BotClient.SetStatusAsync((UserStatus)Config.BotStatus.Status);
 
+            BotClient.SlashCommandExecuted += SlashCommandHandler;
+            BotClient.MessageReceived += MessageReceivedHandler;
+            BotClient.InteractionCreated += InteractionCreatedHandler;
+
             var linkCommand = new SlashCommandBuilder()
                 .WithName(Config.Link.DiscordCommand.ToLower())
                 .WithDescription(Config.Link.DiscordDescription)
@@ -191,19 +196,8 @@ namespace DiscordUtilities
                 Perform_SendConsoleMessage($"An error occurred while updating Link Slash Commands: '{ex.Message}'", ConsoleColor.Red);
                 throw new Exception($"An error occurred while updating Link Slash Commands: {ex.Message}");
             }
-
-            try
-            {
-                BotClient.SlashCommandExecuted += SlashCommandHandler;
-                BotClient.MessageReceived += MessageReceivedHandler;
-                BotClient.InteractionCreated += InteractionCreatedHandler;
-            }
-            catch (Exception ex)
-            {
-                Perform_SendConsoleMessage($"An error occurred while creating handlers: '{ex.Message}'", ConsoleColor.Red);
-                throw new Exception($"An error occurred while creating handlers: {ex.Message}");
-            }
         }
+
         private Task InteractionCreatedHandler(SocketInteraction interaction)
         {
             if ((DateTime.Now - LastInteractionTime).TotalSeconds > 60)
@@ -250,7 +244,7 @@ namespace DiscordUtilities
                 BotClient.InteractionCreated -= InteractionCreatedHandler;
             }
         }
-        
+
         public static void Perform_SendConsoleMessage(string text, ConsoleColor color)
         {
             string prefix = "[Discord Utilities] ";

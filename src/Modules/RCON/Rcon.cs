@@ -12,13 +12,14 @@ namespace RCON
     {
         public override string ModuleName => "[Discord Utilities] RCON";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.1";
+        public override string ModuleVersion => "1.2";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public DUConfig Config { get; set; } = new();
         public void OnConfigParsed(DUConfig config) { Config = config; }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers += DiscordUtilitiesEventHandler;
+            DiscordUtilities!.CheckVersion(ModuleName, ModuleVersion);
         }
         public override void Unload(bool hotReload)
         {

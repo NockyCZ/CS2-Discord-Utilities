@@ -36,6 +36,9 @@ namespace DiscordUtilities
                 if (IsDbConnected)
                     _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), 0);
             }
+            serverData.OnlinePlayers = GetPlayersCount().ToString();
+            serverData.OnlinePlayersAndBots = GetPlayersCountWithBots().ToString();
+            serverData.OnlineBots = GetBotsCounts().ToString();
             return HookResult.Continue;
         }
 
@@ -49,6 +52,9 @@ namespace DiscordUtilities
                     _ = UpdateOrLoadPlayerData(player, player.AuthorizedSteamID.SteamId64.ToString(), playerData[player.Slot].PlayedTime, false);
                 playerData.Remove(player.Slot);
             }
+            serverData.OnlinePlayers = GetPlayersCount().ToString();
+            serverData.OnlinePlayersAndBots = GetPlayersCountWithBots().ToString();
+            serverData.OnlineBots = GetBotsCounts().ToString();
 
             return HookResult.Continue;
         }

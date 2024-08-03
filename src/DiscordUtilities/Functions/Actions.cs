@@ -26,11 +26,62 @@ namespace DiscordUtilities
                 }
                 catch (HttpRequestException ex)
                 {
-                    Perform_SendConsoleMessage($"An error occurred while loading a Map Images: '{ex.Message}'", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"An error occurred while loading Map Images: '{ex.Message}'", ConsoleColor.Red);
                 }
                 catch (Exception ex)
                 {
-                    Perform_SendConsoleMessage($"An error occurred while loading a Map Images: '{ex.Message}'", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"An error occurred while loading Map Images: '{ex.Message}'", ConsoleColor.Red);
+                }
+            }
+        }
+
+        public async Task LoadVersions()
+        {
+            moduleVersions.Clear();
+            using (HttpClient client = new HttpClient())
+            {
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync("https://nockycz.github.io/CS2-Discord-Utilities/module_versions.json");
+                    response.EnsureSuccessStatusCode();
+
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    var versions = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseBody)!;
+                    if (versions != null)
+                    {
+                        foreach (var module in versions)
+                        {
+                            string moduleName = module.Key;
+                            if (!moduleName.Equals("Main"))
+                                moduleName = "[Discord Utilities] " + moduleName;
+
+                            moduleVersions.Add(moduleName, module.Value);
+                        }
+
+                        if (moduleVersions.TryGetValue("Main", out var latestVersion))
+                        {
+                            if (!ModuleVersion.Trim().Equals(latestVersion.Trim()))
+                            {
+                                Console.WriteLine("====================================================================================");
+                                Console.WriteLine("");
+                                Perform_SendConsoleMessage($"Plugin is outdated! (Latest Version: {latestVersion})", ConsoleColor.DarkRed);
+                                Perform_SendConsoleMessage($"Check: https://github.com/NockyCZ/CS2-Discord-Utilities/", ConsoleColor.DarkRed);
+                                Console.WriteLine("");
+                                Console.WriteLine("====================================================================================");
+                            }
+                        }
+                    }
+                    else
+                        Perform_SendConsoleMessage($"Version je null", ConsoleColor.Red);
+
+                }
+                catch (HttpRequestException ex)
+                {
+                    Perform_SendConsoleMessage($"An error occurred while loading module versions: '{ex.Message}'", ConsoleColor.Red);
+                }
+                catch (Exception ex)
+                {
+                    Perform_SendConsoleMessage($"An error occurred while loading module versions: '{ex.Message}'", ConsoleColor.Red);
                 }
             }
         }

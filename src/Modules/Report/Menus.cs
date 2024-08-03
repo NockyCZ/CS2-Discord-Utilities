@@ -100,7 +100,7 @@ namespace Report
 
         private void OnSelectPlayer_ReportMenu(CCSPlayerController player, CCSPlayerController target)
         {
-            if (Config.AntiSpamReport && solvedPlayers.Contains(target.Slot))
+            if (Config.AntiSpamReport && solvedPlayers.Contains(target.SteamID))
             {
                 player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ThisPlayerCannotBeReported", target.PlayerName]}");
                 return;

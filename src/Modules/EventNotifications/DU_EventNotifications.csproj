@@ -4,13 +4,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\..\Compiled Files\plugins\DU_EventNotifications</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.202" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\DiscordUtilitiesAPI\DiscordUtilitiesAPI.csproj" />
+    <ProjectReference Include="..\..\DiscordUtilitiesAPI\DiscordUtilitiesAPI.csproj">
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

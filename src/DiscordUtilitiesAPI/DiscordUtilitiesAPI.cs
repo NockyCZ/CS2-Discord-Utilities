@@ -33,6 +33,7 @@ public interface IDiscordUtilitiesAPI
     public void SendConsoleMessage(string text, MessageType type);
     public string ReplaceVariables(string text, ReplaceVariables.Builder replacedVariables);
     public void RemoveAllUsersFromRole(string roleId);
+    public void CheckVersion(string moduleName, string moduleVersion);
     public bool IsBotLoaded();
     public bool IsDatabaseLoaded();
 }

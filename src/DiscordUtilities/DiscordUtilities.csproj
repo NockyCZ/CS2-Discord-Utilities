@@ -4,6 +4,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>..\..\Compiled Files\plugins\DiscordUtilities</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,9 +15,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.0" />
     <PackageReference Include="MySqlConnector" Version="2.3.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <ProjectReference Include="..\DiscordUtilitiesAPI\DiscordUtilitiesAPI.csproj">
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\DiscordUtilitiesAPI\DiscordUtilitiesAPI.csproj" />
-  </ItemGroup>
-
 </Project>

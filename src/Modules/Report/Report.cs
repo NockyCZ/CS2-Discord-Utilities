@@ -19,18 +19,18 @@ namespace Report
     {
         public override string ModuleName => "[Discord Utilities] Report System";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.1";
+        public override string ModuleVersion => "1.2";
         public IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new();
         public Dictionary<CCSPlayerController, int> reportCooldowns = new();
         public Dictionary<string, ReportData> reportsList = new();
-        public List<int> solvedPlayers = new();
+        public List<ulong> solvedPlayers = new();
         public class ReportData
         {
-            public required int sender;
+            public required ulong senderSteamId;
             public required string senderName;
-            public required int target;
+            public required ulong targetSteamId;
             public required string targetName;
             public required string reason;
             public required ulong messageId;
@@ -43,6 +43,7 @@ namespace Report
         public override void OnAllPluginsLoaded(bool hotReload)
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers += DiscordUtilitiesEventHandler;
+            DiscordUtilities!.CheckVersion(ModuleName, ModuleVersion);
         }
         public override void Unload(bool hotReload)
         {
@@ -157,7 +158,7 @@ namespace Report
                 }
                 reportCooldowns.Remove(sender);
             }
-            if (Config.AntiSpamReport && solvedPlayers.Contains(target.Slot))
+            if (Config.AntiSpamReport && solvedPlayers.Contains(target.SteamID))
             {
                 sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ThisPlayerCannotBeReported", target.PlayerName]}");
                 return;
@@ -195,9 +196,9 @@ namespace Report
 
             var reportData = new ReportData()
             {
-                sender = sender.Slot,
+                senderSteamId = sender.SteamID,
                 senderName = sender.PlayerName,
-                target = Config.ReportMethod != 3 ? target.Slot : sender.Slot,
+                targetSteamId = Config.ReportMethod != 3 ? target.SteamID : sender.SteamID,
                 targetName = Config.ReportMethod != 3 ? target.PlayerName : sender.PlayerName,
                 reason = reason,
                 messageId = 0,
@@ -286,7 +287,7 @@ namespace Report
                         return;
 
                     var data = reportsList[CustomId];
-                    ReportSolvedAction(data.sender, data.targetName, data.target);
+                    ReportSolvedAction(data.senderSteamId, data.targetName, data.targetSteamId);
                     var messageId = data.messageId;
                     reportsList.Remove(CustomId);
 
@@ -319,18 +320,18 @@ namespace Report
             }
         }
 
-        public void ReportSolvedAction(int senderSlot, string targetName, int targetSlot)
+        public void ReportSolvedAction(ulong senderSteamId, string targetName, ulong targetSteamId)
         {
             if (Config.SendMessageOnSolved)
             {
-                var sender = Utilities.GetPlayerFromSlot(senderSlot);
+                var sender = Utilities.GetPlayerFromSteamId(senderSteamId);
                 if (sender != null && sender.IsValid)
                     sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.YourReportHasBeenSolved", targetName]}");
             }
             if (Config.AntiSpamReport)
             {
-                if (!solvedPlayers.Contains(targetSlot))
-                    solvedPlayers.Add(targetSlot);
+                if (!solvedPlayers.Contains(targetSteamId))
+                    solvedPlayers.Add(targetSteamId);
             }
         }
 
@@ -340,7 +341,7 @@ namespace Report
                 return;
 
             var data = reportsList[reportId];
-            ReportSolvedAction(data.sender, data.targetName, data.target);
+            ReportSolvedAction(data.senderSteamId, data.targetName, data.targetSteamId);
             if (player != null)
                 reportsList.Remove(reportId);
 
@@ -422,8 +423,8 @@ namespace Report
                 var replaceVariablesBuilder = new ReplaceVariables.Builder
                 {
                     ServerData = true,
-                    PlayerData = Utilities.GetPlayerFromSlot(reportData.sender),
-                    TargetData = Utilities.GetPlayerFromSlot(reportData.target),
+                    PlayerData = Utilities.GetPlayerFromSteamId(reportData.senderSteamId),
+                    TargetData = Utilities.GetPlayerFromSteamId(reportData.targetSteamId),
                     CustomVariables = new Dictionary<string, string>{
                         { "{REASON}", reportData.reason }
                     },
@@ -449,7 +450,7 @@ namespace Report
                 }
                 if (Config.ReportEmbed.SearchPlayerButton.Enabled)
                 {
-                    var target = Utilities.GetPlayerFromSlot(reportData.target);
+                    var target = Utilities.GetPlayerFromSteamId(reportData.targetSteamId);
                     if (target != null)
                     {
                         InteractiveButtons.Add(

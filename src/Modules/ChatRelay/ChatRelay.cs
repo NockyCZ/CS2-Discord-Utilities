@@ -16,13 +16,14 @@ namespace ChatRelay
     {
         public override string ModuleName => "[Discord Utilities] Chat Relay";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.1";
+        public override string ModuleVersion => "1.2";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers += DiscordUtilitiesEventHandler;
+            DiscordUtilities!.CheckVersion(ModuleName, ModuleVersion);
         }
         public override void Unload(bool hotReload)
         {

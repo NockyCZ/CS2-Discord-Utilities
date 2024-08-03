@@ -8,6 +8,22 @@ using static DiscordUtilitiesAPI.Builders.Components;
 namespace DiscordUtilities;
 public partial class DiscordUtilities : IDiscordUtilitiesAPI
 {
+    public void CheckVersion(string moduleName, string moduleVersion)
+    {
+        if (moduleVersions.ContainsKey(moduleName))
+        {
+            if (!moduleVersions[moduleName].Equals(moduleVersion))
+            {
+                var moduleWithoutPrefix = moduleName.Replace("[Discord Utilities] ","");
+                Console.WriteLine("====================================================================================");
+                Console.WriteLine("");
+                Perform_SendConsoleMessage($"Module '{moduleWithoutPrefix}' is outdated! (Latest Version: {moduleVersions[moduleName]})", ConsoleColor.DarkRed);
+                Console.WriteLine("");
+                Console.WriteLine("====================================================================================");
+            }
+        }
+    }
+
     public bool IsCustomMessageSaved(ulong messageId)
     {
         return savedMessages.ContainsKey(messageId);

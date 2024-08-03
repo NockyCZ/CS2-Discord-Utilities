@@ -18,7 +18,7 @@ namespace EventNotifications
     {
         public override string ModuleName => "[Discord Utilities] Event Notifications";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.2";
+        public override string ModuleVersion => "1.3";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public bool IsMapEnding;
@@ -26,6 +26,7 @@ namespace EventNotifications
         public override void OnAllPluginsLoaded(bool hotReload)
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers += DiscordUtilitiesEventHandler;
+            DiscordUtilities!.CheckVersion(ModuleName, ModuleVersion);
         }
         public override void Load(bool hotReload)
         {
@@ -290,7 +291,7 @@ namespace EventNotifications
             return HookResult.Continue;
         }
 
-        [GameEventHandler]
+        [GameEventHandler(HookMode.Pre)]
         public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
         {
             if (Config.PlayerDisconnect.Enabled)
