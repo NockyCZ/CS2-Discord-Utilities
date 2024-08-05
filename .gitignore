@@ -16,6 +16,7 @@
 # Package files
 *.nupkg
 *.snupkg
-**/Modules Paid/
+**/Modules (Paid)/
+**/Compiled Files (Paid)/
 **/Compiled Files/
 
