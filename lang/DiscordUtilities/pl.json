@@ -1,0 +1,8 @@
+{
+  "Chat.Prefix": "{darkred}[Discord]{default}",
+  "Chat.LinkAccount": "{blue}===============\n{default}• Odwiedz naszego discorda: {green}https://discord.gg/INVITE\n{default}• Kod: {darkred}{0}\n {blue}===============",
+  "Chat.AccountUnliked": "Twoje konto zostalo pomyslnie odlaczone!",
+  "Chat.NotLinked": "Twoje konto nie jest polaczone z kontem discord!",
+  "Chat.AlreadyLinked": "Twoje konto steam jest juz polaczone z kontem discord!",
+  "Chat.AccountLinked": "Twoje konto steam zostalo pomyslnie polaczone z kontem discord {green}{0}"
+}
