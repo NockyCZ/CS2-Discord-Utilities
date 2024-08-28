@@ -4,5 +4,6 @@
   "Chat.AccountUnliked": "Your account has been successfully unliked!",
   "Chat.NotLinked": "Your account is not linked with the discord account!",
   "Chat.AlreadyLinked": "Your Steam Account is already linked!",
-  "Chat.AccountLinked": "Your Steam Account has been linked with Discord Account {green}{0}"
+  "Chat.AccountLinked": "Your Steam Account has been linked with Discord Account {green}{0}",
+  "Chat.AccountLinkedAll": "Player {green}{0}{default} has linked their account with the Discord account {darkblue}{1}"
 }
