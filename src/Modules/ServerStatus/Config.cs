@@ -28,6 +28,7 @@ public class ServerStatusEmbed
 public class Buttons
 {
     [JsonPropertyName("Join Button")] public JoinButton JoinButton { get; set; } = new();
+    [JsonPropertyName("Banlist Button")] public BanlistButton BanlistButton { get; set; } = new();
     [JsonPropertyName("Leaderboard Button")] public LeaderboardButton LeaderboardButton { get; set; } = new();
     [JsonPropertyName("Search Player Button")] public SearchPlayerButton SearchPlayerButton { get; set; } = new();
 }
@@ -56,4 +57,12 @@ public class SearchPlayerButton
     [JsonPropertyName("Button Text")] public string Text { get; set; } = "Search Players Stats";
     [JsonPropertyName("Button Color")] public int Color { get; set; } = 1;
     [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = ":bar_chart:";
+}
+
+public class BanlistButton
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
+    [JsonPropertyName("Button Text")] public string Text { get; set; } = "Banlist";
+    [JsonPropertyName("Button Color")] public int Color { get; set; } = 4;
+    [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = ":no_entry_sign:";
 }

@@ -15,6 +15,17 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     {
         DiscordUtilitiesEventHandlers?.Invoke(this, @event);
     }
+
+    public void ExecuteCustomCommands(string server, List<string> Commands)
+    {
+        Server.NextFrame(() =>
+        {
+            DiscordUtilitiesAPI.Get()?.TriggerEvent(new ExecuteCustomCommands(server, Commands));
+            if (IsDebug)
+                Perform_SendConsoleMessage("New Event Triggered: 'ExecuteCustomCommands'", ConsoleColor.Cyan);
+        });
+    }
+
     public void PlayerDataLoaded(CCSPlayerController player)
     {
         Server.NextFrame(() =>
@@ -63,12 +74,35 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     public void Event_SlashCommand(SocketSlashCommand command)
     {
         var interactionId = int.Parse(GetRandomCode(6, true));
-        var optionsData = command.Data.Options.Select(option => new CommandOptionsData
+
+        List<CommandOptionsData> optionsData = new();
+        foreach (var option in command.Data.Options)
         {
-            Name = option.Name.ToLower(),
-            Value = option.Value.ToString() ?? "",
-            Type = (SlashCommandOptionsType)option.Type
-        }).ToList();
+            string? value = "";
+            if (option.Type == ApplicationCommandOptionType.User)
+            {
+                var targetUser = (SocketUser)option.Value;
+                if (targetUser != null)
+                    value = targetUser.Id.ToString();
+            }
+            else if (option.Type == ApplicationCommandOptionType.Role)
+            {
+                var targetRole = (SocketRole)option.Value;
+                if (targetRole != null)
+                    value = targetRole.Id.ToString();
+            }
+            else
+            {
+                value = option.Value.ToString();
+            }
+
+            optionsData.Add(new CommandOptionsData
+            {
+                Name = option.Name.ToLower(),
+                Value = value != null ? value : "",
+                Type = (SlashCommandOptionsType)option.Type
+            });
+        }
 
         ulong? guildId = command.GuildId != null ? command.GuildId.Value : null;
 
@@ -196,7 +230,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             ID = user != null ? user.Id : interaction.User.Id,
             RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
-        
+
         if (!savedInteractions.ContainsKey(interactionId))
             savedInteractions.Add(interactionId, modalInteraction);
 

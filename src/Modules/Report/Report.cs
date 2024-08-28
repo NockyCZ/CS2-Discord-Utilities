@@ -19,7 +19,7 @@ namespace Report
     {
         public override string ModuleName => "[Discord Utilities] Report System";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.2";
+        public override string ModuleVersion => "1.3";
         public IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new();
@@ -448,10 +448,10 @@ namespace Report
                     }
                     );
                 }
-                if (Config.ReportEmbed.SearchPlayerButton.Enabled)
+                var target = Utilities.GetPlayerFromSteamId(reportData.targetSteamId);
+                if (target != null)
                 {
-                    var target = Utilities.GetPlayerFromSteamId(reportData.targetSteamId);
-                    if (target != null)
+                    if (Config.ReportEmbed.SearchPlayerButton.Enabled)
                     {
                         InteractiveButtons.Add(
                             new Components.InteractiveButtonsBuilder
@@ -460,6 +460,18 @@ namespace Report
                                 Label = Config.ReportEmbed.SearchPlayerButton.Text,
                                 Color = (Components.ButtonColor)Config.ReportEmbed.SearchPlayerButton.Color,
                                 Emoji = Config.ReportEmbed.SearchPlayerButton.Emoji,
+                            }
+                        );
+                    }
+                    if (Config.ReportEmbed.BanlistButton.Enabled)
+                    {
+                        InteractiveButtons.Add(
+                            new Components.InteractiveButtonsBuilder
+                            {
+                                CustomId = $"banlist_report_{target.SteamID}",
+                                Label = Config.ReportEmbed.BanlistButton.Text,
+                                Color = (Components.ButtonColor)Config.ReportEmbed.BanlistButton.Color,
+                                Emoji = Config.ReportEmbed.BanlistButton.Emoji,
                             }
                         );
                     }

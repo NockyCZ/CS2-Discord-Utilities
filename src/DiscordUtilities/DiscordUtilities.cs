@@ -1,14 +1,14 @@
-﻿using CounterStrikeSharp.API;
+﻿﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Core.Attributes;
-using CounterStrikeSharp.API.Modules.Cvars;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using CounterStrikeSharp.API.Core.Capabilities;
-using System.Text;
+using DiscordUtilitiesAPI.Events;
+using System.Data.Common;
 
 namespace DiscordUtilities
 {
@@ -17,7 +17,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.8";
+        public override string ModuleVersion => "2.0.9";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
@@ -95,6 +95,9 @@ namespace DiscordUtilities
                     playerData.Clear();
                     AddTimer(3.0f, () =>
                     {
+                        if (Config.TimedRoles)
+                            CheckExpiredTimedRoles();
+
                         UpdateServerData();
                         serverData.MapName = mapName;
                         serverData.GameDirectory = Server.GameDirectory;
@@ -123,7 +126,7 @@ namespace DiscordUtilities
                 {
                     AlwaysDownloadUsers = true,
                     UseInteractionSnowflakeDate = false,
-                    GatewayIntents = GatewayIntents.MessageContent | GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.GuildMembers
+                    GatewayIntents = GatewayIntents.MessageContent | GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.GuildMembers | GatewayIntents.GuildScheduledEvents
                 });
 
                 BotCommands = new CommandService();
@@ -168,11 +171,13 @@ namespace DiscordUtilities
             BotClient.SlashCommandExecuted += SlashCommandHandler;
             BotClient.MessageReceived += MessageReceivedHandler;
             BotClient.InteractionCreated += InteractionCreatedHandler;
+            BotClient.GuildScheduledEventCreated += ScheduledEventCreated;
+            //BotClient.SentRequest += OnSentRequest;
 
             var linkCommand = new SlashCommandBuilder()
-                .WithName(Config.Link.DiscordCommand.ToLower())
-                .WithDescription(Config.Link.DiscordDescription)
-                .AddOption(Config.Link.DiscordOptionName.ToLower(), ApplicationCommandOptionType.String, Config.Link.DiscordOptionDescription, isRequired: true);
+                .WithName(Config.Link.LinkDiscordSettings.Name.ToLower())
+                .WithDescription(Config.Link.LinkDiscordSettings.Description)
+                .AddOption(Config.Link.LinkDiscordSettings.OptionName.ToLower(), ApplicationCommandOptionType.String, Config.Link.LinkDiscordSettings.OptionDescription, isRequired: true);
 
             try
             {
@@ -197,6 +202,53 @@ namespace DiscordUtilities
                 throw new Exception($"An error occurred while updating Link Slash Commands: {ex.Message}");
             }
         }
+        /*private Task OnSentRequest(string method, string endpoint, double duration)
+        {
+            Console.WriteLine($"Request sent: Method = {method}, Endpoint = {endpoint}, Duration = {duration}ms");
+            return Task.CompletedTask;
+        }*/
+
+        public async Task CreateScheduledEventAsync(string eventData)
+        {
+            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
+            if (guild == null)
+                return;
+
+            var guildEvent = await guild.CreateEventAsync($"Custom Event (DU)", DateTimeOffset.UtcNow.AddMinutes(1), GuildScheduledEventType.External, endTime: DateTimeOffset.UtcNow.AddMinutes(2), location: "Discord Utilities", description: eventData);
+            await guildEvent.DeleteAsync();
+        }
+
+        private async Task ScheduledEventCreated(SocketGuildEvent scheduledEvent)
+        {
+            if (scheduledEvent.Location.Equals("Discord Utilities"))
+            {
+                if (scheduledEvent.Name.Contains("Custom Event (DU)"))
+                {
+                    var data = scheduledEvent.Description.Split(';');
+                    var CustomId = data.FirstOrDefault();
+                    if (CustomId == null)
+                        return;
+
+                    if (CustomId.Equals("addcode"))
+                    {
+                        var code = DecodeSecretString(data[1]);
+                        if (!linkCodes.ContainsKey(code))
+                            linkCodes.Add(code, data[2]);
+                    }
+                    else if (CustomId.Equals("removecode"))
+                    {
+                        var code = DecodeSecretString(data[1]);
+                        if (linkCodes.ContainsKey(code))
+                            linkCodes.Remove(code);
+                    }
+                    else if (CustomId.Equals("refreshlinkedplayers"))
+                    {
+                        await LoadLinkedPlayers();
+                    }
+                }
+            }
+            return;
+        }
 
         private Task InteractionCreatedHandler(SocketInteraction interaction)
         {
@@ -215,6 +267,7 @@ namespace DiscordUtilities
             }
             return Task.CompletedTask;
         }
+
         private Task MessageReceivedHandler(SocketMessage message)
         {
             if (message.Author.IsBot || message.Author.IsWebhook)
@@ -226,7 +279,7 @@ namespace DiscordUtilities
 
         private async Task SlashCommandHandler(SocketSlashCommand command)
         {
-            if (command.CommandName == Config.Link.DiscordCommand.ToLower())
+            if (command.CommandName == Config.Link.LinkDiscordSettings.Name.ToLower())
                 await DiscordLink_CMD(command);
             else
                 Event_SlashCommand(command);
@@ -242,6 +295,7 @@ namespace DiscordUtilities
                 BotClient.SlashCommandExecuted -= SlashCommandHandler;
                 BotClient.MessageReceived -= MessageReceivedHandler;
                 BotClient.InteractionCreated -= InteractionCreatedHandler;
+                BotClient.GuildScheduledEventCreated -= ScheduledEventCreated;
             }
         }
 

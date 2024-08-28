@@ -45,6 +45,15 @@ public class ReportEmbed
     [JsonPropertyName("Footer Timestamp")] public bool FooterTimestamp { get; set; } = false;
     [JsonPropertyName("Admin Button")] public ReportButton ReportButton { get; set; } = new();
     [JsonPropertyName("Player Stats Button")] public SearchPlayerButton SearchPlayerButton { get; set; } = new();
+    [JsonPropertyName("Player Punishments Button")] public BanlistButton BanlistButton { get; set; } = new();
+}
+
+public class BanlistButton
+{
+    [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = true;
+    [JsonPropertyName("Button Text")] public string Text { get; set; } = "Player Punishments";
+    [JsonPropertyName("Button Color")] public int Color { get; set; } = 4;
+    [JsonPropertyName("Button Emoji")] public string Emoji { get; set; } = ":no_entry_sign:";
 }
 
 public class SearchPlayerButton

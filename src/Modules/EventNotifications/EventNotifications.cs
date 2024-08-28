@@ -18,31 +18,18 @@ namespace EventNotifications
     {
         public override string ModuleName => "[Discord Utilities] Event Notifications";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.3";
+        public override string ModuleVersion => "1.4";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
-        public bool IsMapEnding;
         public void OnConfigParsed(Config config) { Config = config; }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers += DiscordUtilitiesEventHandler;
             DiscordUtilities!.CheckVersion(ModuleName, ModuleVersion);
         }
+        public List<ulong> blockedJoinAndLeaveMessage = new();
         public override void Load(bool hotReload)
         {
-            RegisterListener<Listeners.OnMapStart>(mapName =>
-            {
-                if (Config.PlayerConnect.DisabledOnMapEnding)
-                {
-                    IsMapEnding = true;
-                    AddTimer(20.0f, () =>
-                    {
-                        IsMapEnding = false;
-                    });
-                }
-                else
-                    IsMapEnding = false;
-            });
             RegisterListener<Listeners.OnMapEnd>(() =>
             {
                 PerformMapEnd();
@@ -65,7 +52,7 @@ namespace EventNotifications
                 return;
             }
 
-            var playerList = Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && (p.Team == CsTeam.Terrorist || p.Team == CsTeam.CounterTerrorist) && DiscordUtilities!.IsPlayerDataLoaded(p)).ToList();
+            var playerList = Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && (p.Team == CsTeam.Terrorist || p.Team == CsTeam.CounterTerrorist) && DiscordUtilities!.IsPlayerDataLoaded(p)).Take(18).ToList();
             if (playerList.Count <= 1)
                 return;
 
@@ -85,7 +72,7 @@ namespace EventNotifications
                 var sb3 = new StringBuilder();
                 int count = 0;
 
-                foreach (var player in playerList.OrderByDescending(p => p.Score).Take(25))
+                foreach (var player in playerList.OrderByDescending(p => p.Score))
                 {
                     var replacePlayerVariables = new ReplaceVariables.Builder()
                     {
@@ -158,7 +145,7 @@ namespace EventNotifications
             {
                 var sb = new StringBuilder();
                 int count = 0;
-                foreach (var player in playerList.Where(p => p.Team == CsTeam.Terrorist).OrderByDescending(p => p.Score).Take(12))
+                foreach (var player in playerList.Where(p => p.Team == CsTeam.Terrorist).OrderByDescending(p => p.Score).Take(9))
                 {
                     var replacePlayerVariables = new ReplaceVariables.Builder()
                     {
@@ -183,7 +170,7 @@ namespace EventNotifications
 
                 sb = new StringBuilder();
                 count = 0;
-                foreach (var player in playerList.Where(p => p.Team == CsTeam.CounterTerrorist).OrderByDescending(p => p.Score).Take(12))
+                foreach (var player in playerList.Where(p => p.Team == CsTeam.CounterTerrorist).OrderByDescending(p => p.Score).Take(9))
                 {
                     var replacePlayerVariables = new ReplaceVariables.Builder()
                     {
@@ -211,6 +198,11 @@ namespace EventNotifications
 
         public void PerformMapStart()
         {
+            AddTimer(40.0f, () =>
+            {
+                blockedJoinAndLeaveMessage.Clear();
+            });
+
             if (!Config.MapChanged.Enabled)
                 return;
 
@@ -255,7 +247,13 @@ namespace EventNotifications
         [GameEventHandler]
         public HookResult OnMatchEnd(EventCsWinPanelMatch @event, GameEventInfo info)
         {
-            IsMapEnding = true;
+            var players = Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && DiscordUtilities!.IsPlayerDataLoaded(p));
+            foreach (var p in players)
+            {
+                if (!blockedJoinAndLeaveMessage.Contains(p.SteamID))
+                    blockedJoinAndLeaveMessage.Add(p.SteamID);
+            }
+
             PerformMatchEnd();
             return HookResult.Continue;
         }
@@ -296,12 +294,12 @@ namespace EventNotifications
         {
             if (Config.PlayerDisconnect.Enabled)
             {
-                if (IsMapEnding && Config.PlayerDisconnect.DisabledOnMapEnding)
-                    return HookResult.Continue;
-
                 var player = @event.Userid;
                 if (player != null && player.IsValid && DiscordUtilities!.IsPlayerDataLoaded(player))
                 {
+                    if (Config.PlayerDisconnect.DisabledOnMapEnding && blockedJoinAndLeaveMessage.Contains(player.SteamID))
+                        return HookResult.Continue;
+
                     if (string.IsNullOrEmpty(Config.PlayerDisconnect.ChannelID))
                     {
                         DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! ('Event Notifications (Player Disconnect)')", MessageType.Error);
@@ -325,11 +323,11 @@ namespace EventNotifications
         {
             if (Config.PlayerConnect.Enabled)
             {
-                if (IsMapEnding && Config.PlayerConnect.DisabledOnMapEnding)
-                    return;
-
                 if (player != null && player.IsValid && DiscordUtilities!.IsPlayerDataLoaded(player))
                 {
+                    if (Config.PlayerDisconnect.DisabledOnMapEnding && blockedJoinAndLeaveMessage.Contains(player.SteamID))
+                        return;
+
                     if (string.IsNullOrEmpty(Config.PlayerConnect.ChannelID))
                     {
                         DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! ('Event Notifications (Player Connect)')", MessageType.Error);

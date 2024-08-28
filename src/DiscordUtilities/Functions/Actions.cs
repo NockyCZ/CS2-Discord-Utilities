@@ -148,7 +148,7 @@ namespace DiscordUtilities
                 return;
             }
 
-            await PerformLinkRole(discordID.ToString());
+            await PerformLinkRole(user, guild.GetRole(ulong.Parse(Config.Link.LinkDiscordSettings.LinkRole)));
             LoadPlayerDiscordData(ulong.Parse(steamid), discordID);
 
             Server.NextFrame(() =>

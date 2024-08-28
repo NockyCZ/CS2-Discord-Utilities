@@ -19,7 +19,7 @@ namespace ManageRolesAndPermissions
     {
         public override string ModuleName => "[Discord Utilities] Manage Roles and Permissions";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.3";
+        public override string ModuleVersion => "1.4";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
@@ -45,61 +45,6 @@ namespace ManageRolesAndPermissions
         private void OnBotLoaded()
         {
             LoadManageRolesAndFlags();
-        }
-
-        [ConsoleCommand("css_du_who", "Get Player Admin Data")]
-        [CommandHelper(1, usage: "<#userid or name>", whoCanExecute: CommandUsage.SERVER_ONLY)]
-        public void GetPlayerData_CMD(CCSPlayerController player, CommandInfo info)
-        {
-            var targets = GetTarget(info);
-            if (targets == null)
-                return;
-
-            var playersList = targets.Players.Where(p => p.IsValid && p != null && !p.IsHLTV && !p.IsBot).ToList();
-            if (playersList.Count == 0)
-                return;
-
-            var target = playersList.FirstOrDefault();
-            if (target == null)
-                return;
-
-            var data = AdminManager.GetPlayerAdminData(target);
-            var flags = data == null ? "none" : string.Join(", ", data.GetAllFlags());
-            var immunity = data == null ? 0 : data.Immunity;
-
-            StringBuilder cmdOverrides = new();
-            if (data != null)
-            {
-                if (data.CommandOverrides.Count > 0)
-                {
-                    int count = 0;
-                    foreach (var cmd in data.CommandOverrides)
-                    {
-                        if (count > 0)
-                            cmdOverrides.Append($", {cmd.Key} ({cmd.Value})");
-                        else
-                            cmdOverrides.Append($"{cmd.Key} ({cmd.Value})");
-                        count++;
-                    }
-                }
-                else
-                {
-                    cmdOverrides.Append("none");
-                }
-            }
-            else
-            {
-                cmdOverrides.Append("none");
-            }
-
-            info.ReplyToCommand("========================================");
-            info.ReplyToCommand("Discord Utilities • Player Data");
-            info.ReplyToCommand(" ");
-            info.ReplyToCommand($"• Player: {target.PlayerName}");
-            info.ReplyToCommand($"• Flags: {flags}");
-            info.ReplyToCommand($"• Command Overrides: {cmdOverrides}");
-            info.ReplyToCommand($"• Immunity: {immunity}");
-            info.ReplyToCommand("========================================");
         }
 
         private static TargetResult? GetTarget(CommandInfo info)

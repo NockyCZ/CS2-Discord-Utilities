@@ -82,8 +82,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var socketUser = guild.GetUser(userId);
         if (socketUser == null)
         {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"AddRolesToUser - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.Cyan);
+            Perform_SendConsoleMessage($"AddRolesToUser - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.Cyan);
             return;
         }
 
@@ -129,8 +128,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var socketUser = guild.GetUser(userId);
         if (socketUser == null)
         {
-            if (IsDebug)
-                Perform_SendConsoleMessage($"'RemoveRolesFromUser' - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.Cyan);
+            Perform_SendConsoleMessage($"'RemoveRolesFromUser' - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.Cyan);
             return;
         }
 

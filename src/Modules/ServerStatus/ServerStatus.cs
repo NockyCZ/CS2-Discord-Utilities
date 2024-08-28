@@ -16,7 +16,7 @@ namespace ServerStatus
     {
         public override string ModuleName => "[Discord Utilities] Server Status";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.2";
+        public override string ModuleVersion => "1.3";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
@@ -77,6 +77,16 @@ namespace ServerStatus
                             Label = DiscordUtilities!.ReplaceVariables(Config.ServerStatusEmbed.Buttons.LeaderboardButton.Text, replaceVariablesBuilder),
                             Color = (Components.ButtonColor)Config.ServerStatusEmbed.Buttons.LeaderboardButton.Color,
                             Emoji = Config.ServerStatusEmbed.Buttons.LeaderboardButton.Emoji,
+                        });
+                    }
+                    if (Config.ServerStatusEmbed.Buttons.BanlistButton.Enabled)
+                    {
+                        Buttons.Add(new Components.InteractiveButtonsBuilder
+                        {
+                            CustomId = "banlist_lastpunishments",
+                            Label = DiscordUtilities!.ReplaceVariables(Config.ServerStatusEmbed.Buttons.BanlistButton.Text, replaceVariablesBuilder),
+                            Color = (Components.ButtonColor)Config.ServerStatusEmbed.Buttons.BanlistButton.Color,
+                            Emoji = Config.ServerStatusEmbed.Buttons.BanlistButton.Emoji,
                         });
                     }
                     if (Config.ServerStatusEmbed.Buttons.SearchPlayerButton.Enabled)
@@ -178,6 +188,16 @@ namespace ServerStatus
                     Label = DiscordUtilities!.ReplaceVariables(Config.ServerStatusEmbed.Buttons.LeaderboardButton.Text, replaceVariablesBuilder),
                     Color = (Components.ButtonColor)Config.ServerStatusEmbed.Buttons.LeaderboardButton.Color,
                     Emoji = Config.ServerStatusEmbed.Buttons.LeaderboardButton.Emoji,
+                });
+            }
+            if (Config.ServerStatusEmbed.Buttons.BanlistButton.Enabled)
+            {
+                Buttons.Add(new Components.InteractiveButtonsBuilder
+                {
+                    CustomId = "banlist_lastpunishments",
+                    Label = DiscordUtilities!.ReplaceVariables(Config.ServerStatusEmbed.Buttons.BanlistButton.Text, replaceVariablesBuilder),
+                    Color = (Components.ButtonColor)Config.ServerStatusEmbed.Buttons.BanlistButton.Color,
+                    Emoji = Config.ServerStatusEmbed.Buttons.BanlistButton.Emoji,
                 });
             }
             if (Config.ServerStatusEmbed.Buttons.SearchPlayerButton.Enabled)

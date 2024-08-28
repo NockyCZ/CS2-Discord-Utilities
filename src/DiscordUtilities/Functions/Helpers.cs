@@ -1,5 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Utils;
 using Discord;
 using DiscordUtilitiesAPI.Builders;
@@ -277,6 +279,53 @@ namespace DiscordUtilities
             }
 
             return keyBuilder.ToString();
+        }
+
+        private string EncodeSecretString(string code)
+        {
+            var randomString = GetRandomCode(code.Length + 20);
+            StringBuilder encodedString = new StringBuilder(randomString);
+
+            Random random = new Random();
+            int[] positions = new int[code.Length];
+            for (int i = 0; i < code.Length; i++)
+            {
+                int position;
+                do
+                {
+                    position = random.Next(randomString.Length);
+                } while (Array.Exists(positions, x => x == position));
+
+                positions[i] = position;
+                encodedString[position] = code[i];
+            }
+
+            string positionsString = string.Join(",", positions);
+            encodedString.Append($"|{positionsString}");
+
+            return encodedString.ToString();
+        }
+
+        private string DecodeSecretString(string encoded)
+        {
+            var parts = encoded.Split('|');
+            if (parts.Length < 2) return string.Empty;
+
+            var randomString = parts[0];
+            var positionsString = parts[1];
+            var positions = positionsString.Split(',');
+
+            StringBuilder decodedString = new StringBuilder();
+
+            foreach (var pos in positions)
+            {
+                if (int.TryParse(pos, out int position) && position < randomString.Length)
+                {
+                    decodedString.Append(randomString[position]);
+                }
+            }
+
+            return decodedString.ToString();
         }
 
         public static string ReplacePlayerDataVariables(string replacedString, CCSPlayerController target, bool isTarget = false, bool checkCustomVariables = true)
@@ -601,6 +650,25 @@ namespace DiscordUtilities
             string result = Regex.Replace(input, emojiPattern, string.Empty);
             Console.WriteLine($"return: {result}");
             return result;
+        }
+
+        private static TargetResult? GetTarget(CommandInfo info)
+        {
+            var matches = info.GetArgTargetResult(1);
+            if (!matches.Any())
+            {
+                info.ReplyToCommand($"Target {info.GetArg(1)} was not found.");
+                return null;
+            }
+
+            if (info.GetArg(1).StartsWith('@'))
+                return matches;
+
+            if (matches.Count() == 1)
+                return matches;
+
+            info.ReplyToCommand($"Multiple targets found for \"{info.GetArg(1)}\".");
+            return null;
         }
 
         private int GetPlayersCount()

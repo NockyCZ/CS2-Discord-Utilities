@@ -30,7 +30,6 @@ namespace DiscordUtilities
                 await connection.OpenAsync();
                 await CreateTable(connection);
                 IsDbConnected = true;
-                await LoadLinkCodes();
                 await LoadLinkedPlayers();
                 Perform_SendConsoleMessage("The database has been connected!", ConsoleColor.Green);
                 await connection.CloseAsync();
@@ -49,12 +48,6 @@ namespace DiscordUtilities
                 @"CREATE TABLE IF NOT EXISTS Discord_Utilities (
                     steamid VARCHAR(32) PRIMARY KEY UNIQUE NOT NULL,
                     discordid VARCHAR(32) NOT NULL
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-                CREATE TABLE IF NOT EXISTS Discord_Utilities_Codes (
-                    steamid VARCHAR(32) PRIMARY KEY UNIQUE NOT NULL,
-                    code VARCHAR(32) NOT NULL,
-                    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
                 
                 CREATE TABLE IF NOT EXISTS DU_time (
@@ -164,7 +157,7 @@ namespace DiscordUtilities
             }
         }
 
-        public async Task InsertPlayerData(string steamid, string discordid)
+        public async Task InsertPlayerData(string steamid, string discordid, string username)
         {
             try
             {
@@ -180,7 +173,24 @@ namespace DiscordUtilities
                     }
                 }
                 if (!linkedPlayers.ContainsKey(ulong.Parse(steamid)))
+                {
                     linkedPlayers.Add(ulong.Parse(steamid), ulong.Parse(discordid));
+                    Server.NextFrame(() =>
+                    {
+                        var player = Utilities.GetPlayerFromSteamId(ulong.Parse(steamid));
+                        if (player != null)
+                        {
+                            _ = LoadPlayerData(steamid, ulong.Parse(discordid));
+                            if (Config.Link.LinkIngameSettings.SendLinkedMessageToPlayer)
+                                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.AccountLinked", username]}");
+                            if (Config.Link.LinkIngameSettings.SendLinkedMessageToAll)
+                                Server.PrintToChatAll($"{Localizer["Chat.Prefix"]} {Localizer["Chat.AccountLinkedAll", player.PlayerName, username]}");
+                            if (!string.IsNullOrEmpty(Config.Link.LinkIngameSettings.LinkedSound))
+                                player.ExecuteClientCommand($"play {Config.Link.LinkIngameSettings.LinkedSound}");
+                        }
+                    });
+                }
+
             }
             catch (Exception ex)
             {
@@ -188,32 +198,9 @@ namespace DiscordUtilities
             }
         }
 
-        public async Task InsertNewCode(string steamid, string code)
-        {
-            try
-            {
-                using (var connection = GetConnection())
-                {
-                    await connection.OpenAsync();
-                    string sql = "INSERT INTO Discord_Utilities_Codes (steamid, code) VALUES (@steamid, @code) ON DUPLICATE KEY UPDATE steamid = @steamid";
-                    using (var cmd = new MySqlCommand(sql, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@steamid", steamid);
-                        cmd.Parameters.AddWithValue("@code", code);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-                }
-                if (!linkCodes.ContainsKey(code))
-                    linkCodes.Add(code, steamid);
-            }
-            catch (Exception ex)
-            {
-                Perform_SendConsoleMessage($"An error occurred while entering new code into the database: '{ex.Message}'", ConsoleColor.Red);
-            }
-        }
-
         public static async Task LoadLinkedPlayers()
         {
+            linkedPlayers.Clear();
             try
             {
                 using (var connection = GetConnection())
@@ -241,59 +228,6 @@ namespace DiscordUtilities
             }
         }
 
-        public static async Task LoadLinkCodes()
-        {
-            try
-            {
-                using (var connection = GetConnection())
-                {
-                    await connection.OpenAsync();
-                    var sql = "SELECT * FROM Discord_Utilities_Codes";
-
-                    using (var cmd = new MySqlCommand(sql, connection))
-                    {
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                string steamid = reader.GetString("steamid");
-                                string code = reader.GetString("code");
-                                if (!linkCodes.ContainsKey(code))
-                                    linkCodes.Add(code, steamid);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Perform_SendConsoleMessage($"An error occurred while loading code: '{ex.Message}'", ConsoleColor.Red);
-            }
-        }
-
-        public async Task RemoveCode(string data)
-        {
-            try
-            {
-                using (var connection = GetConnection())
-                {
-                    await connection.OpenAsync();
-                    //string sql = bySteamid ? "DELETE FROM Discord_Utilities_Codes WHERE steamid = @data" : "DELETE FROM Discord_Utilities_Codes WHERE code = @data";
-                    string sql = "DELETE FROM Discord_Utilities_Codes WHERE code = @data";
-                    using (var cmd = new MySqlCommand(sql, connection))
-                    {
-                        cmd.Parameters.AddWithValue("@data", data);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-                }
-                if (linkCodes.ContainsKey(data))
-                    linkCodes.Remove(data);
-            }
-            catch (Exception ex)
-            {
-                Perform_SendConsoleMessage($"An error occurred while removing code from the database: '{ex.Message}'", ConsoleColor.Red);
-            }
-        }
         public async Task RemovePlayerData(string steamid)
         {
             try

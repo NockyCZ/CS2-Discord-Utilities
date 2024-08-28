@@ -1,6 +1,8 @@
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Modules.Admin;
 using Discord;
 using Discord.WebSocket;
+using DiscordUtilitiesAPI.Builders;
 
 namespace DiscordUtilities
 {
@@ -8,7 +10,7 @@ namespace DiscordUtilities
     {
         public void PerformLinkPermission(ulong steamid)
         {
-            var Permission = Config.Link.LinkPermissions;
+            var Permission = Config.Link.LinkIngameSettings.Flag;
             if (Permission.StartsWith('@') || Permission.StartsWith('#'))
             {
 
@@ -45,10 +47,10 @@ namespace DiscordUtilities
                     return;
 
 
-                var role = guild.GetRole(ulong.Parse(Config.Link.LinkRole));
+                var role = guild.GetRole(ulong.Parse(Config.Link.LinkDiscordSettings.LinkRole));
                 if (role == null)
                 {
-                    Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
+                    Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkDiscordSettings.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
                     return;
                 }
                 if (user.Roles.Any(id => id == role))
@@ -61,27 +63,14 @@ namespace DiscordUtilities
                 Perform_SendConsoleMessage($"An error occurred while removing Link role: '{ex.Message}'", ConsoleColor.Red);
             }
         }
-        public async Task PerformLinkRole(string discordid)
+
+        public async Task PerformLinkRole(SocketGuildUser user, SocketRole? role)
         {
             try
             {
-                var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-                if (guild == null)
-                {
-                    Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
-                    return;
-                }
-                var user = guild.GetUser(ulong.Parse(discordid));
-                if (user == null)
-                    return;
-
-
-                var role = guild.GetRole(ulong.Parse(Config.Link.LinkRole));
                 if (role == null)
-                {
-                    Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkRole}' was not found (Link Section)!", ConsoleColor.Red);
                     return;
-                }
+
                 if (!user.Roles.Any(id => id == role))
                 {
                     await user.AddRoleAsync(role);
@@ -93,12 +82,30 @@ namespace DiscordUtilities
             }
         }
 
-        private async Task DiscordLink_CMD(SocketSlashCommand command)
+        public async Task SendUserLinkedAllMessage(SocketGuildUser user, string steamId)
         {
-            if (!Config.Link.ResponseServer)
+            if (string.IsNullOrEmpty(Config.Link.LinkDiscordSettings.SendLinkedMessageToAll) || !ulong.TryParse(Config.Link.LinkDiscordSettings.SendLinkedMessageToAll, out var channelId))
                 return;
 
-            if (IsDebug)
+            if (BotClient!.GetChannel(channelId) is not IMessageChannel channel)
+                return;
+
+            var replaceVariablesBuilder = new ReplaceVariables.Builder
+            {
+                DiscordUser = GetUserDataByUserID(user.Id),
+                CustomVariables = new(){
+                    { "{STEAM}", steamId },
+                }
+            };
+
+            var embed = GetEmbedBuilder(GetEmbedBuilderFromConfig(Config.Link.LinkEmbed.UserLinkedAll, replaceVariablesBuilder));
+            var content = ReplaceVariables(Config.Link.LinkEmbed.UserLinkedAll.Content, replaceVariablesBuilder);
+            await channel.SendMessageAsync(text: content, embed: embed.Build());
+        }
+
+        private async Task DiscordLink_CMD(SocketSlashCommand command)
+        {
+            if (IsDebug && Config.Link.ResponseServer)
                 Perform_SendConsoleMessage($"Slash command '{command.CommandName}' has been successfully logged", ConsoleColor.Cyan);
 
             if (command.GuildId == null)
@@ -106,7 +113,7 @@ namespace DiscordUtilities
                 await command.RespondAsync(text: "This command cannot be used in a private message!");
                 return;
             }
-            
+
             ulong guildId = command.GuildId.Value;
             var guild = BotClient!.GetGuild(guildId);
 
@@ -116,17 +123,17 @@ namespace DiscordUtilities
                 return;
             }
 
-            var user = guild.GetUser(command.User.Id);
+            var user = command.User as SocketGuildUser;
             if (user == null)
             {
                 Perform_SendConsoleMessage($"User was not found! (DiscordLink_CMD)", ConsoleColor.Red);
                 return;
             }
 
-            var role = guild.GetRole(ulong.Parse(Config.Link.LinkRole));
+            var role = guild.GetRole(ulong.Parse(Config.Link.LinkDiscordSettings.LinkRole));
             if (role == null)
             {
-                Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkRole}' was not found! (DiscordLink_CMD)", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"Role with id '{Config.Link.LinkDiscordSettings.LinkRole}' was not found! (DiscordLink_CMD)", ConsoleColor.Red);
                 return;
             }
 
@@ -134,62 +141,19 @@ namespace DiscordUtilities
             var embed = new EmbedBuilder();
             if (linkedPlayers.ContainsValue(user.Id))
             {
-                var findSteamIdByUserId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id).Key;
-                content = Config.Link.LinkEmbed.AlreadyLinked.Content.Replace("{STEAM}", findSteamIdByUserId.ToString());
+                if (!Config.Link.ResponseServer)
+                    return;
 
-                embed = new EmbedBuilder();
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.AlreadyLinked.Title))
+                var findSteamIdByUserId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id).Key;
+                var replaceVariablesBuilder = new ReplaceVariables.Builder
                 {
-                    var Title = Config.Link.LinkEmbed.AlreadyLinked.Title.Replace("{STEAM}", findSteamIdByUserId.ToString());
-                    embed.WithTitle(Title);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.AlreadyLinked.Description))
-                {
-                    var Description = Config.Link.LinkEmbed.AlreadyLinked.Description.Replace("{STEAM}", findSteamIdByUserId.ToString());
-                    embed.WithDescription(Description);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.AlreadyLinked.Fields))
-                {
-                    string[] fields = Config.Link.LinkEmbed.AlreadyLinked.Fields.Split('|');
-                    foreach (var field in fields)
-                    {
-                        var replacedField = field.Replace("{STEAM}", findSteamIdByUserId.ToString());
-                        string[] fieldData = replacedField.Split(';');
-                        if (fieldData.Length == 3)
-                            embed.AddField(fieldData[0], fieldData[1], bool.Parse(fieldData[2]));
-                        else
-                        {
-                            Perform_SendConsoleMessage($"Invalid Fields Format! ('{Config.Link.LinkEmbed.AlreadyLinked.Fields}')", ConsoleColor.Red);
-                            return;
-                        }
+                    CustomVariables = new(){
+                        { "{STEAM}", findSteamIdByUserId.ToString() },
                     }
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.AlreadyLinked.Thumbnail))
-                {
-                    var value = Config.Link.LinkEmbed.AlreadyLinked.Thumbnail;
-                    if (value.Contains(".jpg") || value.Contains(".png") || value.Contains(".gif"))
-                        embed.WithThumbnailUrl(value);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.AlreadyLinked.Image))
-                {
-                    var value = Config.Link.LinkEmbed.AlreadyLinked.Image;
-                    if (value.Contains(".jpg") || value.Contains(".png") || value.Contains(".gif"))
-                        embed.WithImageUrl(value);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.AlreadyLinked.Color))
-                {
-                    var value = Config.Link.LinkEmbed.AlreadyLinked.Color;
-                    if (value.StartsWith("#"))
-                        value = value.Substring(1);
-                    embed.WithColor(new Color(Convert.ToUInt32(value, 16)));
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.AlreadyLinked.Footer))
-                {
-                    var Footer = Config.Link.LinkEmbed.AlreadyLinked.Footer.Replace("{STEAM}", findSteamIdByUserId.ToString());
-                    embed.WithFooter(Footer);
-                }
-                if (Config.Link.LinkEmbed.AlreadyLinked.FooterTimestamp)
-                    embed.WithCurrentTimestamp();
+                };
+
+                embed = GetEmbedBuilder(GetEmbedBuilderFromConfig(Config.Link.LinkEmbed.AlreadyLinked, replaceVariablesBuilder));
+                content = Config.Link.LinkEmbed.AlreadyLinked.Content.Replace("{STEAM}", findSteamIdByUserId.ToString());
 
                 await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
                 return;
@@ -201,127 +165,63 @@ namespace DiscordUtilities
             if (!string.IsNullOrEmpty(code) && linkCodes.ContainsKey(code))
             {
                 var steamId = linkCodes[code];
+                if (!Config.Link.ResponseServer)
+                {
+                    if (!linkedPlayers.ContainsKey(ulong.Parse(steamId)))
+                    {
+                        Server.NextFrame(() =>
+                        {
+                            linkedPlayers.Add(ulong.Parse(steamId), user.Id);
+                            var player = Utilities.GetPlayerFromSteamId(ulong.Parse(steamId));
+                            if (player != null)
+                            {
+                                _ = LoadPlayerData(steamId, user.Id);
+                                if (Config.Link.LinkIngameSettings.SendLinkedMessageToPlayer)
+                                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.AccountLinked", user.DisplayName]}");
+                                if (Config.Link.LinkIngameSettings.SendLinkedMessageToAll)
+                                    Server.PrintToChatAll($"{Localizer["Chat.Prefix"]} {Localizer["Chat.AccountLinkedAll", player.PlayerName, user.DisplayName]}");
+                                if (!string.IsNullOrEmpty(Config.Link.LinkIngameSettings.LinkedSound))
+                                    player.ExecuteClientCommand($"play {Config.Link.LinkIngameSettings.LinkedSound}");
+                            }
+                        });
+                    }
+                    return;
+                }
+
+                var replaceVariablesBuilder = new ReplaceVariables.Builder
+                {
+                    CustomVariables = new(){
+                        { "{STEAM}", steamId },
+                    }
+                };
+
+                embed = GetEmbedBuilder(GetEmbedBuilderFromConfig(Config.Link.LinkEmbed.Success, replaceVariablesBuilder));
                 content = Config.Link.LinkEmbed.Success.Content.Replace("{STEAM}", steamId);
 
-                embed = new EmbedBuilder();
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Success.Title))
-                {
-                    var Title = Config.Link.LinkEmbed.Success.Title.Replace("{STEAM}", steamId);
-                    embed.WithTitle(Title);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Success.Description))
-                {
-                    var Description = Config.Link.LinkEmbed.Success.Description.Replace("{STEAM}", steamId);
-                    embed.WithDescription(Description);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Success.Fields))
-                {
-                    string[] fields = Config.Link.LinkEmbed.Success.Fields.Split('|');
-                    foreach (var field in fields)
-                    {
-                        var replacedField = field.Replace("{STEAM}", steamId);
-                        string[] fieldData = replacedField.Split(';');
-                        if (fieldData.Length == 3)
-                            embed.AddField(fieldData[0], fieldData[1], bool.Parse(fieldData[2]));
-                        else
-                        {
-                            Perform_SendConsoleMessage($"Invalid Fields Format! ('{Config.Link.LinkEmbed.Success.Fields}')", ConsoleColor.Red);
-                            return;
-                        }
-                    }
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Success.Thumbnail))
-                {
-                    var value = Config.Link.LinkEmbed.Success.Thumbnail;
-                    if (value.Contains(".jpg") || value.Contains(".png") || value.Contains(".gif"))
-                        embed.WithThumbnailUrl(value);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Success.Image))
-                {
-                    var value = Config.Link.LinkEmbed.Success.Image;
-                    if (value.Contains(".jpg") || value.Contains(".png") || value.Contains(".gif"))
-                        embed.WithImageUrl(value);
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Success.Color))
-                {
-                    var value = Config.Link.LinkEmbed.Success.Color;
-                    if (value.StartsWith("#"))
-                        value = value.Substring(1);
-                    embed.WithColor(new Color(Convert.ToUInt32(value, 16)));
-                }
-                if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Success.Footer))
-                {
-                    var Footer = Config.Link.LinkEmbed.Success.Footer.Replace("{STEAM}", steamId);
-                    embed.WithFooter(Footer);
-                }
-                if (Config.Link.LinkEmbed.Success.FooterTimestamp)
-                    embed.WithCurrentTimestamp();
-
-                await InsertPlayerData(linkCodes[code].ToString(), command.User.Id.ToString());
-                await RemoveCode(code);
+                await InsertPlayerData(linkCodes[code].ToString(), command.User.Id.ToString(), user.DisplayName);
                 await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
                 if (!user.Roles.Any(id => id == role))
                 {
                     await user.AddRoleAsync(role);
                 }
+
+                await SendUserLinkedAllMessage(user, steamId);
+                await CreateScheduledEventAsync($"removecode;{code};{steamId}");
                 return;
             }
 
-            content = Config.Link.LinkEmbed.Failed.Content.Replace("{CODE}", code);
-            embed = new EmbedBuilder();
-            if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Failed.Title))
-            {
-                var Title = Config.Link.LinkEmbed.Failed.Title.Replace("{CODE}", code);
-                embed.WithTitle(Title);
-            }
-            if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Failed.Description))
-            {
-                var Description = Config.Link.LinkEmbed.Failed.Description.Replace("{CODE}", code);
-                embed.WithDescription(Description);
-            }
-            if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Failed.Fields))
-            {
-                string[] fields = Config.Link.LinkEmbed.Failed.Fields.Split('|');
-                foreach (var field in fields)
-                {
-                    var replacedField = field.Replace("{CODE}", code);
-                    string[] fieldData = replacedField.Split(';');
-                    if (fieldData.Length == 3)
-                        embed.AddField(fieldData[0], fieldData[1], bool.Parse(fieldData[2]));
-                    else
-                    {
-                        Perform_SendConsoleMessage($"Invalid Fields Format! ('{Config.Link.LinkEmbed.Failed.Fields}')", ConsoleColor.Red);
-                        return;
-                    }
-                }
-            }
-            if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Failed.Thumbnail))
-            {
-                var value = Config.Link.LinkEmbed.Failed.Thumbnail;
-                if (value.Contains(".jpg") || value.Contains(".png") || value.Contains(".gif"))
-                    embed.WithThumbnailUrl(value);
-            }
-            if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Failed.Image))
-            {
-                var value = Config.Link.LinkEmbed.Failed.Image;
-                if (value.Contains(".jpg") || value.Contains(".png") || value.Contains(".gif"))
-                    embed.WithImageUrl(value);
-            }
-            if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Failed.Color))
-            {
-                var value = Config.Link.LinkEmbed.Failed.Color;
-                if (value.StartsWith("#"))
-                    value = value.Substring(1);
-                embed.WithColor(new Color(Convert.ToUInt32(value, 16)));
-            }
-            if (!string.IsNullOrEmpty(Config.Link.LinkEmbed.Failed.Footer))
-            {
-                var Footer = Config.Link.LinkEmbed.Failed.Footer.Replace("{CODE}", code);
-                embed.WithFooter(Footer);
-            }
-            if (Config.Link.LinkEmbed.Failed.FooterTimestamp)
-                embed.WithCurrentTimestamp();
+            if (!Config.Link.ResponseServer)
+                return;
 
+            var replaceVariables = new ReplaceVariables.Builder
+            {
+                CustomVariables = new(){
+                    { "{CODE}", code },
+                }
+            };
+
+            embed = GetEmbedBuilder(GetEmbedBuilderFromConfig(Config.Link.LinkEmbed.Failed, replaceVariables));
+            content = Config.Link.LinkEmbed.Failed.Content.Replace("{CODE}", code);
             await command.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, ephemeral: true);
         }
     }
