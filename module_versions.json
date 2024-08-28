@@ -1,17 +1,20 @@
 {
-    "Main": "2.0.8",
+    "Main": "2.0.9",
     "Chat Relay": "1.2",
     "Connected Players Role": "1.3",
-    "Event Notifications": "1.3",
-    "Manage Roles and Permissions": "1.3",
+    "Event Notifications": "1.4",
+    "Manage Roles and Permissions": "1.4",
     "RCON": "1.2",
-    "Report System": "1.2",
-    "Server Status": "1.2",
+    "Report System": "1.3",
+    "Server Status": "1.3",
     "Commands Blocker": "1.2",
     "Leaderboard": "1.2",
     "Player Stats": "1.2",
-    "Server Status Plus": "1.2",
+    "Server Status Plus": "1.3",
     "Skin Changer (CSS)": "1.2",
     "Skin Changer (Metamod)": "1.2",
-    "Store": "1.2"
+    "Store": "1.2",
+    "Banlist (SimpleAdmin)" : "1.0",
+    "Banlist (Pisex)" : "1.0",
+    "Banlist (IKS)" : "1.0"
 }
