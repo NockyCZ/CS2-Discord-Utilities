@@ -3,31 +3,34 @@
 Discord Utilities is a server API plugin for communication between the CS2 server and the Discord server. With this plugin you can install/create modules that will run through the main plugin.<br>
 Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) framework
 
-## [Documentation/Wiki](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities)
+## [Documentation/Wiki](https://docs.sourcefactory.eu/discord-utilities/info)
 ### Discord Support Server
 [<img src="https://discordapp.com/api/guilds/1149315368465211493/widget.png?style=banner2">](https://discord.gg/Tzmq98gwqF)
 - [Map Images API](https://nockycz.github.io/CS2-Discord-Utilities/)
   
 # Main Features
 • These features are already implemented in the main plugin.
-- [x] [Linking System](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/main-configuration/linking-system)
-- [x] [Custom Bot Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/main-configuration/custom-bot-status)
+- [x] [Linking System](https://docs.sourcefactory.eu/discord-utilities/main-configuration/linking-system)
+- [x] [Custom Bot Status](https://docs.sourcefactory.eu/discord-utilities/main-configuration/custom-bot-status)
+- [x] Timed Roles
+- [x] [Admin Commands](https://docs.sourcefactory.eu/discord-utilities/admin-commands)
 
 # Addons/Modules
 • These modules are separate plugins that have their own configuration and work only with the main plugin.
-- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/report-calladmin)
-- [x] [Server Status](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-status)
-- [x] [RCON](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/rcon) (Execute Commands from your Discord)
-- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/chat-relay)
-- [x] [Connected Players Role](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/connected-players-role)
-- [x] [Event Notifications (Connect, Disconnect, Etc..)](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/event-notifications)
-- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/manage-roles-and-permissions)
-- [x] ⭐ [Skin Changer](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/skin-changer)
-- [x] ⭐ [Automatic Store](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/automatic-store)
-- [x] ⭐ [Player Stats](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/player-stats)
-- [x] ⭐ [Server Status Plus](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/server-status-plus)
-- [x] ⭐ [Commands Blocker](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/commands-blocker)
-- [x] ⭐ [Leaderboard](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/modules/leaderboard)
+- [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/discord-utilities/modules/report-calladmin)
+- [x] [Server Status](https://docs.sourcefactory.eu/discord-utilities/modules/server-status)
+- [x] [RCON](https://docs.sourcefactory.eu/discord-utilities/modules/rcon) (Execute Commands from your Discord)
+- [x] [Discord Chat Relay](https://docs.sourcefactory.eu/discord-utilities/modules/chat-relay)
+- [x] [Connected Players Role](https://docs.sourcefactory.eu/discord-utilities/modules/connected-players-role)
+- [x] [Event Notifications (Connect, Disconnect, Etc..)](https://docs.sourcefactory.eu/discord-utilities/modules/event-notifications)
+- [x] [Manage Roles and Permissions](https://docs.sourcefactory.eu/discord-utilities/modules/manage-roles-and-permissions)
+- [x] ⭐ [Skin Changer](https://docs.sourcefactory.eu/discord-utilities/modules/skin-changer)
+- [x] ⭐ [Automatic Store](https://docs.sourcefactory.eu/discord-utilities/modules/automatic-store)
+- [x] ⭐ [Player Stats](https://docs.sourcefactory.eu/discord-utilities/modules/player-stats)
+- [x] ⭐ [Banlist](https://docs.sourcefactory.eu/discord-utilities/modules/player-stats)
+- [x] ⭐ [Server Status Plus](https://docs.sourcefactory.eu/discord-utilities/modules/server-status-plus)
+- [x] ⭐ [Commands Blocker](https://docs.sourcefactory.eu/discord-utilities/modules/commands-blocker)
+- [x] ⭐ [Leaderboard](https://docs.sourcefactory.eu/discord-utilities/modules/leaderboard)
 
 # Installation
 1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
@@ -40,7 +43,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 
 # Requirements
 - MySQL Database
-- [Created Discord Bot](https://docs.sourcefactory.eu/cs2-plugins/discord-utilities/setting-up-a-discord-bot)
+- [Created Discord Bot](https://docs.sourcefactory.eu/discord-utilities/tutorials/setting-up-a-discord-bot)
 
 # Preview Images/Videos from available modules
 <details>
