@@ -14,6 +14,7 @@ Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSha
 - [x] [Custom Bot Status](https://docs.sourcefactory.eu/discord-utilities/main-configuration/custom-bot-status)
 - [x] Timed Roles
 - [x] [Admin Commands](https://docs.sourcefactory.eu/discord-utilities/admin-commands)
+- [x] [Custom Variables (Placeholders)](https://docs.sourcefactory.eu/discord-utilities/main-configuration/custom-variables)
 
 # Addons/Modules
 • These modules are separate plugins that have their own configuration and work only with the main plugin.
