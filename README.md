@@ -1,7 +1,11 @@
-# CS2 Discord Utilities
- 
-Discord Utilities is a server API plugin for communication between the CS2 server and the Discord server. With this plugin you can install/create modules that will run through the main plugin.<br>
-Designed for [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) framework
+<p align="center">
+<b>Discord Utilities</b> is a server API plugin for communication between the CS2 server and the Discord server. With this plugin you can install/create modules that will run through the main plugin.
+Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterStrikeSharp</a> framework<br>
+<br>
+<a href="https://buymeacoffee.com/sourcefactory">
+<img src="https://img.buymeacoffee.com/button-api/?text=Support Me&emoji=🚀&slug=sourcefactory&button_colour=e6005c&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" />
+</a>
+</p>
 
 ## [Documentation/Wiki](https://docs.sourcefactory.eu/discord-utilities/info)
 ### Discord Support Server
