@@ -1,11 +1,17 @@
 ﻿
+using System.Drawing;
 using System.Text;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using DiscordUtilitiesAPI;
 using DiscordUtilitiesAPI.Events;
 using DiscordUtilitiesAPI.Helpers;
+using Newtonsoft.Json;
 
 namespace ManageRolesAndPermissions
 {
@@ -13,10 +19,12 @@ namespace ManageRolesAndPermissions
     {
         public override string ModuleName => "[Discord Utilities] Manage Roles and Permissions";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.5";
+        public override string ModuleVersion => "1.4";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
+        public Dictionary<string, string> PermissionsToRoles = new();
+        public Dictionary<string, RoleGroupData> RolesToPermissions = new();
 
         public class RoleGroupData
         {
@@ -29,15 +37,68 @@ namespace ManageRolesAndPermissions
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers += DiscordUtilitiesEventHandler;
             DiscordUtilities!.CheckVersion(ModuleName, ModuleVersion);
-            if (DiscordUtilities.Debug())
-            {
-                DiscordUtilities.SendConsoleMessage($"A total of '{Config.PermissionToRole.Count()}' Permissions To Roles have been loaded", MessageType.Debug);
-                DiscordUtilities.SendConsoleMessage($"A total of '{Config.RoleToPermission.Count()}' Roles To Permissions Roles have been loaded", MessageType.Debug);
-            }
         }
         public override void Unload(bool hotReload)
         {
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers -= DiscordUtilitiesEventHandler;
+        }
+        private void OnBotLoaded()
+        {
+            LoadManageRolesAndFlags();
+        }
+
+        private static TargetResult? GetTarget(CommandInfo info)
+        {
+            var matches = info.GetArgTargetResult(1);
+            if (!matches.Any())
+            {
+                info.ReplyToCommand($"Target {info.GetArg(1)} was not found.");
+                return null;
+            }
+
+            if (info.GetArg(1).StartsWith('@'))
+                return matches;
+
+            if (matches.Count() == 1)
+                return matches;
+
+            info.ReplyToCommand($"Multiple targets found for \"{info.GetArg(1)}\".");
+            return null;
+        }
+
+        public void LoadManageRolesAndFlags()
+        {
+            PermissionsToRoles.Clear();
+            RolesToPermissions.Clear();
+
+            string filePath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/DU_ManageRolesAndPermissions/DU_ManageRolesAndPermissions.json";
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    var jsonData = File.ReadAllText(filePath);
+                    dynamic deserializedJson = JsonConvert.DeserializeObject(jsonData)!;
+
+                    var roleToPermission = deserializedJson["Role To Permission"].ToObject<Dictionary<string, RoleGroupData>>();
+                    if (roleToPermission != null)
+                        RolesToPermissions = roleToPermission;
+
+                    var permissionToRole = deserializedJson["Permission To Role"].ToObject<Dictionary<string, string>>();
+                    if (permissionToRole != null)
+                        PermissionsToRoles = permissionToRole;
+
+                    if (DiscordUtilities != null && DiscordUtilities.Debug())
+                    {
+                        DiscordUtilities.SendConsoleMessage($"A total of '{PermissionsToRoles.Count()}' Permissions To Roles have been loaded", MessageType.Debug);
+                        DiscordUtilities.SendConsoleMessage($"A total of '{RolesToPermissions.Count()}' Roles To Permissions Roles have been loaded", MessageType.Debug);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    DiscordUtilities!.SendConsoleMessage($"An error occurred while loading the Manage Roles and Permissions configuration: '{ex.Message}'", MessageType.Error);
+                    throw new Exception($"An error occurred while loading the Manage Roles and Permissions configuration: {ex.Message}");
+                }
+            }
         }
 
         private void DiscordUtilitiesEventHandler(object? _, IDiscordUtilitiesEvent @event)
@@ -47,6 +108,9 @@ namespace ManageRolesAndPermissions
                 case LinkedUserDataLoaded linkedUser:
                     OnLinkedUserDataLoaded(linkedUser.User, linkedUser.player);
                     break;
+                case BotLoaded:
+                    OnBotLoaded();
+                    break;
                 default:
                     break;
             }
@@ -54,63 +118,50 @@ namespace ManageRolesAndPermissions
 
         private void OnLinkedUserDataLoaded(UserData user, CCSPlayerController player)
         {
-            if (Config.RoleToPermission.Count > 0)
+            if (RolesToPermissions.Count > 0)
             {
-                List<string> flags = new();
-                uint? maxImmunity = new();
-
-                user.RolesIds.ForEach(roleID =>
+                var groupData = RolesToPermissions.Where(x => user.RolesIds.Contains(ulong.Parse(x.Key))).FirstOrDefault();
+                if (groupData.Key != null)
                 {
-                    if (Config.RoleToPermission.TryGetValue(roleID.ToString(), out RoleGroupData? roleGroupData))
+                    var roleGroupData = groupData.Value;
+                    if (roleGroupData.flags.Count > 0)
                     {
-                        if (roleGroupData != null)
+                        StringBuilder sb = new();
+                        int count = 0;
+                        foreach (var flag in roleGroupData.flags)
                         {
-                            if (!maxImmunity.HasValue)
-                                maxImmunity = roleGroupData.immunity;
-                            else
-                                maxImmunity = roleGroupData.immunity > maxImmunity ? roleGroupData.immunity : maxImmunity;
+                            if (!AdminManager.PlayerHasPermissions(player.AuthorizedSteamID, flag))
+                            {
+                                if (count > 0)
+                                    sb.Append($", '{flag}'");
+                                else
+                                    sb.Append($"'{flag}'");
 
-                            if (roleGroupData.flags.Count > 0)
-                            {
-                                StringBuilder sb = new();
-                                int count = 0;
-                                foreach (var flag in roleGroupData.flags)
-                                {
-                                    if (!AdminManager.PlayerHasPermissions(player.AuthorizedSteamID, flag))
-                                    {
-                                        flags.Add(flag);
-                                        if (count > 0)
-                                            sb.Append($", '{flag}'");
-                                        else
-                                            sb.Append($"'{flag}'");
-                                        count++;
-                                    }
-                                }
-                                if (DiscordUtilities!.Debug())
-                                    DiscordUtilities.SendConsoleMessage($"Flags {sb} has been added to player '{player.PlayerName}'", MessageType.Debug);
-                            }
-                            if (roleGroupData.command_overrides.Count > 0)
-                            {
-                                foreach (var cmd in roleGroupData.command_overrides)
-                                {
-                                    AdminManager.SetPlayerCommandOverride(player.AuthorizedSteamID, cmd.Key, cmd.Value);
-                                }
+                                AdminManager.AddPlayerPermissions(player.AuthorizedSteamID, flag);
+                                count++;
                             }
                         }
+                        if (DiscordUtilities!.Debug())
+                            DiscordUtilities.SendConsoleMessage($"Flags {sb} has been added to player '{player.PlayerName}'", MessageType.Debug);
                     }
-                });
-                if (maxImmunity.HasValue)
-                    AdminManager.SetPlayerImmunity(player, maxImmunity.Value);
-                if (flags.Count > 0)
-                    AdminManager.AddPlayerPermissions(player.AuthorizedSteamID, [.. flags]);
+
+                    if (roleGroupData.command_overrides.Count > 0)
+                    {
+                        foreach (var cmd in roleGroupData.command_overrides)
+                        {
+                            AdminManager.SetPlayerCommandOverride(player.AuthorizedSteamID, cmd.Key, cmd.Value);
+                        }
+                    }
+                    AdminManager.SetPlayerImmunity(player.AuthorizedSteamID, roleGroupData.immunity);
+
+                }
             }
 
-            if (Config.PermissionToRole.Count != 0)
+            var rolesList = new List<string>();
+            var rolesToRemove = new List<string>();
+            if (PermissionsToRoles.Count != 0)
             {
-                var rolesList = new List<string>();
-                var rolesToRemove = new List<string>();
-
-                foreach (var item in Config.PermissionToRole)
+                foreach (var item in PermissionsToRoles)
                 {
                     if (item.Key.StartsWith('@'))
                     {
@@ -143,12 +194,12 @@ namespace ManageRolesAndPermissions
                         DiscordUtilities!.SendConsoleMessage($"Invalid permission '{item.Key}'!", MessageType.Error);
                     }
                 }
-
-                if (Config.removeRolesOnPermissionLoss && rolesToRemove.Count() > 0)
-                    PerformRemoveRole(user, rolesToRemove);
-                if (rolesList.Count() > 0)
-                    PerformPermissionToRole(user, rolesList);
             }
+
+            if (Config.removeRolesOnPermissionLoss && rolesToRemove.Count() > 0)
+                PerformRemoveRole(user, rolesToRemove);
+            if (rolesList.Count() > 0)
+                PerformPermissionToRole(user, rolesList);
         }
 
         public void PerformPermissionToRole(UserData user, List<string> rolesIds)
