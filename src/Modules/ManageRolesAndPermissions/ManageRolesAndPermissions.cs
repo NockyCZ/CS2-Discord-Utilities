@@ -1,9 +1,6 @@
-﻿
-using System.Drawing;
-using System.Text;
+﻿using System.Text;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -120,41 +117,53 @@ namespace ManageRolesAndPermissions
         {
             if (RolesToPermissions.Count > 0)
             {
-                var groupData = RolesToPermissions.Where(x => user.RolesIds.Contains(ulong.Parse(x.Key))).FirstOrDefault();
-                if (groupData.Key != null)
+                List<string> flags = new();
+                uint? maxImmunity = new();
+                user.RolesIds.ForEach(roleID =>
                 {
-                    var roleGroupData = groupData.Value;
-                    if (roleGroupData.flags.Count > 0)
+                    if (RolesToPermissions.TryGetValue(roleID.ToString(), out RoleGroupData? roleGroupData))
                     {
-                        StringBuilder sb = new();
-                        int count = 0;
-                        foreach (var flag in roleGroupData.flags)
+                        if (!maxImmunity.HasValue)
                         {
-                            if (!AdminManager.PlayerHasPermissions(player.AuthorizedSteamID, flag))
+                            maxImmunity = roleGroupData.immunity;
+                        }
+                        else
+                        {
+                            maxImmunity = roleGroupData.immunity > maxImmunity ? roleGroupData.immunity : maxImmunity;
+                        }
+                        if (roleGroupData.flags.Count > 0)
+                        {
+                            StringBuilder sb = new();
+                            int count = 0;
+                            foreach (var flag in roleGroupData.flags)
                             {
-                                if (count > 0)
-                                    sb.Append($", '{flag}'");
-                                else
-                                    sb.Append($"'{flag}'");
-
-                                AdminManager.AddPlayerPermissions(player.AuthorizedSteamID, flag);
-                                count++;
+                                flags.Add(flag);
+                                if (!AdminManager.PlayerHasPermissions(player.AuthorizedSteamID, flag))
+                                {
+                                    if (count > 0)
+                                        sb.Append($", '{flag}'");
+                                    else
+                                        sb.Append($"'{flag}'");
+                                    count++;
+                                }
+                            }
+                            if (DiscordUtilities!.Debug())
+                                DiscordUtilities.SendConsoleMessage($"Flags {sb} has been added to player '{player.PlayerName}'", MessageType.Debug);
+                        }
+                        if (roleGroupData.command_overrides.Count > 0)
+                        {
+                            foreach (var cmd in roleGroupData.command_overrides)
+                            {
+                                AdminManager.SetPlayerCommandOverride(player.AuthorizedSteamID, cmd.Key, cmd.Value);
                             }
                         }
-                        if (DiscordUtilities!.Debug())
-                            DiscordUtilities.SendConsoleMessage($"Flags {sb} has been added to player '{player.PlayerName}'", MessageType.Debug);
                     }
-
-                    if (roleGroupData.command_overrides.Count > 0)
-                    {
-                        foreach (var cmd in roleGroupData.command_overrides)
-                        {
-                            AdminManager.SetPlayerCommandOverride(player.AuthorizedSteamID, cmd.Key, cmd.Value);
-                        }
-                    }
-                    AdminManager.SetPlayerImmunity(player.AuthorizedSteamID, roleGroupData.immunity);
-
+                });
+                if (maxImmunity.HasValue)
+                {
+                    AdminManager.SetPlayerImmunity(player, maxImmunity.Value);
                 }
+                AdminManager.AddPlayerPermissions(player.AuthorizedSteamID, [.. flags]);
             }
 
             var rolesList = new List<string>();
