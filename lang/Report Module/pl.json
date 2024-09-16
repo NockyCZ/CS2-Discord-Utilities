@@ -7,6 +7,7 @@
     "Chat.ReportSend": "Gracz {green}{0}{default} zostal zgloszony! (Powod: {darkred}{1}{default})",
     "Chat.ReportCancelled": "Twoje zgloszenie zostalo anulowane.",
     "Chat.ReportShortReason": "Nieprawidlowa dlugosc zgloszenia.",
+    "Chat.ReportIgnoredReason": "Ten powód jest zablokowany. Wprowadź powód ponownie. Aby anulować, wpisz {green}!cancel.",
     "Chat.ReportNoTargetsFound": "Brak osob do zgloszenia. Jestes sam na serwerze!",
     "Chat.ReportCooldown": "Mozesz uzyc komendy report co {green}{0} sekund{default}!",
     "Chat.ThisPlayerCannotBeReported": "Gracz{darkred}{0}{default} nie moze zostac zgloszony.",

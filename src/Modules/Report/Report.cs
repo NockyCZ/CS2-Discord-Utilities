@@ -114,6 +114,11 @@ namespace Report
                     performReport.Remove(player);
                     return HookResult.Handled;
                 }
+                if (Config.IgnoreReasonsList.Contains(info.GetArg(1)))
+                {
+                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer[name: "Chat.ReportIgnoredReason"]}");
+                    return HookResult.Handled;
+                }
                 SendReport(player, performReport[player], info.GetArg(1));
                 performReport.Remove(player);
                 return HookResult.Handled;
@@ -137,6 +142,11 @@ namespace Report
                 {
                     player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCancelled"]}");
                     performReport.Remove(player);
+                    return HookResult.Handled;
+                }
+                if (Config.IgnoreReasonsList.Contains(info.GetArg(1)))
+                {
+                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer[name: "Chat.ReportIgnoredReason"]}");
                     return HookResult.Handled;
                 }
                 SendReport(player, performReport[player], info.GetArg(1));
