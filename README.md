@@ -58,7 +58,8 @@ Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterS
 - [Created Discord Bot](https://docs.sourcefactory.eu/discord-utilities/tutorials/setting-up-a-discord-bot)
 <br>
 
-# 🔗 Plugins that use the Discord Utilities API
+# 🔗 Third-Party Plugins
+*Plugins that use the Discord Utilities API*
 1. [Reserved Slots](https://github.com/NockyCZ/CS2-ReservedSlots)
    - Used to set up reserved slots for players with certain discord roles
 <br>
