@@ -7,10 +7,17 @@ Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterS
 </a>
 </p>
 
-## [Documentation/Wiki](https://docs.sourcefactory.eu/discord-utilities/info)
-### Discord Support Server
-[<img src="https://discordapp.com/api/guilds/1149315368465211493/widget.png?style=banner2">](https://discord.gg/Tzmq98gwqF)
-- [Map Images API](https://nockycz.github.io/CS2-Discord-Utilities/)
+<p align="center">
+  <a href="https://docs.sourcefactory.eu/discord-utilities/info">Documentation/Wiki</a>
+  ·
+  <a href="https://nockycz.github.io/CS2-Discord-Utilities/">Map Images API</a>
+  ·
+  <a href="https://sourcefactory.eu">Website</a>
+</p>
+<h3 align="center">
+  Discord Support Server<br>
+  <a href="https://discord.gg/Tzmq98gwqF"><img src="https://discordapp.com/api/guilds/1149315368465211493/widget.png?style=banner2"></a>
+</h3>
   
 # Main Features
 • These features are already implemented in the main plugin.
@@ -20,7 +27,7 @@ Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterS
 - [x] [Admin Commands](https://docs.sourcefactory.eu/discord-utilities/admin-commands)
 - [x] [Custom Variables (Placeholders)](https://docs.sourcefactory.eu/discord-utilities/main-configuration/custom-variables)
 
-# Addons/Modules
+# Offical Addons/Modules
 • These modules are separate plugins that have their own configuration and work only with the main plugin.
 - [x] [Report System (Calladmin)](https://docs.sourcefactory.eu/discord-utilities/modules/report-calladmin)
 - [x] [Server Status](https://docs.sourcefactory.eu/discord-utilities/modules/server-status)
@@ -37,7 +44,7 @@ Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterS
 - [x] ⭐ [Commands Blocker](https://docs.sourcefactory.eu/discord-utilities/modules/commands-blocker)
 - [x] ⭐ [Leaderboard](https://docs.sourcefactory.eu/discord-utilities/modules/leaderboard)
 
-# Installation
+# ⚙️ Installation
 1. Download the latest verison - https://github.com/NockyCZ/CS2-Discord-Utilities/releases/latest
    - `DiscordUtilities.zip` file includes only the main plugin without available modules
    - `DiscordUtilitiesWithModules.zip` file includes all available modules, if you don't want to use some modules, just remove them from `/plugins/` folder
@@ -46,9 +53,15 @@ Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterS
 5. Configure the config file
 6. After any configuration changes, you must restart the server
 
-# Requirements
+# 📋 Requirements
 - MySQL Database
 - [Created Discord Bot](https://docs.sourcefactory.eu/discord-utilities/tutorials/setting-up-a-discord-bot)
+<br>
+
+# 🔗 Plugins that use the Discord Utilities API
+1. [Reserved Slots](https://github.com/NockyCZ/CS2-ReservedSlots)
+   - Used to set up reserved slots for players with certain discord roles
+<br>
 
 # Preview Images/Videos from available modules
 <details>
