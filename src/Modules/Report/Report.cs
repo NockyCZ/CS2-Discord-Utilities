@@ -19,7 +19,7 @@ namespace Report
     {
         public override string ModuleName => "[Discord Utilities] Report System";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.3";
+        public override string ModuleVersion => "1.4";
         public IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new();
@@ -54,7 +54,7 @@ namespace Report
         {
             CreateCustomCommands();
             AddCommandListener("say", OnPlayerSay, HookMode.Pre);
-            AddCommandListener("say_team", OnPlayerSayTeam, HookMode.Pre);
+            AddCommandListener("say_team", OnPlayerSay, HookMode.Pre);
             RegisterListener<OnMapStart>(mapName =>
             {
                 solvedPlayers.Clear();
@@ -98,62 +98,36 @@ namespace Report
 
         private HookResult OnPlayerSay(CCSPlayerController? player, CommandInfo info)
         {
-            if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
+            if (player == null || !player.IsValid || player.AuthorizedSteamID == null || !performReport.ContainsKey(player))
                 return HookResult.Continue;
 
-            if (performReport.ContainsKey(player))
+            var reason = info.GetArg(1);
+            if (reason.Length < Config.ReasonLength)
             {
-                if (info.GetArg(1).Length < Config.ReasonLength)
-                {
-                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer[name: "Chat.ReportShortReason"]}");
-                    return HookResult.Handled;
-                }
-                if (info.GetArg(1).Contains(Config.CancelCommand))
-                {
-                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCancelled"]}");
-                    performReport.Remove(player);
-                    return HookResult.Handled;
-                }
-                if (Config.IgnoreReasonsList.Contains(info.GetArg(1)))
-                {
-                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer[name: "Chat.ReportIgnoredReason"]}");
-                    return HookResult.Handled;
-                }
-                SendReport(player, performReport[player], info.GetArg(1));
+                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer[name: "Chat.ReportShortReason"]}");
+                return HookResult.Handled;
+            }
+            if (reason.Contains(Config.CancelCommand))
+            {
+                player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCancelled"]}");
                 performReport.Remove(player);
                 return HookResult.Handled;
             }
-            return HookResult.Continue;
-        }
 
-        private HookResult OnPlayerSayTeam(CCSPlayerController? player, CommandInfo info)
-        {
-            if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
-                return HookResult.Continue;
-
-            if (performReport.ContainsKey(player))
+            var blockedReasons = Config.BlockedReason.Trim().ToLower().Split(",").ToList();
+            var reasonsList = reason.ToLower().Split(" ").ToList();
+            foreach (var x in reasonsList)
             {
-                if (info.GetArg(1).Length < Config.ReasonLength)
+                if (blockedReasons.Contains(x))
                 {
-                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer[name: "Chat.ReportShortReason"]}");
-                    return HookResult.Handled;
-                }
-                if (info.GetArg(1).Contains(Config.CancelCommand))
-                {
-                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCancelled"]}");
+                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportBlockedReason", x]}");
                     performReport.Remove(player);
                     return HookResult.Handled;
                 }
-                if (Config.IgnoreReasonsList.Contains(info.GetArg(1)))
-                {
-                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer[name: "Chat.ReportIgnoredReason"]}");
-                    return HookResult.Handled;
-                }
-                SendReport(player, performReport[player], info.GetArg(1));
-                performReport.Remove(player);
-                return HookResult.Handled;
             }
-            return HookResult.Continue;
+            SendReport(player, performReport[player], reason);
+            performReport.Remove(player);
+            return HookResult.Handled;
         }
 
         public void SendReport(CCSPlayerController sender, CCSPlayerController target, string reason)
@@ -352,8 +326,8 @@ namespace Report
 
             var data = reportsList[reportId];
             ReportSolvedAction(data.senderSteamId, data.targetName, data.targetSteamId);
-            if (player != null)
-                reportsList.Remove(reportId);
+            //if (player != null)
+            reportsList.Remove(reportId);
 
             if (DiscordUtilities!.IsCustomMessageSaved(data.messageId))
             {
