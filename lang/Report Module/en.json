@@ -7,6 +7,7 @@
     "Chat.ReportSend": "Player {green}{0}{default} has been reported! (Reason: {darkred}{1}{default})",
     "Chat.ReportCancelled": "Your report has been successfully cancelled.",
     "Chat.ReportShortReason": "Insufficient length of reason",
+    "Chat.ReportBlockedReason": "Reason cannot contain the word {darkred}{0}{default}! Please enter the reason again. To cancel, type {green}!cancel",
     "Chat.ReportNoTargetsFound": "No targets found! Only you are on the server!",
     "Chat.ReportCooldown": "You can use the report once every {green}{0} seconds{default}!",
     "Chat.ThisPlayerCannotBeReported": "Player {darkred}{0}{default} cannot be reported.",

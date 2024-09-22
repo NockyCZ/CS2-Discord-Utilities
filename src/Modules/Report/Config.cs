@@ -7,6 +7,7 @@ public class Config : BasePluginConfig
 {
     [JsonPropertyName("Report Commands")] public string ReportCommands { get; set; } = "report,calladmin";
     [JsonPropertyName("Reports List Commands")] public string ReportsListCommands { get; set; } = "reports,reportslist";
+    [JsonPropertyName("Blocked Words In Reason")] public string BlockedReason { get; set; } = "idiot,test,rtv,nominate,ws";
     [JsonPropertyName("Allow Ingame Reports List")] public bool ReportsListMenu { get; set; } = true;
     [JsonPropertyName("Allow Self Report")] public bool SelfReport { get; set; } = false;
     [JsonPropertyName("Report Expiration")] public int ReportExpiration { get; set; } = 120;
