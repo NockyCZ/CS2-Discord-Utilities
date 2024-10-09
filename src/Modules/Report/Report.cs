@@ -115,14 +115,17 @@ namespace Report
             }
 
             var blockedReasons = Config.BlockedReason.Trim().ToLower().Split(",").ToList();
-            var reasonsList = reason.ToLower().Split(" ").ToList();
-            foreach (var x in reasonsList)
+            if (blockedReasons.Count > 0)
             {
-                if (blockedReasons.Contains(x))
+                var reasonsList = reason.ToLower().Split(" ").ToList();
+                foreach (var x in reasonsList)
                 {
-                    player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportBlockedReason", x]}");
-                    performReport.Remove(player);
-                    return HookResult.Handled;
+                    if (blockedReasons.Contains(x))
+                    {
+                        player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportBlockedReason", x]}");
+                        performReport.Remove(player);
+                        return HookResult.Handled;
+                    }
                 }
             }
             SendReport(player, performReport[player], reason);

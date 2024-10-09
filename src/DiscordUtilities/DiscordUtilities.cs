@@ -1,33 +1,29 @@
 ﻿﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
-using CounterStrikeSharp.API.Core.Attributes;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using CounterStrikeSharp.API.Core.Capabilities;
 using DiscordUtilitiesAPI.Events;
-using System.Data.Common;
 
 namespace DiscordUtilities
 {
-    [MinimumApiVersion(202)]
     public partial class DiscordUtilities : BasePlugin, IPluginConfig<DUConfig>
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.0.9";
+        public override string ModuleVersion => "2.1.0";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;
         }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
-            _ = LoadVersions();
-            _ = LoadDiscordBOT();
             if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
             {
+                _ = LoadDiscordBOT();
                 databaseData = new DatabaseConnection
                 {
                     Server = Config.Database.Host,
@@ -37,30 +33,31 @@ namespace DiscordUtilities
                     Password = Config.Database.Password,
                 };
                 _ = CreateDatabaseConnection();
+
+                if (string.IsNullOrEmpty(Config.ServerID) || !ulong.TryParse(Config.ServerID, out _))
+                {
+                    Perform_SendConsoleMessage("Invalid Discord Server ID!", ConsoleColor.Red);
+                }
+                else
+                {
+                    int counter = 0;
+                    while (!IsBotConnected)
+                    {
+                        counter++;
+                        if (counter > 5)
+                        {
+                            Perform_SendConsoleMessage("Discord BOT failed to connect!", ConsoleColor.Red);
+                            break;
+                        }
+                        else
+                            Perform_SendConsoleMessage("Loading Discord BOT...", ConsoleColor.DarkYellow);
+                        Thread.Sleep(3000);
+                    }
+                }
             }
             else
             {
-                Perform_SendConsoleMessage($"You need to setup Database credentials in config", ConsoleColor.Red);
-                throw new Exception("Database connection information is missing!");
-            }
-
-            if (string.IsNullOrEmpty(Config.ServerID))
-            {
-                Perform_SendConsoleMessage($"Invalid Discord Server ID!", ConsoleColor.Red);
-                throw new Exception("Invalid Discord Server ID");
-            }
-
-            int counter = 0;
-            while (!IsBotConnected)
-            {
-                counter++;
-                if (counter > 5)
-                {
-                    Perform_SendConsoleMessage($"Discord BOT failed to connect!", ConsoleColor.Red);
-                    throw new Exception("Discord BOT failed to connect");
-                }
-                Perform_SendConsoleMessage($"Loading Discord BOT...", ConsoleColor.DarkYellow);
-                Thread.Sleep(3000);
+                Perform_SendConsoleMessage("You need to setup Database credentials in config", ConsoleColor.Red);
             }
         }
         public override void Load(bool hotReload)
@@ -72,6 +69,7 @@ namespace DiscordUtilities
             if (Config.UseCustomVariables)
                 LoadCustomConditions();
 
+            _ = LoadVersions();
             _ = LoadMapImages();
             IsDbConnected = false;
             IsBotConnected = false;
@@ -93,7 +91,7 @@ namespace DiscordUtilities
                     mapStarted = true;
                     Server.ExecuteCommand("sv_hibernate_when_empty false");
                     playerData.Clear();
-                    AddTimer(3.0f, () =>
+                    AddTimer(4.0f, () =>
                     {
                         if (Config.TimedRoles)
                             CheckExpiredTimedRoles();
@@ -162,9 +160,7 @@ namespace DiscordUtilities
                     Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
             }
 
-            string ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
-            //await BotClient!.SetGameAsync(ActivityFormat, null, (ActivityType)Config.BotStatus.ActivityType);
-
+            var ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
             await BotClient!.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType, ActivityProperties.None));
             await BotClient.SetStatusAsync((UserStatus)Config.BotStatus.Status);
 
@@ -172,7 +168,8 @@ namespace DiscordUtilities
             BotClient.MessageReceived += MessageReceivedHandler;
             BotClient.InteractionCreated += InteractionCreatedHandler;
             BotClient.GuildScheduledEventCreated += ScheduledEventCreated;
-            //BotClient.SentRequest += OnSentRequest;
+            BotClient.GuildMemberUpdated += GuildMemberUpdated;
+            BotClient.UserLeft += GuildMemberLeft;
 
             var linkCommand = new SlashCommandBuilder()
                 .WithName(Config.Link.LinkDiscordSettings.Name.ToLower())
@@ -202,11 +199,54 @@ namespace DiscordUtilities
                 throw new Exception($"An error occurred while updating Link Slash Commands: {ex.Message}");
             }
         }
-        /*private Task OnSentRequest(string method, string endpoint, double duration)
+
+        private async Task GuildMemberLeft(SocketGuild guild, SocketUser user)
         {
-            Console.WriteLine($"Request sent: Method = {method}, Endpoint = {endpoint}, Duration = {duration}ms");
-            return Task.CompletedTask;
-        }*/
+            if (Config.Link.Enabled && Config.Link.ResponseServer)
+            {
+                if (linkedPlayers.ContainsValue(user.Id))
+                {
+                    var steamId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id).Key;
+                    if (linkedPlayers.ContainsKey(steamId))
+                    {
+                        await RemovePlayerData(steamId.ToString());
+                        await CreateScheduledEventAsync("refreshlinkedplayers");
+                    }
+                }
+            }
+        }
+
+        private async Task GuildMemberUpdated(Cacheable<SocketGuildUser, ulong> before, SocketGuildUser after)
+        {
+            if (!linkedPlayers.ContainsValue(after.Id))
+                return;
+
+            var beforeGuildUser = await before.GetOrDownloadAsync();
+
+            var beforeRoles = beforeGuildUser.Roles.Select(r => r.Id).ToList();
+            var afterRoles = after.Roles.Select(r => r.Id).ToList();
+
+            var addedRoles = afterRoles
+                .Except(beforeRoles)
+                .Select(role => role.ToString())
+                .ToList();
+
+            var removedRoles = beforeRoles
+                .Except(afterRoles)
+                .Select(role => role.ToString())
+                .ToList();
+
+            Server.NextFrame(() =>
+            {
+                var user = GetUserDataByUserID(after.Id);
+                if (user == null)
+                    return;
+
+                DiscordUtilitiesAPI.Get()?.TriggerEvent(new LinkedUserRolesUpdated(user, addedRoles, removedRoles));
+                if (IsDebug)
+                    Perform_SendConsoleMessage("New Event Triggered: 'LinkedUserRolesUpdated'", ConsoleColor.Cyan);
+            });
+        }
 
         public async Task CreateScheduledEventAsync(string eventData)
         {

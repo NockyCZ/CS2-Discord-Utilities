@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using Discord;
 using DiscordUtilitiesAPI.Events;
+using DiscordUtilitiesAPI.Helpers;
 
 namespace DiscordUtilities
 {
@@ -56,8 +57,10 @@ namespace DiscordUtilities
             {
                 cmdOverrides.Append("None");
             }
-            var userId = linkedPlayers.ContainsKey(target.AuthorizedSteamID!.SteamId64) ? linkedPlayers[target.AuthorizedSteamID!.SteamId64].ToString() : "Not Found";
-            var user = GetUserDataByUserID(ulong.Parse(userId));
+
+            UserData? user = null;
+            if (linkedPlayers.TryGetValue(target.AuthorizedSteamID!.SteamId64, out var userId))
+                user = GetUserDataByUserID(userId);
 
             info.ReplyToCommand("========================================");
             info.ReplyToCommand("Discord Utilities • Player Data");
@@ -65,8 +68,10 @@ namespace DiscordUtilities
             info.ReplyToCommand($"• Player: {target.PlayerName}");
             info.ReplyToCommand($"• Linked: {linkedPlayers.ContainsKey(target.AuthorizedSteamID!.SteamId64)}");
             if (user != null)
+            {
                 info.ReplyToCommand($"• Discord User: {user.DisplayName}");
-            info.ReplyToCommand($"• Discord User ID: {userId}");
+                info.ReplyToCommand($"• Discord User ID: {userId}");
+            }
             info.ReplyToCommand($"• Flags: {flags}");
             info.ReplyToCommand($"• Command Overrides: {cmdOverrides}");
             info.ReplyToCommand($"• Immunity: {immunity}");

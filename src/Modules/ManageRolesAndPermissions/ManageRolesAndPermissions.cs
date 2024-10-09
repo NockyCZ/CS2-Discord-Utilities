@@ -1,5 +1,6 @@
 ﻿
 using System.Text;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
@@ -44,12 +45,50 @@ namespace ManageRolesAndPermissions
         {
             switch (@event)
             {
-                case LinkedUserDataLoaded linkedUser:
-                    OnLinkedUserDataLoaded(linkedUser.User, linkedUser.player);
+                case LinkedUserDataLoaded data:
+                    OnLinkedUserDataLoaded(data.User, data.player);
+                    break;
+                case LinkedUserRolesUpdated data:
+                    OnLinkedUserRolesUpdated(data.User, data.removedRoles);
                     break;
                 default:
                     break;
             }
+        }
+
+        private void OnLinkedUserRolesUpdated(UserData user, List<string>? removedRoles)
+        {
+            if (!Config.removePermissionsOnRoleLoss || removedRoles == null || removedRoles.Count == 0)
+                return;
+
+            var steamId = DiscordUtilities!.GetLinkedPlayers().FirstOrDefault(x => x.Value == user.ID).Key;
+            var player = Utilities.GetPlayerFromSteamId(steamId);
+
+            if (player == null || !player.IsValid)
+                return;
+
+            var permsToRemoveByRole = new List<string>();
+            foreach (var role in removedRoles)
+            {
+                if (Config.RoleToPermission.ContainsKey(role))
+                    permsToRemoveByRole.Add(role);
+            }
+
+            if (permsToRemoveByRole.Count == 0)
+                return;
+
+            foreach (var role in permsToRemoveByRole)
+            {
+                if (Config.RoleToPermission.TryGetValue(role, out var data))
+                {
+                    AdminManager.RemovePlayerPermissions(player, data.flags.ToArray());
+                    foreach (var cmdOverride in data.command_overrides)
+                    {
+                        AdminManager.SetPlayerCommandOverride(player, cmdOverride.Key, !cmdOverride.Value);
+                    }
+                }
+            }
+            AdminManager.SetPlayerImmunity(player, 0);
         }
 
         private void OnLinkedUserDataLoaded(UserData user, CCSPlayerController player)
@@ -61,7 +100,7 @@ namespace ManageRolesAndPermissions
 
                 user.RolesIds.ForEach(roleID =>
                 {
-                    if (Config.RoleToPermission.TryGetValue(roleID.ToString(), out RoleGroupData? roleGroupData))
+                    if (Config.RoleToPermission.TryGetValue(roleID.ToString(), out var roleGroupData))
                     {
                         if (roleGroupData != null)
                         {

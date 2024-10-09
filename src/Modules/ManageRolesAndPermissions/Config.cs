@@ -7,6 +7,7 @@ namespace ManageRolesAndPermissions;
 public class Config : BasePluginConfig
 {
     [JsonPropertyName("Remove Roles On Permission Loss")] public bool removeRolesOnPermissionLoss { get; set; } = false;
+    [JsonPropertyName("Remove Permissions On Role Loss")] public bool removePermissionsOnRoleLoss { get; set; } = false;
     [JsonPropertyName("Role To Permission")]
     public Dictionary<string, RoleGroupData> RoleToPermission { get; set; } = new Dictionary<string, RoleGroupData>()
     {
@@ -23,7 +24,6 @@ public class Config : BasePluginConfig
             command_overrides = { { "css_slay", true } }
         }
     };
-
     [JsonPropertyName("Permission To Role")]
     public Dictionary<string, string> PermissionToRole { get; set; } = new Dictionary<string, string>()
     {
