@@ -39,7 +39,7 @@ Designed for <a href="https://github.com/roflmuffin/CounterStrikeSharp">CounterS
 - [x] ⭐ [Skin Changer](https://docs.sourcefactory.eu/discord-utilities/modules/skin-changer)
 - [x] ⭐ [Automatic Store](https://docs.sourcefactory.eu/discord-utilities/modules/automatic-store)
 - [x] ⭐ [Player Stats](https://docs.sourcefactory.eu/discord-utilities/modules/player-stats)
-- [x] ⭐ [Banlist](https://docs.sourcefactory.eu/discord-utilities/modules/player-stats)
+- [x] ⭐ [Banlist](https://docs.sourcefactory.eu/discord-utilities/modules/banlist)
 - [x] ⭐ [Server Status Plus](https://docs.sourcefactory.eu/discord-utilities/modules/server-status-plus)
 - [x] ⭐ [Commands Blocker](https://docs.sourcefactory.eu/discord-utilities/modules/commands-blocker)
 - [x] ⭐ [Leaderboard](https://docs.sourcefactory.eu/discord-utilities/modules/leaderboard)
