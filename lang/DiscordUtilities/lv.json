@@ -1,0 +1,9 @@
+{
+    "Chat.Prefix": "{darkred}[Discord]{default}",
+    "Chat.LinkAccount": "{blue}===============\n{default}• Apmeklē mūsu Discord serveri: {green}https://discord.gg/INVITE\n{default}• Savienošanas kods: {darkred}{0}\n {blue}===============",
+    "Chat.AccountUnliked": "Tavs konts ir veiksmīgi atvienots/atsaistīts!",
+    "Chat.NotLinked": "Tavs konts nav saistīts ar Discord kontu!",
+    "Chat.AlreadyLinked": "Tavs Steam konts jau ir saistīts!",
+    "Chat.AccountLinked": "Tavs Steam konts ir sasaistīts ar Discord kontu {green}{0}",
+    "Chat.AccountLinkedAll": "Spēlētājs {green}{0}{default} ir sasaistījis savu kontu ar Discord kontu {darkblue}{1}"
+  }
