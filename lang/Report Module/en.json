@@ -1,5 +1,6 @@
 {
     "Chat.Prefix": "{darkred}[Discord]{default}",
+    "Chat.MenuUnavailable": "Kitsune menu is not available. Please install the Kitsune-Menu plugin.",
     "Menu.ReportSelectPlayer": "Select a Player",
     "Menu.ReportSelectReason": "Select a Reason",
     "Menu.ReportCustomReason": "Custom Reason",
@@ -10,6 +11,7 @@
     "Chat.ReportBlockedReason": "Reason cannot contain the word {darkred}{0}{default}! Please enter the reason again. To cancel, type {green}!cancel",
     "Chat.ReportNoTargetsFound": "No targets found! Only you are on the server!",
     "Chat.ReportCooldown": "You can use the report once every {green}{0} seconds{default}!",
+    "Chat.TargetRecentlyReported": "Player {darkred}{0}{default} has already been reported! Please wait {green}{1} seconds{default} before reporting again.",
     "Chat.ThisPlayerCannotBeReported": "Player {darkred}{0}{default} cannot be reported.",
     "Chat.YourReportHasBeenSolved": "Your report of player {darkred}{0}{default} has been resolved.",
     "Chat.SelfReport": "You cant report your self!",
@@ -18,7 +20,7 @@
     "Chat.TargetNotFound": "A player named {green}{0}{default} was not found!",
     "Chat.TargetNotConnected": "Player {green}{0}{default} is no longer connected!",
     "Chat.MultipleTargetFound": "Multiple players were found with the name {green}{0}{default}!",
-    "Chat.AdminReportSend": "{darkred}[REPORTS]{default} Player {green}{0}{default} reported player {darkblue}{1}{default} (Reason: {darkred}{2}{default})",
+    "Chat.AdminReportSend": "{darkred}[Discord]{default} Player {green}{0}{default} reported player {darkblue}{1}{default} (Reason: {darkred}{2}{default})",
     "Chat.ReportSolved": "The report has been set as resolved.",
     "Chat.NoReportsFound": "No Reports Found!",
     "Menu.ReportsList": "List of Reports ({0})",

@@ -24,6 +24,7 @@ namespace Report
         public Config Config { get; set; } = new();
         public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new();
         public Dictionary<CCSPlayerController, int> reportCooldowns = new();
+        public Dictionary<ulong, int> targetReportCooldowns = new();
         public Dictionary<string, ReportData> reportsList = new();
         public List<ulong> solvedPlayers = new();
         public class ReportData
@@ -58,6 +59,7 @@ namespace Report
             RegisterListener<OnMapStart>(mapName =>
             {
                 solvedPlayers.Clear();
+                targetReportCooldowns.Clear();
             });
         }
 
@@ -157,6 +159,20 @@ namespace Report
                     sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.TargetNotConnected"]}");
                     return;
                 }
+                if (Config.TargetReportCooldown > 0)
+                {
+                    var targetSteamId = target.SteamID;
+                    if (targetReportCooldowns.TryGetValue(targetSteamId, out var lastReportTime))
+                    {
+                        var elapsed = (int)Server.CurrentTime - lastReportTime;
+                        if (elapsed < Config.TargetReportCooldown)
+                        {
+                            var remaining = Config.TargetReportCooldown - elapsed;
+                            sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.TargetRecentlyReported", target.PlayerName, remaining]}");
+                            return;
+                        }
+                    }
+                }
                 if (!Config.SelfReport)
                 {
                     if (target == sender)
@@ -197,6 +213,10 @@ namespace Report
             DiscordUtilities.SendCustomMessageToChannel($"report_{reportId}", ulong.Parse(Config.ChannelID), content, embedBuider, null, true);
 
             reportCooldowns.Add(sender, (int)Server.CurrentTime);
+            if (Config.ReportMethod != 3 && Config.TargetReportCooldown > 0)
+            {
+                targetReportCooldowns[target.SteamID] = (int)Server.CurrentTime;
+            }
             sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportSend", target.PlayerName, reason]}");
             foreach (var admin in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, Config.AdminFlag)))
             {

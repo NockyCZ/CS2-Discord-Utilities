@@ -15,6 +15,19 @@ public class Chatlog
     [JsonPropertyName("Enabled")] public bool Enabled { get; set; } = false;
     [JsonPropertyName("Blocked Words")] public string BlockedWords { get; set; } = "@everyone,@here";
     [JsonPropertyName("Display Commands")] public bool DisplayCommands { get; set; } = true;
+    [JsonPropertyName("Silenced Prefix Emoji")] public string SilencedPrefixEmoji { get; set; } = ":mute:";
+    [JsonPropertyName("Gag Prefix Emoji")] public string GagPrefixEmoji { get; set; } = ":no_entry_sign:";
+    [JsonPropertyName("Muted Prefix Emoji")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? LegacyMutedPrefixEmoji
+    {
+        get => null;
+        set
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                SilencedPrefixEmoji = value;
+        }
+    }
     [JsonPropertyName("Channel ID")] public string ChannelID { get; set; } = "";
     [JsonPropertyName("All Chat Embed")] public AllChatEmbed AllChatEmbed { get; set; } = new AllChatEmbed();
     [JsonPropertyName("Team Chat Embed")] public TeamChatEmbed TeamChatEmbed { get; set; } = new TeamChatEmbed();
@@ -30,7 +43,7 @@ public class AdminChat
 
 public class AllChatEmbed
 {
-    [JsonPropertyName("Content")] public string Content { get; set; } = "{Player.CountryEmoji} **[{Player.NameWithoutEmoji}](<{Player.CommunityUrl}>)**: {MESSAGE}";
+    [JsonPropertyName("Content")] public string Content { get; set; } = "{SILENCE_PREFIX}{GAG_PREFIX}{Player.CountryEmoji} **[{Player.NameWithoutEmoji}](<{Player.CommunityUrl}>)**: {MESSAGE}";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
     [JsonPropertyName("Description")] public string Description { get; set; } = "";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";
@@ -43,7 +56,7 @@ public class AllChatEmbed
 
 public class TeamChatEmbed
 {
-    [JsonPropertyName("Content")] public string Content { get; set; } = "{Player.CountryEmoji} [{Player.TeamShortName}] **[{Player.NameWithoutEmoji}](<{Player.CommunityUrl}>)**: {MESSAGE}";
+    [JsonPropertyName("Content")] public string Content { get; set; } = "{SILENCE_PREFIX}{GAG_PREFIX}{Player.CountryEmoji} [{Player.TeamShortName}] **[{Player.NameWithoutEmoji}](<{Player.CommunityUrl}>)**: {MESSAGE}";
     [JsonPropertyName("Title")] public string Title { get; set; } = "";
     [JsonPropertyName("Description")] public string Description { get; set; } = "";
     [JsonPropertyName("Fields")] public string Fields { get; set; } = "";

@@ -16,6 +16,7 @@ public class Config : BasePluginConfig
     [JsonPropertyName("Admin Flag")] public string AdminFlag { get; set; } = "@discord_utilities/report";
     [JsonPropertyName("Unreportable Flag")] public string UnreportableFlag { get; set; } = "@discord_utilities/antireport";
     [JsonPropertyName("Report Cooldown")] public int ReportCooldown { get; set; } = 60;
+    [JsonPropertyName("Target Report Cooldown")] public int TargetReportCooldown { get; set; } = 600;
     [JsonPropertyName("Report Command Method")] public int ReportMethod { get; set; } = 1;
     [JsonPropertyName("Report Reasons")] public string ReportReasons { get; set; } = "#CUSTOMREASON,Cheating,Trolling,AFK";
     [JsonPropertyName("Custom Reason Minimum Length")] public int ReasonLength { get; set; } = 5;
