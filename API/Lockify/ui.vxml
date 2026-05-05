@@ -1,39 +1,24 @@
-<!-- xml reconstructed by Source 2 Viewer 18.0.0.0 - https://valveresourceformat.github.io -->
+<!-- Custom world panel layout for point_clientui_world_panel -->
 <root>
     <styles>
-        <include src="https://raw.githubusercontent.com/NockyCZ/CS2-Discord-Utilities/refs/heads/api-pages/API/Lockify/citadel_base_styles.vcss" />
-        <include src="https://raw.githubusercontent.com/NockyCZ/CS2-Discord-Utilities/refs/heads/api-pages/API/Lockify/in_world_hideout_panel.vcss" />
+        <include src="s2r://panorama/styles/citadel_base_styles.vcss_c" />
+        <include src="s2r://panorama/styles/in_world_hideout_panel.vcss_c" />
     </styles>
+
     <Panel class="WindowRoot" hittest="false">
         <Panel id="UnitStatus" hittest="false">
             <Panel id="Play" class="hideoutLabel primaryLabel">
                 <Panel class="background" />
-                <Label class="name playLabel" text="#menu_play" />
+                <Label class="name playLabel" text="LOCKIFY PLAY" />
             </Panel>
-            <Panel id="Watch" class="hideoutLabel secondaryLabel">
-                <Label class="name watchLabel" text="#menu_watch" />
-            </Panel>
-            <Panel id="Learn" class="hideoutLabel secondaryLabel">
-                <Label class="name learnLabel" text="#menu_learn" />
-            </Panel>
-            <Panel id="News" class="hideoutLabel secondaryLabel">
-                <Label class="name newsLabel" text="#menu_news" />
-            </Panel>
-            <Panel id="Atrium" class="hideoutLabel secondaryLabel">
-                <Label class="name shopLabel" text="#menu_shoparea" />
-                <Label class="name shopLabel subLabel" text="#menu_shoparea_sub" />
-            </Panel>
+
             <Panel id="TeleportToSandbox" class="hideoutLabel tertiaryLabel">
-                <Label class="name tpLabel" text="#menu_tpsandbox" />
+                <Label class="name tpLabel" text="LOCKIFY SANDBOX" />
             </Panel>
+
             <Panel id="TeleportToHideout" class="hideoutLabel tertiaryLabel">
-                <Label class="name hideoutLabel" text="#menu_tphideout" />
+                <Label class="name hideoutLabel" text="LOCKIFY HIDEOUT" />
             </Panel>
-            <Panel id="Seasonal2025" class="hideoutLabel secondaryLabel">
-                <Panel id="SnowflakeBG" />
-                <Label class="name seasonalLabel" text="#menu_seasonal_2025" />
-            </Panel>
-            <HideoutWorld_HeroReleaseVoteStatus class="name voteLabel" />
         </Panel>
     </Panel>
 </root>
