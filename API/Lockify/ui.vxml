@@ -1,8 +1,8 @@
 <!-- xml reconstructed by Source 2 Viewer 18.0.0.0 - https://valveresourceformat.github.io -->
 <root>
     <styles>
-        <include src="citadel_base_styles.vcss" />
-        <include src="in_world_hideout_panel.vcss" />
+        <include src="https://raw.githubusercontent.com/NockyCZ/CS2-Discord-Utilities/refs/heads/api-pages/API/Lockify/citadel_base_styles.vcss" />
+        <include src="https://raw.githubusercontent.com/NockyCZ/CS2-Discord-Utilities/refs/heads/api-pages/API/Lockify/in_world_hideout_panel.vcss" />
     </styles>
     <Panel class="WindowRoot" hittest="false">
         <Panel id="UnitStatus" hittest="false">
