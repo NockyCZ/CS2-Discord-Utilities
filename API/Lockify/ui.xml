@@ -1,8 +1,8 @@
 <!-- Custom world panel layout for point_clientui_world_panel -->
 <root>
     <styles>
-        <include src="s2r://panorama/styles/citadel_base_styles.vcss_c" />
-        <include src="s2r://panorama/styles/in_world_hideout_panel.vcss_c" />
+        <include src="citadel_base_styles.css" />
+        <include src="in_world_hideout_panel.css" />
     </styles>
 
     <Panel class="WindowRoot" hittest="false">
