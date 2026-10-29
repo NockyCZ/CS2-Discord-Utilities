@@ -57,7 +57,7 @@ namespace RCON
                         {
                             var failedConfig = Config.RconFailedEmbed;
                             var embed = DiscordUtilities!.GetEmbedBuilderFromConfig(failedConfig, null);
-                            var failedContent = Config.RconReplyEmbed.Content;
+                            var failedContent = Config.RconFailedEmbed.Content;
                             DiscordUtilities!.SendRespondMessageToSlashCommand(command.InteractionId, failedContent, embed, null, Config.RconFailedEmbed.SilentResponse);
                             return;
                         }

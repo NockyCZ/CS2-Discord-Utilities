@@ -23,7 +23,6 @@ namespace DiscordUtilities
         {
             if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
             {
-                _ = LoadDiscordBOT();
                 databaseData = new DatabaseConnection
                 {
                     Server = Config.Database.Host,
@@ -32,34 +31,37 @@ namespace DiscordUtilities
                     Database = Config.Database.DatabaseName,
                     Password = Config.Database.Password,
                 };
-                
-                CreateDatabaseConnection().GetAwaiter().GetResult();
-                _ = LoadDiscordBOT();
 
-                if (string.IsNullOrEmpty(Config.ServerID) || !ulong.TryParse(Config.ServerID, out _))
-                {
-                    Perform_SendConsoleMessage("Invalid Discord Server ID!", ConsoleColor.Red);
-                }
-                else
-                {
-                    int counter = 0;
-                    while (!IsBotConnected)
-                    {
-                        counter++;
-                        if (counter > 5)
-                        {
-                            Perform_SendConsoleMessage("Discord BOT failed to connect!", ConsoleColor.Red);
-                            break;
-                        }
-                        else
-                            Perform_SendConsoleMessage("Loading Discord BOT...", ConsoleColor.DarkYellow);
-                        Thread.Sleep(3000);
-                    }
-                }
+                _ = InitializeAsync();
             }
             else
             {
                 Perform_SendConsoleMessage("You need to setup Database credentials in config", ConsoleColor.Red);
+            }
+        }
+        private async Task InitializeAsync()
+        {
+            await CreateDatabaseConnection();
+            _ = LoadDiscordBOT();
+
+            if (string.IsNullOrEmpty(Config.ServerID) || !ulong.TryParse(Config.ServerID, out _))
+            {
+                Perform_SendConsoleMessage("Invalid Discord Server ID!", ConsoleColor.Red);
+                return;
+            }
+
+            int counter = 0;
+            while (!IsBotConnected)
+            {
+                counter++;
+                if (counter > 5)
+                {
+                    Perform_SendConsoleMessage("Discord BOT failed to connect!", ConsoleColor.Red);
+                    break;
+                }
+                else
+                    Perform_SendConsoleMessage("Loading Discord BOT...", ConsoleColor.DarkYellow);
+                await Task.Delay(3000);
             }
         }
         public override void Load(bool hotReload)

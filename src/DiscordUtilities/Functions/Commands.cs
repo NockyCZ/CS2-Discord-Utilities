@@ -225,7 +225,7 @@ namespace DiscordUtilities
                 return;
             }
 
-            var targetRoleId = info.GetArg(1);
+            var targetRoleId = info.GetArg(2);
             if (string.IsNullOrEmpty(targetRoleId) || !ulong.TryParse(targetRoleId, out var roleId))
             {
                 info.ReplyToCommand($"[Discord Utilities] '{targetRoleId}' is not a valid Role ID!");
@@ -267,7 +267,7 @@ namespace DiscordUtilities
                 return;
             }
 
-            var targetRoleId = info.GetArg(1);
+            var targetRoleId = info.GetArg(2);
             if (string.IsNullOrEmpty(targetRoleId) || !ulong.TryParse(targetRoleId, out var roleId))
             {
                 info.ReplyToCommand($"[Discord Utilities] '{targetRoleId}' is not a valid Role ID!");

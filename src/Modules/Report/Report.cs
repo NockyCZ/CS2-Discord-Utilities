@@ -67,7 +67,7 @@ namespace Report
             if (reportsList.Count == 0 || Config.ReportExpiration == 0)
                 return HookResult.Continue;
 
-            foreach (var report in reportsList)
+            foreach (var report in reportsList.ToList())
             {
                 var data = report.Value;
                 TimeSpan difference = DateTime.Now - data.time;

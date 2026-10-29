@@ -27,52 +27,59 @@ namespace DiscordUtilities
                 if (messageComponents != null && messageComponents.Count() > 0)
                 {
                     List<Components.Builder> componentsList = new();
-                    foreach (var component in messageComponents)
+                    foreach (var row in messageComponents.OfType<ActionRowComponent>())
                     {
                         var ComponentsBuilder = new Components.Builder();
-                        if (component is ButtonComponent button)
+                        foreach (var component in row.Components)
                         {
-                            if (string.IsNullOrEmpty(button.Url))
+                            if (component is ButtonComponent button)
                             {
-                                var interactiveButton = new Components.InteractiveButtonsBuilder()
+                                if (string.IsNullOrEmpty(button.Url))
                                 {
-                                    CustomId = button.CustomId,
-                                    Label = button.Label,
-                                    Emoji = button.Emote.Name,
-                                    Color = (Components.ButtonColor)button.Style,
-                                };
+                                    ComponentsBuilder.InteractiveButtons ??= new();
+                                    ComponentsBuilder.InteractiveButtons.Add(new Components.InteractiveButtonsBuilder()
+                                    {
+                                        CustomId = button.CustomId,
+                                        Label = button.Label,
+                                        Emoji = button.Emote?.ToString() ?? string.Empty,
+                                        Color = (Components.ButtonColor)button.Style,
+                                    });
+                                }
+                                else
+                                {
+                                    ComponentsBuilder.LinkButtons ??= new();
+                                    ComponentsBuilder.LinkButtons.Add(new Components.LinkButtonsBuilder()
+                                    {
+                                        Label = button.Label,
+                                        URL = button.Url,
+                                        Emoji = button.Emote?.ToString() ?? string.Empty,
+                                    });
+                                }
                             }
-                            else
+                            else if (component is SelectMenuComponent selectMenu)
                             {
-                                var linkButton = new Components.LinkButtonsBuilder()
+                                var interactiveMenu = new Components.InteractiveMenusBuilder()
                                 {
-                                    Label = button.Label,
-                                    URL = button.Url,
-                                    Emoji = button.Emote.Name,
+                                    CustomId = selectMenu.CustomId,
+                                    Placeholder = selectMenu.Placeholder,
+                                    MinValues = selectMenu.MinValues,
+                                    MaxValues = selectMenu.MaxValues,
+                                    Options = new List<Components.InteractiveMenusOptions>()
                                 };
+                                interactiveMenu.Options.AddRange(selectMenu.Options.Select(option => new Components.InteractiveMenusOptions
+                                {
+                                    Label = option.Label,
+                                    Value = option.Value,
+                                    Description = option.Description,
+                                    Emoji = option.Emote?.ToString() ?? string.Empty
+                                }));
+                                ComponentsBuilder.InteractiveMenus ??= new();
+                                ComponentsBuilder.InteractiveMenus.Add(interactiveMenu);
                             }
                         }
-                        else if (component is SelectMenuComponent selectMenu)
-                        {
-                            var interactiveMenu = new Components.InteractiveMenusBuilder()
-                            {
-                                CustomId = selectMenu.CustomId,
-                                Placeholder = selectMenu.Placeholder,
-                                MinValues = selectMenu.MinValues,
-                                MaxValues = selectMenu.MaxValues,
-                                Options = new List<Components.InteractiveMenusOptions>()
-                            };
-                            interactiveMenu.Options.AddRange(selectMenu.Options.Select(option => new Components.InteractiveMenusOptions
-                            {
-                                Label = option.Label,
-                                Value = option.Value,
-                                Description = option.Description,
-                                Emoji = option.Emote.Name
-                            }));
-                        }
-
                         componentsList.Add(ComponentsBuilder);
                     }
+                    messageBuilders.Componenets = componentsList;
                 }
                 if (messageEmbeds != null && messageEmbeds.Count() > 0)
                 {

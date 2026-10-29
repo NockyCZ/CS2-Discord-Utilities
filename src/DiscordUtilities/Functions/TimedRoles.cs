@@ -74,7 +74,7 @@ namespace DiscordUtilities
         {
             var timedRoles = GetTimedRoles();
             bool updateFile = false;
-            foreach (var x in timedRoles)
+            foreach (var x in timedRoles.ToList())
             {
                 var rolesToRemove = x.Value.Where(x => x.Value < DateTime.Now).Select(x => x.Key).ToList();
                 if (rolesToRemove == null || rolesToRemove.Count == 0)
