@@ -14,7 +14,7 @@ namespace DiscordUtilities
     {
         public override string ModuleName => "Discord Utilities";
         public override string ModuleAuthor => "Nocky (SourceFactory.eu)";
-        public override string ModuleVersion => "2.1.0";
+        public override string ModuleVersion => "2.2.0";
         public void OnConfigParsed(DUConfig config)
         {
             Config = config;

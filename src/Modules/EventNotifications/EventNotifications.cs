@@ -18,7 +18,7 @@ namespace EventNotifications
     {
         public override string ModuleName => "[Discord Utilities] Event Notifications";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.4";
+        public override string ModuleVersion => "1.5";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }

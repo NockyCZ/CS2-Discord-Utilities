@@ -16,7 +16,7 @@ namespace ChatRelay
     {
         public override string ModuleName => "[Discord Utilities] Chat Relay";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.2";
+        public override string ModuleVersion => "1.3";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }

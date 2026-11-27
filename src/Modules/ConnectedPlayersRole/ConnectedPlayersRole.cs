@@ -12,7 +12,7 @@ namespace ConnectedPlayersRole
     {
         public override string ModuleName => "[Discord Utilities] Connected Players Role";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.3";
+        public override string ModuleVersion => "1.4";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }

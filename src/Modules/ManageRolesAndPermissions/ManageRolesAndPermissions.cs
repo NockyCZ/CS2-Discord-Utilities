@@ -14,7 +14,7 @@ namespace ManageRolesAndPermissions
     {
         public override string ModuleName => "[Discord Utilities] Manage Roles and Permissions";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.5";
+        public override string ModuleVersion => "1.6";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }

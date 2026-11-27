@@ -19,7 +19,7 @@ namespace Report
     {
         public override string ModuleName => "[Discord Utilities] Report System";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.4";
+        public override string ModuleVersion => "1.5";
         public IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public Dictionary<int, CCSPlayerController> performReport = new();
