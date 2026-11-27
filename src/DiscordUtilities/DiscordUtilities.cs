@@ -90,6 +90,8 @@ namespace DiscordUtilities
         }
         public override void Load(bool hotReload)
         {
+            Perform_SendConsoleMessage($"Version '{ModuleVersion}' has been loaded", ConsoleColor.Green);
+
             var DUApi = new DiscordUtilities();
             Capabilities.RegisterPluginCapability(DiscordUtilitiesAPI, () => DUApi);
 

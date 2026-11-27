@@ -10,18 +10,74 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 {
     public void CheckVersion(string moduleName, string moduleVersion)
     {
-        if (moduleVersions.ContainsKey(moduleName))
+        if (string.IsNullOrEmpty(moduleName) || string.IsNullOrEmpty(moduleVersion))
+            return;
+
+        // Modules only register here, all outdated versions are reported together in 'ReportOutdatedVersions'
+        installedModules[moduleName] = moduleVersion;
+
+        // A module that was loaded after the report (e.g. reloaded) is reported on its own
+        if (versionsReported && moduleVersions.TryGetValue(moduleName, out var latestVersion) && IsVersionOutdated(moduleVersion, latestVersion))
+            Perform_SendConsoleMessage($"Module '{moduleName.Replace(ModulePrefix, "")}' is outdated! ({moduleVersion} -> {latestVersion})", ConsoleColor.DarkRed);
+    }
+
+    private const string ModulePrefix = "[Discord Utilities] ";
+    private const string DownloadUrl = "https://github.com/NockyCZ/CS2-Discord-Utilities/releases";
+    private static volatile bool versionsReported;
+
+    // Only an older version is outdated, a newer one than the published list is not
+    private static bool IsVersionOutdated(string installedVersion, string latestVersion)
+    {
+        installedVersion = installedVersion.Trim();
+        latestVersion = latestVersion.Trim();
+
+        if (Version.TryParse(installedVersion, out var installed) && Version.TryParse(latestVersion, out var latest))
+            return installed < latest;
+
+        return !installedVersion.Equals(latestVersion);
+    }
+
+    private void ReportOutdatedVersions()
+    {
+        var latestVersions = moduleVersions;
+
+        string? outdatedMain = null;
+        if (latestVersions.TryGetValue("Main", out var latestMain) && IsVersionOutdated(ModuleVersion, latestMain))
+            outdatedMain = latestMain;
+
+        var outdatedModules = new List<string>();
+        foreach (var module in installedModules.OrderBy(m => m.Key))
         {
-            if (!moduleVersions[moduleName].Equals(moduleVersion))
-            {
-                var moduleWithoutPrefix = moduleName.Replace("[Discord Utilities] ","");
-                Console.WriteLine("====================================================================================");
-                Console.WriteLine("");
-                Perform_SendConsoleMessage($"Module '{moduleWithoutPrefix}' is outdated! (Latest Version: {moduleVersions[moduleName]})", ConsoleColor.DarkRed);
-                Console.WriteLine("");
-                Console.WriteLine("====================================================================================");
-            }
+            if (latestVersions.TryGetValue(module.Key, out var latestVersion) && IsVersionOutdated(module.Value, latestVersion))
+                outdatedModules.Add($"'{module.Key.Replace(ModulePrefix, "")}' ({module.Value} -> {latestVersion})");
         }
+
+        versionsReported = true;
+
+        var loadedModules = installedModules.OrderBy(m => m.Key).Select(m => $"'{m.Key.Replace(ModulePrefix, "")}' ({m.Value})").ToList();
+        if (loadedModules.Count > 0)
+            Perform_SendConsoleMessage($"Loaded modules ({loadedModules.Count}): {string.Join(", ", loadedModules)}", ConsoleColor.Green);
+
+        if (outdatedMain == null && outdatedModules.Count == 0)
+        {
+            Perform_SendConsoleMessage("The plugin and all modules are up to date", ConsoleColor.Green);
+            return;
+        }
+
+        // One block for the plugin and all modules
+        Console.WriteLine("====================================================================================");
+        Console.WriteLine("");
+        if (outdatedMain != null)
+            Perform_SendConsoleMessage($"Plugin is outdated! (Installed Version: {ModuleVersion}, Latest Version: {outdatedMain})", ConsoleColor.DarkRed);
+        if (outdatedModules.Count > 0)
+        {
+            Perform_SendConsoleMessage(outdatedModules.Count == 1 ? "Module is outdated!" : $"Modules are outdated! ({outdatedModules.Count})", ConsoleColor.DarkRed);
+            foreach (var line in outdatedModules)
+                Perform_SendConsoleMessage($" - {line}", ConsoleColor.DarkRed);
+        }
+        Perform_SendConsoleMessage($"Check: {DownloadUrl}", ConsoleColor.DarkRed);
+        Console.WriteLine("");
+        Console.WriteLine("====================================================================================");
     }
 
     public bool IsCustomMessageSaved(ulong messageId)

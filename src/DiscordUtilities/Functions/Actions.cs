@@ -39,7 +39,6 @@ namespace DiscordUtilities
 
         public async Task LoadVersions()
         {
-            moduleVersions.Clear();
             var client = httpClient;
             {
                 try
@@ -51,30 +50,24 @@ namespace DiscordUtilities
                     var versions = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseBody)!;
                     if (versions != null)
                     {
+                        // Built separately and swapped in, the dictionary is read from other threads
+                        var loadedVersions = new Dictionary<string, string>();
                         foreach (var module in versions)
                         {
                             string moduleName = module.Key;
                             if (!moduleName.Equals("Main"))
                                 moduleName = "[Discord Utilities] " + moduleName;
 
-                            moduleVersions.Add(moduleName, module.Value);
+                            loadedVersions[moduleName] = module.Value;
                         }
+                        moduleVersions = loadedVersions;
 
-                        if (moduleVersions.TryGetValue("Main", out var latestVersion))
-                        {
-                            if (!ModuleVersion.Trim().Equals(latestVersion.Trim()))
-                            {
-                                Console.WriteLine("====================================================================================");
-                                Console.WriteLine("");
-                                Perform_SendConsoleMessage($"Plugin is outdated! (Latest Version: {latestVersion})", ConsoleColor.DarkRed);
-                                Perform_SendConsoleMessage($"Check: https://github.com/NockyCZ/CS2-Discord-Utilities/", ConsoleColor.DarkRed);
-                                Console.WriteLine("");
-                                Console.WriteLine("====================================================================================");
-                            }
-                        }
+                        // Modules register their version in 'OnAllPluginsLoaded', give them time so everything is reported in one message
+                        await Task.Delay(3000);
+                        ReportOutdatedVersions();
                     }
                     else
-                        Perform_SendConsoleMessage($"Version je null", ConsoleColor.Red);
+                        Perform_SendConsoleMessage("The list of the latest versions is empty", ConsoleColor.Red);
 
                 }
                 catch (HttpRequestException ex)
