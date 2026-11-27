@@ -11,14 +11,32 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 {
     public void RemoveSavedCustomMessage(ulong messageId)
     {
-        if (savedMessages.ContainsKey(messageId))
-            savedMessages.Remove(messageId);
+        savedMessages.TryRemove(messageId, out _);
+    }
+
+    private const int MaxSavedMessages = 500;
+
+    // Saved messages are only removed by the module that saved them, so cap the cache and drop the oldest ones
+    private static void SaveCustomMessage(IUserMessage message)
+    {
+        savedMessages.TryAdd(message.Id, message);
+
+        int overflow = savedMessages.Count - MaxSavedMessages;
+        if (overflow <= 0)
+            return;
+
+        // Message IDs are snowflakes, the lowest ID is the oldest message
+        foreach (var messageId in savedMessages.Keys.OrderBy(id => id).Take(overflow).ToList())
+            savedMessages.TryRemove(messageId, out _);
     }
 
     public void RemoveAllUsersFromRole(string roleId)
     {
         if (!string.IsNullOrEmpty(roleId))
         {
+            if (IsProtectedLinkRole(roleId, "RemoveAllUsersFromRole"))
+                return;
+
             _ = RemoveAllUsersFromRoleAsync(ulong.Parse(roleId));
         }
     }
@@ -26,17 +44,13 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     {
         try
         {
-            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-            if (guild == null)
-            {
-                Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
-                throw new Exception($"Guild with id '{ServerId}' was not found!");
-            }
+            if (!TryGetGuild(out var guild))
+                return;
             var role = guild.GetRole(roleId);
             if (role == null)
             {
                 Perform_SendConsoleMessage($"Role with id '{roleId}' was not found! (RemoveAllUsersFromRole)", ConsoleColor.Red);
-                throw new Exception($"Role with id '{roleId}' was not found!");
+                return;
             }
 
             var users = role.Members;
@@ -102,7 +116,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while updating API Slash Commands: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while updating API Slash Commands: {ex.Message}");
         }
     }
 
@@ -131,7 +144,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                 if (BotClient.GetChannel(channelId) is not IMessageChannel channel)
                 {
                     Perform_SendConsoleMessage($"Invalid Channel ID '{channelId}'.", ConsoleColor.Red);
-                    throw new Exception($"Invalid Channel ID '{channelId}'");
+                    return;
                 }
                 await channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null);
                 if (IsDebug)
@@ -140,13 +153,12 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             else
             {
                 Perform_SendConsoleMessage("Failed to send a message to channel because BOT is not connected!", ConsoleColor.Red);
-                throw new Exception("Failed to send a message to channel because BOT is not connected!");
+                return;
             }
         }
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a message: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a message: {ex.Message}");
         }
     }
 
@@ -175,18 +187,15 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                 if (BotClient.GetChannel(channelId) is not IMessageChannel channel)
                 {
                     Perform_SendConsoleMessage($"Invalid Channel ID '{channelId}'.", ConsoleColor.Red);
-                    throw new Exception($"Invalid Channel ID '{channelId}'");
+                    return;
                 }
 
                 var message = await channel.SendMessageAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null);
                 if (message != null)
                 {
-                    Event_CustomMessageReceived(customId, message);
                     if (saveMessage)
-                    {
-                        if (!savedMessages.ContainsKey(message.Id))
-                            savedMessages.Add(message.Id, message);
-                    }
+                        SaveCustomMessage(message);
+                    Event_CustomMessageReceived(customId, message);
                 }
             }
             else
@@ -195,7 +204,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a custom message: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a custom message: {ex.Message}");
         }
     }
 
@@ -225,7 +233,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                 if (BotClient.GetChannel(channelId) is not IMessageChannel channel)
                 {
                     Perform_SendConsoleMessage($"Invalid Channel ID '{channelId}'.", ConsoleColor.Red);
-                    throw new Exception($"Invalid Channel ID '{channelId}'");
+                    return;
                 }
                 var message = await channel.GetMessageAsync(messageId) as IUserMessage;
                 if (message != null)
@@ -245,7 +253,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a response message: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a response message: {ex.Message}");
         }
     }
 
@@ -274,7 +281,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                 if (BotClient.GetChannel(channelId) is not IMessageChannel channel)
                 {
                     Perform_SendConsoleMessage($"Invalid Channel ID '{channelId}'.", ConsoleColor.Red);
-                    throw new Exception($"Invalid Channel ID '{channelId}'");
+                    return;
                 }
 
                 var message = await channel.GetMessageAsync(messageId) as IUserMessage;
@@ -300,7 +307,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while updating message: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while updating message: {ex.Message}");
         }
     }
 
@@ -326,7 +332,11 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     {
         try
         {
-            var interaction = savedInteractions[interactionId];
+            if (!savedInteractions.TryGetValue(interactionId, out var interaction))
+            {
+                Perform_SendConsoleMessage($"Interaction with ID '{interactionId}' was not found or has expired!", ConsoleColor.Red);
+                return;
+            }
 
             if (deleteOriginalInteraction)
             {
@@ -339,7 +349,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
                 await interaction.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null, ephemeral: silent);
             }
 
-            savedInteractions.Remove(interactionId);
+            savedInteractions.TryRemove(interactionId, out _);
 
             if (IsDebug)
                 Perform_SendConsoleMessage($"Respond message to Interaction was sent to interaction with ID '{interactionId}'", ConsoleColor.Cyan);
@@ -347,7 +357,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a Response message to Interaction: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a Response message to Interaction: {ex.Message}");
         }
     }
 
@@ -373,16 +382,19 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     {
         try
         {
-            var interaction = savedInteractions[interactionId];
+            if (!savedInteractions.TryGetValue(interactionId, out var interaction))
+            {
+                Perform_SendConsoleMessage($"Interaction with ID '{interactionId}' was not found or has expired!", ConsoleColor.Red);
+                return;
+            }
             await interaction.RespondAsync(text: string.IsNullOrEmpty(content) ? null : content, embed: IsEmbedValid(embed) ? embed.Build() : null, components: components != null ? components.Build() : null, ephemeral: silent);
-            savedInteractions.Remove(interactionId);
+            savedInteractions.TryRemove(interactionId, out _);
             if (IsDebug)
                 Perform_SendConsoleMessage($"Respond message to Slash Command was sent to interaction with ID '{interactionId}'", ConsoleColor.Cyan);
         }
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a Response message to Slash Command: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a Response message to Slash Command: {ex.Message}");
         }
     }
 
@@ -391,16 +403,19 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var modalToBuild = GetModalBuilder(Modal);
         try
         {
-            var interaction = savedInteractions[interactionId];
+            if (!savedInteractions.TryGetValue(interactionId, out var interaction))
+            {
+                Perform_SendConsoleMessage($"Interaction with ID '{interactionId}' was not found or has expired!", ConsoleColor.Red);
+                return;
+            }
             _ = interaction.RespondWithModalAsync(modalToBuild.Build());
-            savedInteractions.Remove(interactionId);
+            savedInteractions.TryRemove(interactionId, out _);
             if (IsDebug)
                 Perform_SendConsoleMessage($"Respond modal to Interaction was sent to interaction with ID '{interactionId}'", ConsoleColor.Cyan);
         }
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a Response modal to Interaction: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a Response modal to Interaction: {ex.Message}");
         }
     }
 
@@ -409,16 +424,19 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         var modalToBuild = GetModalBuilder(Modal);
         try
         {
-            var interaction = savedInteractions[interactionId];
+            if (!savedInteractions.TryGetValue(interactionId, out var interaction))
+            {
+                Perform_SendConsoleMessage($"Interaction with ID '{interactionId}' was not found or has expired!", ConsoleColor.Red);
+                return;
+            }
             _ = interaction.RespondWithModalAsync(modalToBuild.Build());
-            savedInteractions.Remove(interactionId);
+            savedInteractions.TryRemove(interactionId, out _);
             if (IsDebug)
                 Perform_SendConsoleMessage($"Respond modal to Slash Command was sent to interaction with ID '{interactionId}'", ConsoleColor.Cyan);
         }
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a Response modal to Slash Command: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a Response modal to Slash Command: {ex.Message}");
         }
     }
 
@@ -426,7 +444,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     {
         try
         {
-            var user = BotClient!.GetUser(userId);
+            var user = BotClient?.GetUser(userId);
             if (user == null)
             {
                 Perform_SendConsoleMessage($"'SendDirectMessage' - User with ID '{userId}' was not found on the Discord server!", ConsoleColor.DarkYellow);
@@ -456,7 +474,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while sending a Direct message: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred while sending a Direct message: {ex.Message}");
+            return false;
         }
     }
 

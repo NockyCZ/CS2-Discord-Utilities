@@ -6,7 +6,9 @@ using CounterStrikeSharp.API.Modules.Utils;
 using Discord;
 using DiscordUtilitiesAPI.Builders;
 using DiscordUtilitiesAPI.Helpers;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -207,17 +209,26 @@ namespace DiscordUtilities
             return component;
         }
 
+        // Discord rejects embeds over these limits and Discord.Net throws, so long text is cut instead
+        private static string TruncateForDiscord(string text, int maxLength)
+        {
+            if (text.Length <= maxLength)
+                return text;
+
+            return text.Substring(0, maxLength - 3) + "...";
+        }
+
         public EmbedBuilder GetEmbedBuilder(Embeds.Builder embedBuilder)
         {
             var embed = new EmbedBuilder();
             if (!string.IsNullOrEmpty(embedBuilder.Title))
             {
-                embed.WithTitle(embedBuilder.Title);
+                embed.WithTitle(TruncateForDiscord(embedBuilder.Title, EmbedBuilder.MaxTitleLength));
                 //Console.WriteLine("WithTitle");
             }
             if (!string.IsNullOrEmpty(embedBuilder.Description))
             {
-                embed.WithDescription(embedBuilder.Description);
+                embed.WithDescription(TruncateForDiscord(embedBuilder.Description, EmbedBuilder.MaxDescriptionLength));
                 //Console.WriteLine("WithDescription");
             }
             if (embedBuilder.ThumbnailUrl.Contains(".jpg") || embedBuilder.ThumbnailUrl.Contains(".png") || embedBuilder.ThumbnailUrl.Contains(".gif"))
@@ -232,7 +243,7 @@ namespace DiscordUtilities
             }
             if (!string.IsNullOrEmpty(embedBuilder.Footer))
             {
-                embed.WithFooter(embedBuilder.Footer);
+                embed.WithFooter(TruncateForDiscord(embedBuilder.Footer, EmbedFooterBuilder.MaxFooterTextLength));
                 //Console.WriteLine("WithFooter");
             }
             if (embedBuilder.FooterTimestamp)
@@ -243,9 +254,12 @@ namespace DiscordUtilities
 
             if (embedBuilder.fields.Count() > 0)
             {
-                foreach (var field in embedBuilder.fields)
+                foreach (var field in embedBuilder.fields.Take(EmbedBuilder.MaxFieldCount))
                 {
-                    embed.AddField(field.Title, field.Description, field.Inline);
+                    // Field name and value cannot be empty
+                    var fieldTitle = string.IsNullOrWhiteSpace(field.Title) ? "** **" : TruncateForDiscord(field.Title, EmbedFieldBuilder.MaxFieldNameLength);
+                    var fieldValue = string.IsNullOrWhiteSpace(field.Description) ? "** **" : TruncateForDiscord(field.Description, EmbedFieldBuilder.MaxFieldValueLength);
+                    embed.AddField(fieldTitle, fieldValue, field.Inline);
                 }
             }
             if (!string.IsNullOrEmpty(embedBuilder.Color))
@@ -253,7 +267,10 @@ namespace DiscordUtilities
                 var color = embedBuilder.Color;
                 if (color.StartsWith("#"))
                     color = color.Substring(1);
-                embed.WithColor(new Color(Convert.ToUInt32(color, 16)));
+                if (uint.TryParse(color, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var colorValue) && colorValue <= 0xFFFFFF)
+                    embed.WithColor(new Color(colorValue));
+                else
+                    Perform_SendConsoleMessage($"Invalid embed 'HEX Color' '{embedBuilder.Color}'!", ConsoleColor.Red);
                 //Console.WriteLine("WithColor");
             }
             return embed;
@@ -269,6 +286,46 @@ namespace DiscordUtilities
             return null;
         }
 
+        // Resolves the configured guild without throwing, the BOT may be disconnected or unloaded at any time
+        public static bool TryGetGuild([NotNullWhen(true)] out Discord.WebSocket.SocketGuild? guild)
+        {
+            guild = null;
+            var client = BotClient;
+            if (client == null)
+            {
+                Perform_SendConsoleMessage("Discord BOT is not connected!", ConsoleColor.Red);
+                return false;
+            }
+
+            if (!ulong.TryParse(ServerId, out var guildId))
+            {
+                Perform_SendConsoleMessage($"Invalid Discord Server ID '{ServerId}'!", ConsoleColor.Red);
+                return false;
+            }
+
+            guild = client.GetGuild(guildId);
+            if (guild == null)
+            {
+                Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+                return false;
+            }
+            return true;
+        }
+
+        public static bool TryGetSteamIdByDiscordId(ulong discordId, out ulong steamId)
+        {
+            foreach (var item in linkedPlayers)
+            {
+                if (item.Value == discordId)
+                {
+                    steamId = item.Key;
+                    return true;
+                }
+            }
+            steamId = 0;
+            return false;
+        }
+
         private string GetRandomCode(int length, bool onlyNumbers = false)
         {
             string chars;
@@ -277,12 +334,11 @@ namespace DiscordUtilities
             else
                 chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-            var random = new Random();
             var keyBuilder = new StringBuilder(length);
 
             for (int i = 0; i < length; i++)
             {
-                keyBuilder.Append(chars[random.Next(chars.Length)]);
+                keyBuilder.Append(chars[RandomNumberGenerator.GetInt32(chars.Length)]);
             }
 
             return keyBuilder.ToString();
@@ -293,14 +349,14 @@ namespace DiscordUtilities
             var randomString = GetRandomCode(code.Length + 20);
             StringBuilder encodedString = new StringBuilder(randomString);
 
-            Random random = new Random();
-            int[] positions = new int[code.Length];
+            // Filled with -1 so position 0 is not treated as already used
+            int[] positions = Enumerable.Repeat(-1, code.Length).ToArray();
             for (int i = 0; i < code.Length; i++)
             {
                 int position;
                 do
                 {
-                    position = random.Next(randomString.Length);
+                    position = RandomNumberGenerator.GetInt32(randomString.Length);
                 } while (Array.Exists(positions, x => x == position));
 
                 positions[i] = position;
@@ -651,12 +707,9 @@ namespace DiscordUtilities
 
         public static string RemoveEmoji(string input)
         {
-            Console.WriteLine($"input: {input}");
             string emojiPattern = @"[\p{So}]";
 
-            string result = Regex.Replace(input, emojiPattern, string.Empty);
-            Console.WriteLine($"return: {result}");
-            return result;
+            return Regex.Replace(input, emojiPattern, string.Empty);
         }
 
         private static TargetResult? GetTarget(CommandInfo info)
@@ -680,11 +733,11 @@ namespace DiscordUtilities
 
         private int GetPlayersCount()
         {
-            return Utilities.GetPlayers().Where(p => p.IsValid && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17).Count();
+            return Utilities.GetPlayers().Where(p => p.IsValid && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.Connected && p.SteamID.ToString().Length == 17).Count();
         }
         private int GetPlayersCountWithBots()
         {
-            return Utilities.GetPlayers().Where(p => p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected).Count();
+            return Utilities.GetPlayers().Where(p => p.IsValid && !p.IsHLTV && p.Connected == PlayerConnectedState.Connected).Count();
         }
         private int GetBotsCounts()
         {

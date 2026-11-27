@@ -51,7 +51,6 @@ namespace DiscordUtilities
             catch (Exception ex)
             {
                 Perform_SendConsoleMessage($"An error occurred while adding new Timed Role: '{ex.Message}'", ConsoleColor.Red);
-                throw new Exception($"An error occurred while adding new Timed Role: {ex.Message}");
             }
         }
 
@@ -66,13 +65,26 @@ namespace DiscordUtilities
             catch (Exception ex)
             {
                 Perform_SendConsoleMessage($"An error occurred while updating Timed Roles: '{ex.Message}'", ConsoleColor.Red);
-                throw new Exception($"An error occurred while updating Timed Roles: {ex.Message}");
             }
         }
 
         public void CheckExpiredTimedRoles()
         {
-            var timedRoles = GetTimedRoles();
+            // Without the BOT the roles cannot be removed, keep them in the file for the next check
+            if (BotClient == null || !IsBotConnected)
+                return;
+
+            Dictionary<string, Dictionary<string, DateTime>> timedRoles;
+            try
+            {
+                timedRoles = GetTimedRoles();
+            }
+            catch
+            {
+                // Already logged by GetTimedRoles
+                return;
+            }
+
             bool updateFile = false;
             foreach (var x in timedRoles.ToList())
             {
@@ -81,7 +93,12 @@ namespace DiscordUtilities
                     continue;
 
                 updateFile = true;
-                RemoveRolesFromUser(ulong.Parse(x.Key), rolesToRemove);
+                if (!ulong.TryParse(x.Key, out var timedUserId))
+                {
+                    Perform_SendConsoleMessage($"Invalid User ID '{x.Key}' in Timed Roles file!", ConsoleColor.Red);
+                    continue;
+                }
+                RemoveRolesFromUser(timedUserId, rolesToRemove);
 
                 foreach (var role in rolesToRemove)
                 {

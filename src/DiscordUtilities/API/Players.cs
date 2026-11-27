@@ -21,12 +21,8 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             return null;
         }
 
-        var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-        if (guild == null)
-        {
-            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
-            throw new Exception($"Guild with id '{ServerId}' was not found!");
-        }
+        if (!TryGetGuild(out var guild))
+            return null;
         var user = guild.GetUser(ulong.Parse(playerData[player.Slot].DiscordID));
         if (user == null)
         {
@@ -47,12 +43,8 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 
     public UserData? GetUserDataByUserID(ulong userId)
     {
-        var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-        if (guild == null)
-        {
-            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
-            throw new Exception($"Guild with id '{ServerId}' was not found!");
-        }
+        if (!TryGetGuild(out var guild))
+            return null;
         var user = guild.GetUser(userId);
         if (user == null)
         {
@@ -73,12 +65,8 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 
     public void AddRolesToUser(ulong userId, List<string> rolesIds)
     {
-        var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-        if (guild == null)
-        {
-            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
-            throw new Exception($"Guild with id '{ServerId}' was not found!");
-        }
+        if (!TryGetGuild(out var guild))
+            return;
         var socketUser = guild.GetUser(userId);
         if (socketUser == null)
         {
@@ -113,18 +101,40 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while adding roles: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred when adding roles: {ex.Message}");
         }
+    }
+
+    private static readonly HashSet<string> linkRoleWarnings = new();
+
+    // The link role is owned by the Link system (added on link/join, removed on unlink).
+    // Modules and timed roles must not be able to strip it from linked users.
+    private static bool IsProtectedLinkRole(string roleId, string source)
+    {
+        if (string.IsNullOrEmpty(LinkRoleId) || roleId == null || roleId.Trim() != LinkRoleId)
+            return false;
+
+        bool firstWarning;
+        lock (linkRoleWarnings)
+        {
+            firstWarning = linkRoleWarnings.Add(source);
+        }
+
+        if (firstWarning)
+            Perform_SendConsoleMessage($"'{source}' - Role '{roleId}' is used as 'Link Role ID' and will not be removed! Use a different role in your modules (e.g. 'Connected Players Role') or timed roles.", ConsoleColor.DarkYellow);
+        return true;
     }
 
     public void RemoveRolesFromUser(ulong userId, List<string> rolesIds)
     {
-        var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-        if (guild == null)
+        if (rolesIds.Any(id => IsProtectedLinkRole(id, "RemoveRolesFromUser")))
         {
-            Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
-            throw new Exception($"Guild with id '{ServerId}' was not found!");
+            rolesIds = rolesIds.Where(id => !IsProtectedLinkRole(id, "RemoveRolesFromUser")).ToList();
+            if (rolesIds.Count == 0)
+                return;
         }
+
+        if (!TryGetGuild(out var guild))
+            return;
         var socketUser = guild.GetUser(userId);
         if (socketUser == null)
         {
@@ -160,7 +170,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         catch (Exception ex)
         {
             Perform_SendConsoleMessage($"An error occurred while removing roles: '{ex.Message}'", ConsoleColor.Red);
-            throw new Exception($"An error occurred when removing roles: {ex.Message}");
         }
     }
 
@@ -176,6 +185,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 
     public Dictionary<ulong, ulong> GetLinkedPlayers()
     {
-        return linkedPlayers;
+        return new Dictionary<ulong, ulong>(linkedPlayers);
     }
 }

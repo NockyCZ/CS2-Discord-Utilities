@@ -75,7 +75,7 @@ namespace Report
             }
             else
             {
-                foreach (var p in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p != player && DiscordUtilities!.IsPlayerDataLoaded(p) && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.UnreportableFlag)))
+                foreach (var p in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p != player && DiscordUtilities!.IsPlayerDataLoaded(p) && p.Connected == PlayerConnectedState.Connected && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.UnreportableFlag)))
                     Menu.AddMenuOption(p.PlayerName, (player, target) => OnSelectPlayer_ReportMenu(player, p));
             }
 

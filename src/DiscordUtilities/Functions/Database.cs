@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
@@ -64,7 +65,7 @@ namespace DiscordUtilities
             }
         }
 
-        public async Task UpdateOrLoadPlayerData(CCSPlayerController player, string SteamID, int playedTime, bool load = true)
+        public async Task UpdateOrLoadPlayerData(CCSPlayerController player, string SteamID, int playedTime, bool load = true, string ipAddress = "")
         {
             try
             {
@@ -119,9 +120,14 @@ namespace DiscordUtilities
                                     var firstJoin = reader.GetDateTime("firstjoin");
                                     var lastSeen = reader.GetDateTime("lastseen");
 
+                                    // Looked up here (thread pool) with the IP captured on the game thread, opening the GeoIP database is file I/O
+                                    string[]? country = null;
+                                    if (!string.IsNullOrEmpty(ipAddress) && ulong.TryParse(SteamID, out var countrySteamId))
+                                        country = LookupPlayerCountry(ipAddress, countrySteamId);
+
                                     Server.NextFrame(() =>
                                     {
-                                        if (playerData.ContainsKey(player.Slot))
+                                        if (player.IsValid && player.AuthorizedSteamID != null && playerData.ContainsKey(player.Slot))
                                         {
                                             playerData[player.Slot].PlayedTime = time;
                                             playerData[player.Slot].FirstJoin = firstJoin;
@@ -129,15 +135,17 @@ namespace DiscordUtilities
 
                                             if (Config.Link.Enabled)
                                             {
-                                                if (linkedPlayers.ContainsKey(player.AuthorizedSteamID!.SteamId64))
+                                                if (linkedPlayers.TryGetValue(player.AuthorizedSteamID!.SteamId64, out var linkedDiscordId))
                                                 {
                                                     if (playerData.ContainsKey(player.Slot))
                                                         playerData[player.Slot].IsLinked = true;
-                                                    _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), linkedPlayers[player.AuthorizedSteamID.SteamId64]);
+                                                    // Without the bot it is done later, on the first 'Ready' (LoadConnectedLinkedPlayers)
+                                                    if (IsBotConnected)
+                                                        _ = LoadPlayerData(player.AuthorizedSteamID.SteamId64.ToString(), linkedDiscordId);
                                                 }
                                             }
-                                            string IpAddress = player.IpAddress!.Split(":")[0];
-                                            LoadPlayerCountry(IpAddress, player.AuthorizedSteamID!.SteamId64);
+                                            if (country != null)
+                                                UpdatePlayerCountry(player.AuthorizedSteamID!.SteamId64, country);
                                             PlayerDataLoaded(player);
                                         }
                                     });
@@ -172,9 +180,8 @@ namespace DiscordUtilities
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }
-                if (!linkedPlayers.ContainsKey(ulong.Parse(steamid)))
+                if (linkedPlayers.TryAdd(ulong.Parse(steamid), ulong.Parse(discordid)))
                 {
-                    linkedPlayers.Add(ulong.Parse(steamid), ulong.Parse(discordid));
                     Server.NextFrame(() =>
                     {
                         var player = Utilities.GetPlayerFromSteamId(ulong.Parse(steamid));
@@ -200,7 +207,8 @@ namespace DiscordUtilities
 
         public static async Task LoadLinkedPlayers()
         {
-            linkedPlayers.Clear();
+            // Loaded into a new collection and swapped in, so players are never seen as unlinked during a refresh
+            var loadedPlayers = new ConcurrentDictionary<ulong, ulong>();
             try
             {
                 using (var connection = GetConnection())
@@ -215,12 +223,13 @@ namespace DiscordUtilities
                             {
                                 string steamid = reader.GetString("steamid");
                                 string discordid = reader.GetString("discordid");
-                                if (!linkedPlayers.ContainsKey(ulong.Parse(steamid)))
-                                    linkedPlayers.Add(ulong.Parse(steamid), ulong.Parse(discordid));
+                                if (ulong.TryParse(steamid, out var steamId64) && ulong.TryParse(discordid, out var discordId64))
+                                    loadedPlayers.TryAdd(steamId64, discordId64);
                             }
                         }
                     }
                 }
+                linkedPlayers = loadedPlayers;
             }
             catch (Exception ex)
             {
@@ -242,8 +251,7 @@ namespace DiscordUtilities
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }
-                if (linkedPlayers.ContainsKey(ulong.Parse(steamid)))
-                    linkedPlayers.Remove(ulong.Parse(steamid));
+                linkedPlayers.TryRemove(ulong.Parse(steamid), out _);
             }
             catch (Exception ex)
             {

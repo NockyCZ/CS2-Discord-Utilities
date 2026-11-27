@@ -52,7 +52,7 @@ namespace RCON
                     var requiredRoles = Config.AdminRolesId.Trim().Split(',').ToList();
                     if (requiredRoles != null && requiredRoles.Count > 0)
                     {
-                        bool hasPermission = requiredRoles.Count(role => user.RolesIds.Contains(ulong.Parse(role))) > 0;
+                        bool hasPermission = requiredRoles.Any(role => ulong.TryParse(role.Trim(), out var roleId) && user.RolesIds.Contains(roleId));
                         if (!hasPermission)
                         {
                             var failedConfig = Config.RconFailedEmbed;
@@ -65,7 +65,7 @@ namespace RCON
                 }
 
                 var options = command.OptionsData;
-                string[] data = new string[2];
+                string?[] data = new string?[2];
                 foreach (var option in options)
                 {
                     if (option.Name == Config.ServerOptionName)
@@ -77,12 +77,22 @@ namespace RCON
                         data[0] = option.Value;
                     }
                 }
-                if (data[1] != Config.Server)
+                var rconCommand = data[0];
+                var rconServer = data[1];
+                if (string.IsNullOrEmpty(rconCommand) || string.IsNullOrEmpty(rconServer))
                 {
-                    if (!data[1].Equals("All"))
+                    if (DiscordUtilities!.Debug())
+                        DiscordUtilities.SendConsoleMessage("Slash command is missing the command or the server option! (RCON)", MessageType.Debug);
+                    return;
+                }
+
+                rconServer = rconServer.Trim();
+                if (rconServer != Config.Server.Trim())
+                {
+                    if (!rconServer.Equals("All"))
                     {
                         if (DiscordUtilities!.Debug())
-                            DiscordUtilities.SendConsoleMessage($"This server is not '{data[1]}'! (RCON)", MessageType.Debug);
+                            DiscordUtilities.SendConsoleMessage($"Command ignored: it was sent to the server '{rconServer}', but 'Server' in the config of this server is '{Config.Server}' (RCON)", MessageType.Debug);
                         return;
                     }
                 }
@@ -90,8 +100,8 @@ namespace RCON
                 var replaceVariablesBuilder = new ReplaceVariables.Builder
                 {
                     CustomVariables = new Dictionary<string, string>{
-                            { "{COMMAND}", data[0] },
-                            { "{SERVER}", data[1] },
+                            { "{COMMAND}", rconCommand },
+                            { "{SERVER}", rconServer },
                         },
                 };
                 var config = Config.RconReplyEmbed;
@@ -99,7 +109,7 @@ namespace RCON
                 var content = DiscordUtilities.ReplaceVariables(Config.RconReplyEmbed.Content, replaceVariablesBuilder);
                 content = DiscordUtilities.ReplaceVariables(content, replaceVariablesBuilder);
 
-                Server.ExecuteCommand(data[0]);
+                Server.ExecuteCommand(rconCommand);
                 DiscordUtilities.SendRespondMessageToSlashCommand(command.InteractionId, content, embedBuider, null, Config.RconReplyEmbed.SilentResponse);
 
             }
@@ -114,7 +124,9 @@ namespace RCON
             };
 
             var optionChoices = new List<Commands.SlashCommandOptionChoices>();
-            string[] Servers = Config.ServerList.Trim().Split(',');
+            string[] Servers = Config.ServerList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (!Servers.Contains(Config.Server.Trim()))
+                DiscordUtilities?.SendConsoleMessage($"'Server' ('{Config.Server}') is not in 'Servers List' ('{Config.ServerList}'), this server cannot be selected in the Slash Command! (RCON)", MessageType.Error);
             foreach (var server in Servers)
             {
                 var choice = new Commands.SlashCommandOptionChoices

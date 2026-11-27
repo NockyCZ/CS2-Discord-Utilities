@@ -30,6 +30,8 @@ namespace ServerStatus
             GetDiscordUtilitiesEventSender().DiscordUtilitiesEventHandlers -= DiscordUtilitiesEventHandler;
         }
 
+        private CounterStrikeSharp.API.Modules.Timers.Timer? statusTimer;
+
         private void OnBotLoaded()
         {
             if (string.IsNullOrEmpty(Config.MessageID))
@@ -43,7 +45,15 @@ namespace ServerStatus
                 if (DiscordUtilities!.Debug())
                     DiscordUtilities.SendConsoleMessage($"Starting Repeateable Timer ('{Config.UpdateTimer} secs') for the 'Server Status' update.", MessageType.Debug);
 
-                AddTimer(Config.UpdateTimer, () =>
+                if (!ulong.TryParse(Config.MessageID, out var messageId) || !ulong.TryParse(Config.ChannelID, out var channelId))
+                {
+                    DiscordUtilities!.SendConsoleMessage($"Invalid 'Message ID' '{Config.MessageID}' or 'Channel ID' '{Config.ChannelID}'! (Server Status)", MessageType.Error);
+                    return;
+                }
+
+                // Only one update timer may run, this method is called again after the status message is created
+                statusTimer?.Kill();
+                statusTimer = AddTimer(Config.UpdateTimer, () =>
                 {
                     var replaceVariablesBuilder = new ReplaceVariables.Builder
                     {
@@ -101,7 +111,7 @@ namespace ServerStatus
                     }
                     componentsBuilder.InteractiveButtons = Buttons;
 
-                    DiscordUtilities!.UpdateMessage(ulong.Parse(Config.MessageID), ulong.Parse(Config.ChannelID), content, embedBuider, componentsBuilder);
+                    DiscordUtilities!.UpdateMessage(messageId, channelId, content, embedBuider, componentsBuilder);
                 }, TimerFlags.REPEAT);
             }
         }
@@ -123,7 +133,9 @@ namespace ServerStatus
         {
             if (customId.Equals("serverstatus"))
             {
-                string filePath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/DU_ServerStatus/DU_ServerStatus.json";
+                // <css>/plugins/<Plugin> -> <css>/configs/plugins/<Plugin>/<Plugin>.json
+                string pluginName = Path.GetFileName(ModuleDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                string filePath = Path.GetFullPath(Path.Combine(ModuleDirectory, "..", "..", "configs", "plugins", pluginName, $"{pluginName}.json"));
                 try
                 {
                     string jsonContent = File.ReadAllText(filePath);
@@ -212,8 +224,18 @@ namespace ServerStatus
             }
             componentsBuilder.InteractiveButtons = Buttons;
 
-            DiscordUtilities!.SendCustomMessageToChannel("serverstatus", ulong.Parse(Config.ChannelID), content, embedBuider, componentsBuilder);
+            if (TryGetChannelId(Config.ChannelID, "Server Status", out var channelId))
+                DiscordUtilities!.SendCustomMessageToChannel("serverstatus", channelId, content, embedBuider, componentsBuilder);
         }
+        private bool TryGetChannelId(string value, string section, out ulong channelId)
+        {
+            if (ulong.TryParse(value, out channelId))
+                return true;
+
+            DiscordUtilities!.SendConsoleMessage($"Invalid 'Channel ID' '{value}'! ({section})", MessageType.Error);
+            return false;
+        }
+
         private IDiscordUtilitiesAPI GetDiscordUtilitiesEventSender()
         {
             if (DiscordUtilities is not null)

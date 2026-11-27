@@ -71,9 +71,31 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
         });
     }
 
+    // Discord interaction tokens are valid for 15 minutes, after that nobody can respond to them
+    private const int InteractionLifetimeMinutes = 15;
+
+    private static int SaveInteraction(SocketInteraction interaction)
+    {
+        var now = DateTimeOffset.UtcNow;
+        foreach (var item in savedInteractions)
+        {
+            if ((now - item.Value.CreatedAt).TotalMinutes > InteractionLifetimeMinutes)
+                savedInteractions.TryRemove(item.Key, out _);
+        }
+
+        int interactionId;
+        do
+        {
+            interactionId = Random.Shared.Next(100000, 1000000);
+        }
+        while (!savedInteractions.TryAdd(interactionId, interaction));
+
+        return interactionId;
+    }
+
     public void Event_SlashCommand(SocketSlashCommand command)
     {
-        var interactionId = int.Parse(GetRandomCode(6, true));
+        var interactionId = SaveInteraction(command);
 
         List<CommandOptionsData> optionsData = new();
         foreach (var option in command.Data.Options)
@@ -122,9 +144,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             ID = user != null ? user.Id : command.User.Id,
             RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
-
-        if (!savedInteractions.ContainsKey(interactionId))
-            savedInteractions.Add(interactionId, command);
 
         Server.NextFrame(() =>
         {
@@ -201,7 +220,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
     public void Event_ModalSubmited(SocketInteraction interaction)
     {
         var modalInteraction = (SocketModal)interaction;
-        var interactionId = int.Parse(GetRandomCode(6, true));
+        var interactionId = SaveInteraction(modalInteraction);
 
         ulong? guildId = interaction.GuildId != null ? interaction.GuildId.Value : null;
 
@@ -231,9 +250,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
 
-        if (!savedInteractions.ContainsKey(interactionId))
-            savedInteractions.Add(interactionId, modalInteraction);
-
         Server.NextFrame(() =>
         {
             DiscordUtilitiesAPI.Get()?.TriggerEvent(new ModalSubmited(modalData, userData));
@@ -244,7 +260,7 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
 
     public void Event_InteractionCreated(SocketInteraction interaction, SocketMessageComponent component)
     {
-        var interactionId = int.Parse(GetRandomCode(6, true));
+        var interactionId = SaveInteraction(interaction);
         var message = component.Message;
         ulong? guildId = interaction.GuildId != null ? interaction.GuildId.Value : null;
         ulong? messageId = message != null ? message.Id : null;
@@ -269,9 +285,6 @@ public partial class DiscordUtilities : IDiscordUtilitiesAPI
             ID = user != null ? user.Id : interaction.User.Id,
             RolesIds = user != null ? user.Roles.Select(role => role.Id).ToList() : new(),
         };
-
-        if (!savedInteractions.ContainsKey(interactionId))
-            savedInteractions.Add(interactionId, interaction);
 
         Server.NextFrame(() =>
         {

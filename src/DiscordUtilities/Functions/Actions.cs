@@ -9,10 +9,12 @@ namespace DiscordUtilities
 {
     public partial class DiscordUtilities
     {
+        private static readonly HttpClient httpClient = new() { Timeout = TimeSpan.FromSeconds(15) };
+
         public async Task LoadMapImages()
         {
             mapImagesList.Clear();
-            using (HttpClient client = new HttpClient())
+            var client = httpClient;
             {
                 try
                 {
@@ -38,7 +40,7 @@ namespace DiscordUtilities
         public async Task LoadVersions()
         {
             moduleVersions.Clear();
-            using (HttpClient client = new HttpClient())
+            var client = httpClient;
             {
                 try
                 {
@@ -90,7 +92,9 @@ namespace DiscordUtilities
         {
             customConditions.Clear();
             customVariables.Clear();
-            string filePath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/DiscordUtilities/DiscordUtilities.json";
+            // <css>/plugins/<Plugin> -> <css>/configs/plugins/<Plugin>/<Plugin>.json
+            string pluginName = Path.GetFileName(ModuleDirectory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            string filePath = Path.GetFullPath(Path.Combine(ModuleDirectory, "..", "..", "configs", "plugins", pluginName, $"{pluginName}.json"));
             if (File.Exists(filePath))
             {
                 try
@@ -118,7 +122,7 @@ namespace DiscordUtilities
                             else
                             {
                                 Perform_SendConsoleMessage($"Invalid Custom Variable Name '{item.Key}'", ConsoleColor.Red);
-                                customConditions.Remove(item.Key);
+                                customConditions.Remove($"[{item.Key}]");
                             }
                         }
                     }
@@ -128,43 +132,76 @@ namespace DiscordUtilities
                 catch (Exception ex)
                 {
                     Perform_SendConsoleMessage($"An error occurred while loading the Custom Variables: '{ex.Message}'", ConsoleColor.Red);
-                    throw new Exception($"An error occurred while loading the Custom Variables: {ex.Message}");
                 }
             }
         }
+        private static bool linkRoleMissingReported;
+
         private async Task LoadPlayerData(string steamid, ulong discordID)
         {
-            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-            if (guild == null)
+            try
             {
-                Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
-                return;
-            }
-            var user = guild.GetUser(discordID);
-            if (user == null)
-            {
-                await RemovePlayerData(steamid);
-                Perform_SendConsoleMessage($"User with ID '{discordID}' was not found! Player has been removed from the Linked players.", ConsoleColor.DarkYellow);
-                return;
-            }
+                if (!ulong.TryParse(steamid, out var steamId64))
+                    return;
 
-            await PerformLinkRole(user, guild.GetRole(ulong.Parse(Config.Link.LinkDiscordSettings.LinkRole)));
-            LoadPlayerDiscordData(ulong.Parse(steamid), discordID);
+                var client = BotClient;
+                if (client == null || !TryGetGuild(out var guild))
+                    return;
 
-            Server.NextFrame(() =>
+                var user = guild.GetUser(discordID);
+                if (user == null)
+                {
+                    // The member cache can be incomplete (right after a restart, or without the 'Server Members Intent'),
+                    // so ask Discord directly before treating the link as dead.
+                    var restUser = await client.Rest.GetGuildUserAsync(guild.Id, discordID);
+                    if (restUser == null)
+                    {
+                        await RemovePlayerData(steamid);
+                        Perform_SendConsoleMessage($"User with ID '{discordID}' is no longer on the Discord server! Player has been removed from the Linked players.", ConsoleColor.DarkYellow);
+                        return;
+                    }
+
+                    if (!guild.HasAllMembers)
+                        await guild.DownloadUsersAsync();
+
+                    user = guild.GetUser(discordID);
+                    if (user == null)
+                    {
+                        Perform_SendConsoleMessage($"User with ID '{discordID}' is on the Discord server but could not be loaded yet (Link). Check that the 'Server Members Intent' is enabled.", ConsoleColor.DarkYellow);
+                        return;
+                    }
+                }
+
+                var linkRoleValue = Config.Link.LinkDiscordSettings.LinkRole;
+                if (!string.IsNullOrWhiteSpace(linkRoleValue))
+                {
+                    var linkRole = ulong.TryParse(linkRoleValue.Trim(), out var linkRoleId) ? guild.GetRole(linkRoleId) : null;
+                    if (linkRole != null)
+                        await PerformLinkRole(user, linkRole);
+                    else if (!linkRoleMissingReported)
+                    {
+                        // Reported once, not on every player connect
+                        linkRoleMissingReported = true;
+                        Perform_SendConsoleMessage($"Role with id '{linkRoleValue}' was not found on the Discord server, the Link role will not be added! Check 'Link Role ID' in config.", ConsoleColor.Red);
+                    }
+                }
+
+                Server.NextFrame(() =>
+                {
+                    LoadPlayerDiscordData(steamId64, discordID);
+                    PerformLinkPermission(steamId64);
+                });
+            }
+            catch (Exception ex)
             {
-                PerformLinkPermission(ulong.Parse(steamid));
-            });
+                Perform_SendConsoleMessage($"An error occurred while loading linked player data: '{ex.Message}'", ConsoleColor.Red);
+            }
         }
 
         private void LoadPlayerDiscordData(ulong steamid, ulong discordid)
         {
-            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-            if (guild == null)
-            {
-                Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+            if (!TryGetGuild(out var guild))
                 return;
-            }
             var user = guild.GetUser(discordid);
             if (user == null)
                 return;
@@ -172,8 +209,7 @@ namespace DiscordUtilities
             var target = GetTargetBySteamID64(steamid);
             if (target != null)
             {
-                var p = playerData[target.Slot];
-                if (p != null)
+                if (playerData.TryGetValue(target.Slot, out var p) && p != null)
                 {
                     p.DiscordGlobalname = user.GlobalName;
                     p.DiscordDisplayName = user.DisplayName;
@@ -184,22 +220,66 @@ namespace DiscordUtilities
                 LinkedUserLoaded(user, target);
             }
         }
-        private void LoadPlayerCountry(string IpAddress, ulong steamid)
+        private const string GeoDatabaseFile = "GeoLite2-Country.mmdb";
+        private static bool geoDatabaseMissingReported;
+
+        // The plugin folder is checked first, then '<css>/configs/geoip/' where some CounterStrikeSharp builds keep
+        // an automatically updated copy. When both exist, the most recently written file is used.
+        private string? GetGeoDatabasePath()
         {
             try
             {
-                using (var reader = new DatabaseReader(ModuleDirectory + "/GeoLite2-Country.mmdb"))
+                var pluginFile = Path.Combine(ModuleDirectory, GeoDatabaseFile);
+                var sharedFile = Path.GetFullPath(Path.Combine(ModuleDirectory, "..", "..", "configs", "geoip", GeoDatabaseFile));
+
+                bool pluginExists = File.Exists(pluginFile);
+                bool sharedExists = File.Exists(sharedFile);
+                if (pluginExists && sharedExists)
+                    return File.GetLastWriteTimeUtc(sharedFile) > File.GetLastWriteTimeUtc(pluginFile) ? sharedFile : pluginFile;
+                if (pluginExists)
+                    return pluginFile;
+                if (sharedExists)
+                    return sharedFile;
+            }
+            catch (Exception ex)
+            {
+                if (IsDebug)
+                    Perform_SendConsoleMessage($"An error occurred while searching for '{GeoDatabaseFile}': '{ex.Message}'", ConsoleColor.Cyan);
+            }
+            return null;
+        }
+
+        // Does not touch any game API, so it can run outside of the game thread.
+        // Returns [country name, ISO code] or null when the country is unknown.
+        private string[]? LookupPlayerCountry(string IpAddress, ulong steamid)
+        {
+            var geoDatabasePath = GetGeoDatabasePath();
+            if (geoDatabasePath == null)
+            {
+                // Reported once, not on every player connect
+                if (!geoDatabaseMissingReported)
+                {
+                    geoDatabaseMissingReported = true;
+                    Perform_SendConsoleMessage($"File '{GeoDatabaseFile}' was not found, player country variables will be empty. Copy it from the release package to '{ModuleDirectory}'", ConsoleColor.DarkYellow);
+                }
+                return null;
+            }
+
+            try
+            {
+                using (var reader = new DatabaseReader(geoDatabasePath))
                 {
                     var response = reader.Country(IpAddress);
                     string[] country = new string[2];
                     country[0] = response.Country.Name!;
                     country[1] = response.Country.IsoCode!;
-                    UpdatePlayerCountry(steamid, country);
+                    return country;
                 }
             }
             catch (AddressNotFoundException ex)
             {
-                Perform_SendConsoleMessage($"IP Adress '{ex}' was not found.", ConsoleColor.Red);
+                if (IsDebug)
+                    Perform_SendConsoleMessage($"Country of the player '{steamid}' was not found in '{GeoDatabaseFile}': '{ex.Message}'", ConsoleColor.Cyan);
             }
             catch (GeoIP2Exception ex)
             {
@@ -209,18 +289,19 @@ namespace DiscordUtilities
             {
                 Perform_SendConsoleMessage($"An error occurred while searching IP adress: '{ex.Message}'.", ConsoleColor.Red);
             }
+            return null;
         }
 
         private void UpdateServerData()
         {
-            var timelimit = ConVar.Find("mp_timelimit")!.GetPrimitiveValue<float>() * 60;
+            var timelimit = (ConVar<float>.Find("mp_timelimit")?.Value ?? 0f) * 60;
             var gameStart = GameRules().GameStartTime;
             var currentTime = Server.CurrentTime;
 
             var timeleft = (int)timelimit - (int)(currentTime - gameStart);
             TimeSpan time = TimeSpan.FromSeconds(timeleft);
 
-            serverData.Name = ConVar.Find("hostname")!.StringValue;
+            serverData.Name = ConVar<string>.Find("hostname")?.Value ?? serverData.Name;
             serverData.Timeleft = $"{time:mm\\:ss}";
             serverData.OnlinePlayers = GetPlayersCount().ToString();
             serverData.OnlinePlayersAndBots = GetPlayersCountWithBots().ToString();

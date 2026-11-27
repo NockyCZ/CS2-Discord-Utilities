@@ -16,12 +16,14 @@ namespace DiscordUtilities
         public static DatabaseConnection? databaseData;
         public static ServerData serverData = new ServerData();
         public static bool IsBotConnected;
+        public static volatile string BotConnectError = "";
+        public static volatile bool BotConnectFatal;
         public static bool IsDbConnected;
         public static bool IsDebug;
         public static bool UseCustomVariables;
         public static string ServerId = "";
+        public static string LinkRoleId = "";
         public static string DateFormat = "";
         public static string LastBotActivityText = "";
-        public static DateTime LastInteractionTime = DateTime.Now;
     }
 }

@@ -1,4 +1,4 @@
-﻿﻿using CounterStrikeSharp.API;
+﻿﻿﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using Discord;
@@ -21,7 +21,27 @@ namespace DiscordUtilities
         }
         public override void OnAllPluginsLoaded(bool hotReload)
         {
-            if (!string.IsNullOrEmpty(Config.Database.Password) && !string.IsNullOrEmpty(Config.Database.Host) && !string.IsNullOrEmpty(Config.Database.DatabaseName) && !string.IsNullOrEmpty(Config.Database.User))
+            // Every missing value is reported at once, so the config does not have to be fixed one error at a time
+            var missingDatabase = new List<string>();
+            if (string.IsNullOrWhiteSpace(Config.Database.Host)) missingDatabase.Add("Host");
+            if (string.IsNullOrWhiteSpace(Config.Database.User)) missingDatabase.Add("User");
+            if (string.IsNullOrWhiteSpace(Config.Database.DatabaseName)) missingDatabase.Add("Database");
+            if (string.IsNullOrEmpty(Config.Database.Password)) missingDatabase.Add("Password");
+
+            if (string.IsNullOrWhiteSpace(Config.Token))
+                Perform_SendConsoleMessage("'Bot Token' is empty in config! The Discord BOT will not be loaded.", ConsoleColor.Red);
+            if (string.IsNullOrWhiteSpace(Config.ServerID))
+                Perform_SendConsoleMessage("'Discord Server ID' is empty in config! The Discord BOT will not be loaded.", ConsoleColor.Red);
+            else if (!ulong.TryParse(Config.ServerID.Trim(), out _))
+                Perform_SendConsoleMessage($"'Discord Server ID' in config is not a valid ID ('{Config.ServerID}')! The Discord BOT will not be loaded.", ConsoleColor.Red);
+
+            if (!Config.Link.Enabled)
+                Perform_SendConsoleMessage("Link is disabled in config ('Link System' -> 'Enabled'), the link commands are not registered on this server.", ConsoleColor.DarkYellow);
+
+            if (Config.Link.Enabled && !Config.Link.ResponseServer)
+                Perform_SendConsoleMessage("Link: 'Link System' -> 'Response Server' is disabled on this server. Exactly one server must have it enabled, otherwise the Link Slash Command gets no response in Discord.", ConsoleColor.DarkYellow);
+
+            if (missingDatabase.Count == 0)
             {
                 databaseData = new DatabaseConnection
                 {
@@ -32,31 +52,35 @@ namespace DiscordUtilities
                     Password = Config.Database.Password,
                 };
 
-                _ = InitializeAsync();
+                // Started on the thread pool: the synchronous part (driver/HTTP stack initialization, DNS) must not stall the game thread
+                _ = Task.Run(InitializeAsync);
             }
             else
             {
-                Perform_SendConsoleMessage("You need to setup Database credentials in config", ConsoleColor.Red);
+                Perform_SendConsoleMessage($"You need to setup Database credentials in config ('Database Connection' is missing: '{string.Join("', '", missingDatabase)}')", ConsoleColor.Red);
             }
         }
         private async Task InitializeAsync()
         {
             await CreateDatabaseConnection();
-            _ = LoadDiscordBOT();
+            if (IsDbConnected)
+                Server.NextFrame(LoadConnectedPlayers);
 
-            if (string.IsNullOrEmpty(Config.ServerID) || !ulong.TryParse(Config.ServerID, out _))
-            {
-                Perform_SendConsoleMessage("Invalid Discord Server ID!", ConsoleColor.Red);
+            // Without a valid Server ID or Bot Token the bot cannot do anything, so it is not started at all
+            // Both are already reported in 'OnAllPluginsLoaded'
+            if (string.IsNullOrWhiteSpace(Config.Token) || string.IsNullOrWhiteSpace(Config.ServerID) || !ulong.TryParse(Config.ServerID.Trim(), out _))
                 return;
-            }
+
+            _ = LoadDiscordBOT();
 
             int counter = 0;
             while (!IsBotConnected)
             {
                 counter++;
-                if (counter > 5)
+                if (counter > 5 || BotConnectFatal)
                 {
-                    Perform_SendConsoleMessage("Discord BOT failed to connect!", ConsoleColor.Red);
+                    var reason = BotConnectError;
+                    Perform_SendConsoleMessage(string.IsNullOrEmpty(reason) ? "Discord BOT failed to connect!" : $"Discord BOT failed to connect! Reason: {reason}", ConsoleColor.Red);
                     break;
                 }
                 else
@@ -73,12 +97,16 @@ namespace DiscordUtilities
             if (Config.UseCustomVariables)
                 LoadCustomConditions();
 
-            _ = LoadVersions();
-            _ = LoadMapImages();
+            // Started on the thread pool: the first HTTP request initializes the HTTP stack synchronously
+            _ = Task.Run(LoadVersions);
+            _ = Task.Run(LoadMapImages);
             IsDbConnected = false;
             IsBotConnected = false;
+            BotConnectError = "";
+            BotConnectFatal = false;
             IsDebug = Config.Debug;
             ServerId = Config.ServerID;
+            LinkRoleId = Config.Link.Enabled ? Config.Link.LinkDiscordSettings.LinkRole.Trim() : "";
             UseCustomVariables = Config.UseCustomVariables;
             DateFormat = Config.DateFormat;
             savedInteractions.Clear();
@@ -88,7 +116,7 @@ namespace DiscordUtilities
 
             Server.ExecuteCommand("sv_hibernate_when_empty false");
             bool mapStarted = false;
-            RegisterListener<Listeners.OnMapStart>(mapName =>
+            void OnMapStarted(string mapName)
             {
                 if (!mapStarted)
                 {
@@ -110,14 +138,19 @@ namespace DiscordUtilities
                     AddTimer(60.0f, () =>
                     {
                         UpdateServerData();
-                        foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && p.AuthorizedSteamID != null && playerData.ContainsKey(p.Slot)))
+                        foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.Connected && p.AuthorizedSteamID != null && playerData.ContainsKey(p.Slot)))
                         {
                             playerData[player.Slot].PlayedTime++;
                         }
                     }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
                 }
-            });
+            }
+            RegisterListener<Listeners.OnMapStart>(OnMapStarted);
             RegisterListener<Listeners.OnMapEnd>(() => { mapStarted = false; });
+
+            // 'OnMapStart' is not fired again for the running map, without this the timers and server data wait for the next map
+            if (hotReload)
+                OnMapStarted(Server.MapName);
         }
 
         private async Task LoadDiscordBOT()
@@ -138,42 +171,205 @@ namespace DiscordUtilities
                     .BuildServiceProvider();
 
                 await BotClient.LoginAsync(TokenType.Bot, Config.Token);
-                await BotClient.StartAsync();
+                var missingIntents = await CheckPrivilegedIntents();
+                if (missingIntents.Count > 0)
+                {
+                    // The gateway would close the connection with code 4014 anyway, so the bot is not started
+                    BotConnectError = $"'Disallowed intent(s)' - enable '{string.Join("' and '", missingIntents)}' in the Discord Developer Portal";
+                    BotConnectFatal = true;
+                    return;
+                }
 
+                // Subscribed once here, 'Ready' is fired again on every new gateway session
+                BotClient.Disconnected += BotDisconnected;
                 BotClient.Ready += ReadyAsync;
+                BotClient.SlashCommandExecuted += SlashCommandHandler;
+                BotClient.MessageReceived += MessageReceivedHandler;
+                BotClient.InteractionCreated += InteractionCreatedHandler;
+                BotClient.GuildScheduledEventCreated += ScheduledEventCreated;
+                BotClient.GuildMemberUpdated += GuildMemberUpdated;
+                BotClient.UserLeft += GuildMemberLeft;
 
-                await Task.Delay(-1);
+                await BotClient.StartAsync();
+            }
+            catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                BotConnectError = "'Invalid Bot Token' (401 Unauthorized) - check 'Bot Token' in config";
+                BotConnectFatal = true;
             }
             catch (Exception ex)
             {
                 Perform_SendConsoleMessage($"An error occurred while initializing the Discord BOT: '{ex.Message}'", ConsoleColor.Red);
+                BotConnectError = $"'{ex.Message}'";
+                BotConnectFatal = true;
             }
         }
-        private async Task ReadyAsync()
-        {
-            Perform_SendConsoleMessage("Discord BOT has been connected!", ConsoleColor.Green);
-            IsBotConnected = true;
-            BotLoaded();
 
-            if (string.IsNullOrEmpty(ServerId))
-                Perform_SendConsoleMessage("You do not have a completed 'Server ID'!", ConsoleColor.Red);
-            else
+        // Privileged intents requested in GatewayIntents must be enabled in the Developer Portal,
+        // otherwise the gateway closes the connection with code 4014.
+        private async Task<List<string>> CheckPrivilegedIntents()
+        {
+            var missing = new List<string>();
+            try
             {
-                var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-                if (guild == null)
-                    Perform_SendConsoleMessage($"Guild with id '{ServerId}' was not found!", ConsoleColor.Red);
+                var application = await BotClient!.GetApplicationInfoAsync();
+                var flags = application.Flags;
+
+                if (!flags.HasFlag(ApplicationFlags.GatewayGuildMembers) && !flags.HasFlag(ApplicationFlags.GatewayGuildMembersLimited))
+                    missing.Add("Server Members Intent");
+                if (!flags.HasFlag(ApplicationFlags.GatewayMessageContent) && !flags.HasFlag(ApplicationFlags.GatewayMessageContentLimited))
+                    missing.Add("Message Content Intent");
+
+                if (missing.Count == 0)
+                    return missing;
+
+                foreach (var intent in missing)
+                    Perform_SendConsoleMessage($"Discord BOT is missing privileged intent '{intent}'!", ConsoleColor.Red);
+                Perform_SendConsoleMessage("Enable it at 'https://discord.com/developers/applications' -> Bot -> Privileged Gateway Intents", ConsoleColor.Red);
+            }
+            catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                // 'LoginAsync' does not verify the token against Discord, this is the first real request.
+                // Rethrown so the bot is never started with a token that Discord rejects.
+                throw;
+            }
+            catch (Exception ex)
+            {
+                if (IsDebug)
+                    Perform_SendConsoleMessage($"Unable to check privileged intents of the Discord BOT: '{ex.Message}'", ConsoleColor.Cyan);
+                missing.Clear();
+            }
+            return missing;
+        }
+
+        private Task BotDisconnected(Exception exception)
+        {
+            if (exception == null)
+                return Task.CompletedTask;
+
+            Discord.Net.WebSocketClosedException? closed = null;
+            for (var e = exception; e != null; e = e.InnerException)
+            {
+                if (e is Discord.Net.WebSocketClosedException wsException)
+                {
+                    closed = wsException;
+                    break;
+                }
             }
 
-            var ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
-            await BotClient!.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType, ActivityProperties.None));
-            await BotClient.SetStatusAsync((UserStatus)Config.BotStatus.Status);
+            if (closed == null)
+            {
+                for (var e = exception; e != null; e = e.InnerException)
+                {
+                    if (e is Discord.Net.HttpException { HttpCode: System.Net.HttpStatusCode.Unauthorized })
+                    {
+                        // Discord.Net would retry forever with a rejected token
+                        BotConnectError = "'Invalid Bot Token' (401 Unauthorized) - check 'Bot Token' in config";
+                        BotConnectFatal = true;
+                        Perform_SendConsoleMessage($"Discord BOT has been stopped! Reason: {BotConnectError}", ConsoleColor.Red);
+                        _ = StopDiscordBOT(BotClient);
+                        return Task.CompletedTask;
+                    }
+                }
 
-            BotClient.SlashCommandExecuted += SlashCommandHandler;
-            BotClient.MessageReceived += MessageReceivedHandler;
-            BotClient.InteractionCreated += InteractionCreatedHandler;
-            BotClient.GuildScheduledEventCreated += ScheduledEventCreated;
-            BotClient.GuildMemberUpdated += GuildMemberUpdated;
-            BotClient.UserLeft += GuildMemberLeft;
+                BotConnectError = $"'{(exception.InnerException ?? exception).Message}'";
+                return Task.CompletedTask;
+            }
+
+            var reason = string.IsNullOrEmpty(closed.Reason) ? "Connection closed by Discord" : closed.Reason;
+            switch (closed.CloseCode)
+            {
+                case 4004:
+                    BotConnectError = $"'{reason}' (close code '4004') - check 'Bot Token' in config";
+                    BotConnectFatal = true;
+                    break;
+                case 4013:
+                case 4014:
+                    BotConnectError = $"'{reason}' (close code '{closed.CloseCode}') - enable 'Server Members Intent' and 'Message Content Intent' in the Discord Developer Portal";
+                    BotConnectFatal = true;
+                    break;
+                default:
+                    BotConnectError = $"'{reason}' (close code '{closed.CloseCode}')";
+                    break;
+            }
+            return Task.CompletedTask;
+        }
+        // Discord only answers "Missing Permissions" (50013) without saying which one
+        private static string GetMissingPermissionHint(Exception ex, string requiredPermissions)
+        {
+            bool missingPermissions = ex is Discord.Net.HttpException { DiscordCode: DiscordErrorCode.MissingPermissions or DiscordErrorCode.InsufficientPermissions }
+                || ex.Message.Contains("Missing required guild permission");
+
+            return missingPermissions ? $" - give the role of the Discord BOT the permission(s) {requiredPermissions} in the Discord Server Settings" : "";
+        }
+
+        private void CheckBotPermissions(SocketGuild guild)
+        {
+            try
+            {
+                var permissions = guild.CurrentUser?.GuildPermissions;
+                if (permissions == null || permissions.Value.Administrator)
+                    return;
+
+                // 'Create Events' (1 << 44) is not known by this Discord.Net version
+                if ((permissions.Value.RawValue & (1UL << 44)) == 0)
+                    Perform_SendConsoleMessage("Discord BOT is missing the permission 'Create Events'! Link codes and linked players will not be synced between servers.", ConsoleColor.Red);
+                if (!permissions.Value.ManageEvents)
+                    Perform_SendConsoleMessage("Discord BOT is missing the permission 'Manage Events'! Link codes and linked players will not be synced between servers.", ConsoleColor.Red);
+                if (!permissions.Value.ManageRoles)
+                    Perform_SendConsoleMessage("Discord BOT is missing the permission 'Manage Roles'! Roles (Link role, timed roles, module roles) cannot be added or removed.", ConsoleColor.Red);
+            }
+            catch (Exception ex)
+            {
+                if (IsDebug)
+                    Perform_SendConsoleMessage($"Unable to check permissions of the Discord BOT: '{ex.Message}'", ConsoleColor.Cyan);
+            }
+        }
+
+        private static async Task StopDiscordBOT(DiscordSocketClient? client)
+        {
+            if (client == null)
+                return;
+
+            try
+            {
+                await client.StopAsync();
+            }
+            catch (Exception ex)
+            {
+                if (IsDebug)
+                    Perform_SendConsoleMessage($"An error occurred while stopping the Discord BOT: '{ex.Message}'", ConsoleColor.Cyan);
+            }
+        }
+
+        private async Task ReadyAsync()
+        {
+            bool firstReady = !IsBotConnected;
+            IsBotConnected = true;
+
+            if (firstReady)
+            {
+                Perform_SendConsoleMessage("Discord BOT has been connected!", ConsoleColor.Green);
+                BotLoaded();
+                Server.NextFrame(LoadConnectedLinkedPlayers);
+            }
+            else if (IsDebug)
+                Perform_SendConsoleMessage("Discord BOT has been reconnected", ConsoleColor.Cyan);
+
+            // Logs the reason itself when the guild cannot be resolved
+            if (TryGetGuild(out var readyGuild) && firstReady)
+                CheckBotPermissions(readyGuild);
+
+            var client = BotClient;
+            if (client == null)
+                return;
+
+            var ActivityFormat = ReplaceServerDataVariables(Config.BotStatus.ActivityFormat);
+            await client.SetActivityAsync(new Game(ActivityFormat, (ActivityType)Config.BotStatus.ActivityType, ActivityProperties.None));
+            await client.SetStatusAsync((UserStatus)Config.BotStatus.Status);
+
+            if (!firstReady)
+                return;
 
             var linkCommand = new SlashCommandBuilder()
                 .WithName(Config.Link.LinkDiscordSettings.Name.ToLower())
@@ -188,19 +384,18 @@ namespace DiscordUtilities
                     {
                         if (IsDebug)
                             Perform_SendConsoleMessage($"Link Slash Command has been successfully updated/created", ConsoleColor.Cyan);
-                        await BotClient.CreateGlobalApplicationCommandAsync(linkCommand.Build());
+                        await client.CreateGlobalApplicationCommandAsync(linkCommand.Build());
                     }
                     else
                     {
                         Perform_SendConsoleMessage($"Link Slash Command was not created because you do not have a database connected", ConsoleColor.Red);
-                        throw new Exception("Link Slash Command was not created because you do not have a database connected");
+                        return;
                     }
                 }
             }
             catch (Exception ex)
             {
                 Perform_SendConsoleMessage($"An error occurred while updating Link Slash Commands: '{ex.Message}'", ConsoleColor.Red);
-                throw new Exception($"An error occurred while updating Link Slash Commands: {ex.Message}");
             }
         }
 
@@ -208,21 +403,17 @@ namespace DiscordUtilities
         {
             if (Config.Link.Enabled && Config.Link.ResponseServer)
             {
-                if (linkedPlayers.ContainsValue(user.Id))
+                if (TryGetSteamIdByDiscordId(user.Id, out var steamId))
                 {
-                    var steamId = linkedPlayers.FirstOrDefault(x => x.Value == user.Id).Key;
-                    if (linkedPlayers.ContainsKey(steamId))
-                    {
-                        await RemovePlayerData(steamId.ToString());
-                        await CreateScheduledEventAsync("refreshlinkedplayers");
-                    }
+                    await RemovePlayerData(steamId.ToString());
+                    await CreateScheduledEventAsync("refreshlinkedplayers");
                 }
             }
         }
 
         private async Task GuildMemberUpdated(Cacheable<SocketGuildUser, ulong> before, SocketGuildUser after)
         {
-            if (!linkedPlayers.ContainsValue(after.Id))
+            if (!TryGetSteamIdByDiscordId(after.Id, out _))
                 return;
 
             var beforeGuildUser = await before.GetOrDownloadAsync();
@@ -254,12 +445,19 @@ namespace DiscordUtilities
 
         public async Task CreateScheduledEventAsync(string eventData)
         {
-            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-            if (guild == null)
-                return;
+            try
+            {
+                if (!TryGetGuild(out var guild))
+                    return;
 
-            var guildEvent = await guild.CreateEventAsync($"Custom Event (DU)", DateTimeOffset.UtcNow.AddMinutes(1), GuildScheduledEventType.External, endTime: DateTimeOffset.UtcNow.AddMinutes(2), location: "Discord Utilities", description: eventData);
-            await guildEvent.DeleteAsync();
+                var guildEvent = await guild.CreateEventAsync($"Custom Event (DU)", DateTimeOffset.UtcNow.AddMinutes(1), GuildScheduledEventType.External, endTime: DateTimeOffset.UtcNow.AddMinutes(2), location: "Discord Utilities", description: eventData);
+                await guildEvent.DeleteAsync();
+            }
+            catch (Exception ex)
+            {
+                // The description is not logged, it can contain an encoded link code
+                Perform_SendConsoleMessage($"An error occurred while syncing data between servers: '{ex.Message}'{GetMissingPermissionHint(ex, "'Create Events' and 'Manage Events'")}", ConsoleColor.Red);
+            }
         }
 
         private async Task ScheduledEventCreated(SocketGuildEvent scheduledEvent)
@@ -275,15 +473,21 @@ namespace DiscordUtilities
 
                     if (CustomId.Equals("addcode"))
                     {
+                        if (data.Length < 3)
+                            return;
+
                         var code = DecodeSecretString(data[1]);
-                        if (!linkCodes.ContainsKey(code))
-                            linkCodes.Add(code, data[2]);
+                        if (!string.IsNullOrEmpty(code))
+                            linkCodes.TryAdd(code, data[2]);
                     }
                     else if (CustomId.Equals("removecode"))
                     {
-                        var code = DecodeSecretString(data[1]);
-                        if (linkCodes.ContainsKey(code))
-                            linkCodes.Remove(code);
+                        if (data.Length < 2)
+                            return;
+
+                        // Sent as plain code by the server that handled the link, older versions may send it encoded
+                        if (!linkCodes.TryRemove(data[1], out _))
+                            linkCodes.TryRemove(DecodeSecretString(data[1]), out _);
                     }
                     else if (CustomId.Equals("refreshlinkedplayers"))
                     {
@@ -296,11 +500,6 @@ namespace DiscordUtilities
 
         private Task InteractionCreatedHandler(SocketInteraction interaction)
         {
-            if ((DateTime.Now - LastInteractionTime).TotalSeconds > 60)
-            {
-                savedInteractions.Clear();
-            }
-
             if (interaction is SocketMessageComponent MessageComponent)
             {
                 Event_InteractionCreated(interaction, MessageComponent);
@@ -334,12 +533,50 @@ namespace DiscordUtilities
             if (updateTimer != null)
                 updateTimer.Kill();
 
-            if (IsBotConnected && BotClient != null)
+            var client = BotClient;
+            BotClient = null;
+            IsBotConnected = false;
+
+            if (client != null)
             {
-                BotClient.SlashCommandExecuted -= SlashCommandHandler;
-                BotClient.MessageReceived -= MessageReceivedHandler;
-                BotClient.InteractionCreated -= InteractionCreatedHandler;
-                BotClient.GuildScheduledEventCreated -= ScheduledEventCreated;
+                client.Disconnected -= BotDisconnected;
+                client.Ready -= ReadyAsync;
+                client.SlashCommandExecuted -= SlashCommandHandler;
+                client.MessageReceived -= MessageReceivedHandler;
+                client.InteractionCreated -= InteractionCreatedHandler;
+                client.GuildScheduledEventCreated -= ScheduledEventCreated;
+                client.GuildMemberUpdated -= GuildMemberUpdated;
+                client.UserLeft -= GuildMemberLeft;
+
+                _ = ShutdownDiscordBOT(client);
+            }
+
+            (BotCommands as IDisposable)?.Dispose();
+            BotCommands = null;
+            (BotServices as IDisposable)?.Dispose();
+            BotServices = null;
+        }
+
+        // Without this the old client keeps its gateway session alive after a plugin reload
+        private static async Task ShutdownDiscordBOT(DiscordSocketClient client)
+        {
+            try
+            {
+                await client.StopAsync();
+                await client.LogoutAsync();
+            }
+            catch (Exception ex)
+            {
+                Perform_SendConsoleMessage($"An error occurred while stopping the Discord BOT: '{ex.Message}'", ConsoleColor.Red);
+            }
+
+            try
+            {
+                await client.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Perform_SendConsoleMessage($"An error occurred while disposing the Discord BOT: '{ex.Message}'", ConsoleColor.Red);
             }
         }
 

@@ -45,15 +45,15 @@ namespace Report
                 return;
             }
 
-            if (reportCooldowns.ContainsKey(player))
+            if (reportCooldowns.ContainsKey(player.Slot))
             {
-                var remainingTime = (int)Server.CurrentTime - reportCooldowns[player];
+                var remainingTime = (int)Server.CurrentTime - reportCooldowns[player.Slot];
                 if (remainingTime < Config.ReportCooldown)
                 {
                     player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCooldown", Config.ReportCooldown]}");
                     return;
                 }
-                reportCooldowns.Remove(player);
+                reportCooldowns.Remove(player.Slot);
             }
             if (!Config.SelfReport)
             {

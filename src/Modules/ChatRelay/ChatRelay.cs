@@ -105,7 +105,7 @@ namespace ChatRelay
             if (string.IsNullOrEmpty(Config.DiscordRelay.ChannelID))
                 return;
 
-            if (message.ChannelID == ulong.Parse(Config.DiscordRelay.ChannelID))
+            if (ulong.TryParse(Config.DiscordRelay.ChannelID, out var relayChannelId) && message.ChannelID == relayChannelId)
             {
                 var replaceVariablesBuilder = new ReplaceVariables.Builder
                 {
@@ -144,14 +144,16 @@ namespace ChatRelay
                 var config = Config.Chatlog.TeamChatEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities!.ReplaceVariables(Config.Chatlog.TeamChatEmbed.Content, replaceVariablesBuilder);
-                DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.Chatlog.ChannelID), content, embedBuider, null);
+                if (TryGetChannelId(Config.Chatlog.ChannelID, "Chatlog", out var chatlogChannelId))
+                    DiscordUtilities.SendMessageToChannel(chatlogChannelId, content, embedBuider, null);
             }
             else
             {
                 var config = Config.Chatlog.AllChatEmbed;
                 var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                 var content = DiscordUtilities!.ReplaceVariables(Config.Chatlog.AllChatEmbed.Content, replaceVariablesBuilder);
-                DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.Chatlog.ChannelID), content, embedBuider, null);
+                if (TryGetChannelId(Config.Chatlog.ChannelID, "Chatlog", out var chatlogChannelId))
+                    DiscordUtilities.SendMessageToChannel(chatlogChannelId, content, embedBuider, null);
             }
         }
 
@@ -175,7 +177,17 @@ namespace ChatRelay
             var config = Config.AdminChat.AdminChatEmbed;
             var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
             var content = DiscordUtilities!.ReplaceVariables(Config.AdminChat.AdminChatEmbed.Content, replaceVariablesBuilder);
-            DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.AdminChat.ChannelID), content, embedBuider, null);
+            if (TryGetChannelId(Config.AdminChat.ChannelID, "AdminChat", out var adminChatChannelId))
+                DiscordUtilities.SendMessageToChannel(adminChatChannelId, content, embedBuider, null);
+        }
+
+        private bool TryGetChannelId(string value, string section, out ulong channelId)
+        {
+            if (ulong.TryParse(value, out channelId))
+                return true;
+
+            DiscordUtilities!.SendConsoleMessage($"Invalid 'Channel ID' '{value}'! ({section})", MessageType.Error);
+            return false;
         }
 
         private IDiscordUtilitiesAPI GetDiscordUtilitiesEventSender()

@@ -22,8 +22,8 @@ namespace Report
         public override string ModuleVersion => "1.4";
         public IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
-        public Dictionary<CCSPlayerController, CCSPlayerController> performReport = new();
-        public Dictionary<CCSPlayerController, int> reportCooldowns = new();
+        public Dictionary<int, CCSPlayerController> performReport = new();
+        public Dictionary<int, int> reportCooldowns = new();
         public Dictionary<string, ReportData> reportsList = new();
         public List<ulong> solvedPlayers = new();
         public class ReportData
@@ -86,10 +86,10 @@ namespace Report
             var player = @event.Userid;
             if (player != null && player.IsValid)
             {
-                if (performReport.ContainsKey(player))
-                    performReport.Remove(player);
-                if (reportCooldowns.ContainsKey(player))
-                    reportCooldowns.Remove(player);
+                if (performReport.ContainsKey(player.Slot))
+                    performReport.Remove(player.Slot);
+                if (reportCooldowns.ContainsKey(player.Slot))
+                    reportCooldowns.Remove(player.Slot);
             }
 
             return HookResult.Continue;
@@ -98,7 +98,7 @@ namespace Report
 
         private HookResult OnPlayerSay(CCSPlayerController? player, CommandInfo info)
         {
-            if (player == null || !player.IsValid || player.AuthorizedSteamID == null || !performReport.ContainsKey(player))
+            if (player == null || !player.IsValid || player.AuthorizedSteamID == null || !performReport.ContainsKey(player.Slot))
                 return HookResult.Continue;
 
             var reason = info.GetArg(1);
@@ -110,7 +110,7 @@ namespace Report
             if (reason.Contains(Config.CancelCommand))
             {
                 player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCancelled"]}");
-                performReport.Remove(player);
+                performReport.Remove(player.Slot);
                 return HookResult.Handled;
             }
 
@@ -123,29 +123,29 @@ namespace Report
                     if (blockedReasons.Contains(x))
                     {
                         player.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportBlockedReason", x]}");
-                        performReport.Remove(player);
+                        performReport.Remove(player.Slot);
                         return HookResult.Handled;
                     }
                 }
             }
-            SendReport(player, performReport[player], reason);
-            performReport.Remove(player);
+            SendReport(player, performReport[player.Slot], reason);
+            performReport.Remove(player.Slot);
             return HookResult.Handled;
         }
 
         public void SendReport(CCSPlayerController sender, CCSPlayerController target, string reason)
         {
-            if (reportCooldowns.ContainsKey(sender))
+            if (reportCooldowns.ContainsKey(sender.Slot))
             {
-                var remainingTime = (int)Server.CurrentTime - reportCooldowns[sender];
+                var remainingTime = (int)Server.CurrentTime - reportCooldowns[sender.Slot];
                 if (remainingTime < Config.ReportCooldown)
                 {
                     sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportCooldown", Config.ReportCooldown]}");
                     return;
                 }
-                reportCooldowns.Remove(sender);
+                reportCooldowns.Remove(sender.Slot);
             }
-            if (Config.AntiSpamReport && solvedPlayers.Contains(target.SteamID))
+            if (Config.AntiSpamReport && target.IsValid && solvedPlayers.Contains(target.SteamID))
             {
                 sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ThisPlayerCannotBeReported", target.PlayerName]}");
                 return;
@@ -194,9 +194,10 @@ namespace Report
 
             string reportId = GetRandomChars();
             reportsList.Add(reportId, reportData);
-            DiscordUtilities.SendCustomMessageToChannel($"report_{reportId}", ulong.Parse(Config.ChannelID), content, embedBuider, null, true);
+            if (TryGetChannelId(Config.ChannelID, "Report", out var channelId))
+                DiscordUtilities.SendCustomMessageToChannel($"report_{reportId}", channelId, content, embedBuider, null, true);
 
-            reportCooldowns.Add(sender, (int)Server.CurrentTime);
+            reportCooldowns.Add(sender.Slot, (int)Server.CurrentTime);
             sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.ReportSend", target.PlayerName, reason]}");
             foreach (var admin in Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, Config.AdminFlag)))
             {
@@ -205,9 +206,9 @@ namespace Report
         }
         public void CustomReasonReport(CCSPlayerController sender, CCSPlayerController target)
         {
-            if (!performReport.ContainsKey(sender))
+            if (!performReport.ContainsKey(sender.Slot))
             {
-                performReport.Add(sender, target);
+                performReport.Add(sender.Slot, target);
             }
             sender.PrintToChat($"{Localizer["Chat.Prefix"]} {Localizer["Chat.InserYourReason"]}");
         }
@@ -241,7 +242,7 @@ namespace Report
 
         private int GetTargetsForReportCount(CCSPlayerController player)
         {
-            return Utilities.GetPlayers().Where(p => p.IsValid && p != player && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.PlayerConnected && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.UnreportableFlag)).Count();
+            return Utilities.GetPlayers().Where(p => p.IsValid && p != player && !p.IsHLTV && !p.IsBot && p.Connected == PlayerConnectedState.Connected && p.SteamID.ToString().Length == 17 && !AdminManager.PlayerHasPermissions(p, Config.UnreportableFlag)).Count();
         }
 
         private void OnInteractionCreated(InteractionData interaction, UserData user)
@@ -254,7 +255,7 @@ namespace Report
                     var requiredRoles = Config.ReportEmbed.ReportButton.AdminRolesId.Trim().Split(',').ToList();
                     if (requiredRoles != null && requiredRoles.Count > 0)
                     {
-                        bool hasPermission = requiredRoles.Count(role => user.RolesIds.Contains(ulong.Parse(role))) > 0;
+                        bool hasPermission = requiredRoles.Any(role => ulong.TryParse(role.Trim(), out var roleId) && user.RolesIds.Contains(roleId));
                         if (!hasPermission)
                         {
                             var config = Config.ReportEmbed.ReportButton.ReportReplyEmbeds.ReportFailed;
@@ -377,7 +378,8 @@ namespace Report
                                 content = string.IsNullOrEmpty(Config.SolvedEmbeds.ExpiredReportEmbed.Content) ? "" : DiscordUtilities.ReplaceVariables(Config.SolvedEmbeds.ExpiredReportEmbed.Content, replaceVariablesBuilder);
                         }
                     }
-                    DiscordUtilities.UpdateMessage(message.MessageID, ulong.Parse(Config.ChannelID), content, embedsBuilder, null);
+                    if (TryGetChannelId(Config.ChannelID, "Report", out var channelId))
+                        DiscordUtilities.UpdateMessage(message.MessageID, channelId, content, embedsBuilder, null);
                 }
             }
         }
@@ -468,6 +470,15 @@ namespace Report
                 DiscordUtilities.UpdateMessage(message.MessageID, message.ChannelID, content, embedBuider, componentsBuilder);
             }
         }
+        private bool TryGetChannelId(string value, string section, out ulong channelId)
+        {
+            if (ulong.TryParse(value, out channelId))
+                return true;
+
+            DiscordUtilities!.SendConsoleMessage($"Invalid 'Channel ID' '{value}'! ({section})", MessageType.Error);
+            return false;
+        }
+
         private IDiscordUtilitiesAPI GetDiscordUtilitiesEventSender()
         {
             if (DiscordUtilities is not null)

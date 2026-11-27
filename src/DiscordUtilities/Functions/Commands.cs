@@ -97,10 +97,9 @@ namespace DiscordUtilities
                 return;
             }
 
-            if (!linkedPlayers.ContainsKey(steamId))
+            if (!linkedPlayers.TryGetValue(steamId, out var linkedUserId))
             {
-                var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-                if (guild == null)
+                if (!TryGetGuild(out var guild))
                 {
                     info.ReplyToCommand($"[Discord Utilities] Guild with id '{ServerId}' was not found!");
                     return;
@@ -110,7 +109,7 @@ namespace DiscordUtilities
                 if (user != null)
                 {
                     _ = InsertPlayerData(steamId.ToString(), userId.ToString(), user.DisplayName);
-                    _ = PerformLinkRole(user, guild.GetRole(ulong.Parse(Config.Link.LinkDiscordSettings.LinkRole)));
+                    _ = PerformLinkRole(user, ulong.TryParse(Config.Link.LinkDiscordSettings.LinkRole, out var linkRoleId) ? guild.GetRole(linkRoleId) : null);
                     _ = CreateScheduledEventAsync("refreshlinkedplayers");
                     info.ReplyToCommand($"[Discord Utilities] Player '{steamId}' has been linked with the Discord User: '{user.DisplayName}' ({userId})");
                 }
@@ -121,7 +120,7 @@ namespace DiscordUtilities
             }
             else
             {
-                info.ReplyToCommand($"[Discord Utilities] SteamID '{steamId}' is already linked! (Discord User ID: {linkedPlayers[steamId]})");
+                info.ReplyToCommand($"[Discord Utilities] SteamID '{steamId}' is already linked! (Discord User ID: {linkedUserId})");
             }
         }
 
@@ -137,9 +136,8 @@ namespace DiscordUtilities
                 return;
             }
 
-            if (linkedPlayers.ContainsKey(steamId))
+            if (linkedPlayers.TryGetValue(steamId, out var userId))
             {
-                var userId = linkedPlayers[steamId];
                 var user = GetUserDataByUserID(userId);
                 if (user != null)
                     info.ReplyToCommand($"[Discord Utilities] Player '{steamId}' has been unlinked from the Discord User: '{user.DisplayName}' ({userId})");
@@ -158,6 +156,7 @@ namespace DiscordUtilities
 
         [ConsoleCommand("css_du_addtimedrole", "Add Timed Role to User")]
         [CommandHelper(3, usage: "<discord_userid> <role_id> <minutes>", whoCanExecute: CommandUsage.SERVER_ONLY)]
+        [RequiresPermissions("@du/addtimedrole", "@du/admin")]
         public void AddTimedRole_CMD(CCSPlayerController player, CommandInfo info)
         {
             if (!Config.TimedRoles)
@@ -188,8 +187,7 @@ namespace DiscordUtilities
                 return;
             }
 
-            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-            if (guild == null)
+            if (!TryGetGuild(out var guild))
             {
                 info.ReplyToCommand($"[Discord Utilities] Guild with id '{ServerId}' was not found!");
                 return;
@@ -232,8 +230,7 @@ namespace DiscordUtilities
                 return;
             }
 
-            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-            if (guild == null)
+            if (!TryGetGuild(out var guild))
             {
                 info.ReplyToCommand($"[Discord Utilities] Guild with id '{ServerId}' was not found!");
                 return;
@@ -274,8 +271,7 @@ namespace DiscordUtilities
                 return;
             }
 
-            var guild = BotClient!.GetGuild(ulong.Parse(ServerId));
-            if (guild == null)
+            if (!TryGetGuild(out var guild))
             {
                 info.ReplyToCommand($"[Discord Utilities] Guild with id '{ServerId}' was not found!");
                 return;
@@ -327,9 +323,8 @@ namespace DiscordUtilities
                 return;
             }
 
-            if (linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
+            if (linkedPlayers.TryGetValue(player.AuthorizedSteamID.SteamId64, out var discordId))
             {
-                var discordId = linkedPlayers[player.AuthorizedSteamID.SteamId64];
                 var steamId = player.AuthorizedSteamID.SteamId64.ToString();
                 _ = RemovePlayerData(steamId);
                 _ = RemoveLinkRole(discordId);
@@ -359,15 +354,13 @@ namespace DiscordUtilities
 
             if (!linkedPlayers.ContainsKey(player.AuthorizedSteamID.SteamId64))
             {
-                string code;
-                if (linkCodes.ContainsValue(player.AuthorizedSteamID.SteamId64.ToString()))
-                {
-                    code = linkCodes.FirstOrDefault(x => x.Value == player.AuthorizedSteamID.SteamId64.ToString()).Key;
-                }
-                else
+                string? code = linkCodes.FirstOrDefault(x => x.Value == player.AuthorizedSteamID.SteamId64.ToString()).Key;
+                if (code == null)
                 {
                     code = GetRandomCode(Config.Link.CodeLength);
                     var steamId = player.AuthorizedSteamID.SteamId64.ToString();
+                    // Stored locally as well, so the code works on this server even when the sync between servers fails
+                    linkCodes.TryAdd(code, steamId);
                     _ = CreateScheduledEventAsync($"addcode;{EncodeSecretString(code)};{steamId}");
                 }
 

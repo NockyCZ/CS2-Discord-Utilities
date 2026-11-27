@@ -151,16 +151,22 @@ namespace ManageRolesAndPermissions
 
                 foreach (var item in Config.PermissionToRole)
                 {
+                    if (!ulong.TryParse(item.Value, out var roleId))
+                    {
+                        DiscordUtilities!.SendConsoleMessage($"Invalid Role ID '{item.Value}' for permission '{item.Key}'! (Permission To Role)", MessageType.Error);
+                        continue;
+                    }
+
                     if (item.Key.StartsWith('@'))
                     {
                         if (AdminManager.PlayerHasPermissions(player, item.Key))
                         {
-                            if (!user.RolesIds.Contains(ulong.Parse(item.Value)))
+                            if (!user.RolesIds.Contains(roleId))
                                 rolesList.Add(item.Value);
                         }
                         else
                         {
-                            if (user.RolesIds.Contains(ulong.Parse(item.Value)))
+                            if (user.RolesIds.Contains(roleId))
                                 rolesToRemove.Add(item.Value);
                         }
                     }
@@ -168,12 +174,12 @@ namespace ManageRolesAndPermissions
                     {
                         if (AdminManager.PlayerInGroup(player, item.Key))
                         {
-                            if (!user.RolesIds.Contains(ulong.Parse(item.Value)))
+                            if (!user.RolesIds.Contains(roleId))
                                 rolesList.Add(item.Value);
                         }
                         else
                         {
-                            if (user.RolesIds.Contains(ulong.Parse(item.Value)))
+                            if (user.RolesIds.Contains(roleId))
                                 rolesToRemove.Add(item.Value);
                         }
                     }

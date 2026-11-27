@@ -52,7 +52,7 @@ namespace EventNotifications
                 return;
             }
 
-            var playerList = Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected && (p.Team == CsTeam.Terrorist || p.Team == CsTeam.CounterTerrorist) && DiscordUtilities!.IsPlayerDataLoaded(p)).Take(18).ToList();
+            var playerList = Utilities.GetPlayers().Where(p => !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.Connected && (p.Team == CsTeam.Terrorist || p.Team == CsTeam.CounterTerrorist) && DiscordUtilities!.IsPlayerDataLoaded(p)).Take(18).ToList();
             if (playerList.Count <= 1)
                 return;
 
@@ -193,7 +193,8 @@ namespace EventNotifications
                     }
                 );
             }
-            DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.MatchEndStats.ChannelID), content, Embed, null);
+            if (TryGetChannelId(Config.MatchEndStats.ChannelID, "MatchEndStats", out var matchEndStatsChannelId))
+                DiscordUtilities.SendMessageToChannel(matchEndStatsChannelId, content, Embed, null);
         }
 
         public void PerformMapStart()
@@ -219,7 +220,8 @@ namespace EventNotifications
             var config = Config.MapChanged.MapChangedEmbed;
             var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
             var content = DiscordUtilities!.ReplaceVariables(Config.MapChanged.MapChangedEmbed.Content, replaceVariablesBuilder);
-            DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.MapChanged.ChannelID), content, embedBuider, null);
+            if (TryGetChannelId(Config.MapChanged.ChannelID, "MapChanged", out var mapChangedChannelId))
+                DiscordUtilities.SendMessageToChannel(mapChangedChannelId, content, embedBuider, null);
         }
 
         public void PerformMapEnd()
@@ -241,7 +243,8 @@ namespace EventNotifications
             var config = Config.MapEnd.MapEndEmbed;
             var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
             var content = DiscordUtilities!.ReplaceVariables(Config.MapEnd.MapEndEmbed.Content, replaceVariablesBuilder);
-            DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.MapEnd.ChannelID), content, embedBuider, null);
+            if (TryGetChannelId(Config.MapEnd.ChannelID, "MapEnd", out var mapEndChannelId))
+                DiscordUtilities.SendMessageToChannel(mapEndChannelId, content, embedBuider, null);
         }
 
         [GameEventHandler]
@@ -283,7 +286,8 @@ namespace EventNotifications
                     var config = Config.PlayerDeath.DeathEmbed;
                     var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                     var content = DiscordUtilities!.ReplaceVariables(Config.PlayerDeath.DeathEmbed.Content, replaceVariablesBuilder);
-                    DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.PlayerDeath.ChannelID), content, embedBuider, null);
+                    if (TryGetChannelId(Config.PlayerDeath.ChannelID, "PlayerDeath", out var playerDeathChannelId))
+                        DiscordUtilities.SendMessageToChannel(playerDeathChannelId, content, embedBuider, null);
                 }
             }
             return HookResult.Continue;
@@ -314,7 +318,8 @@ namespace EventNotifications
                     var config = Config.PlayerDisconnect.DisconnectdEmbed;
                     var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                     var content = DiscordUtilities!.ReplaceVariables(Config.PlayerDisconnect.DisconnectdEmbed.Content, replaceVariablesBuilder);
-                    DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.PlayerDisconnect.ChannelID), content, embedBuider, null);
+                    if (TryGetChannelId(Config.PlayerDisconnect.ChannelID, "PlayerDisconnect", out var playerDisconnectChannelId))
+                        DiscordUtilities.SendMessageToChannel(playerDisconnectChannelId, content, embedBuider, null);
                 }
             }
             return HookResult.Continue;
@@ -341,7 +346,8 @@ namespace EventNotifications
                     var config = Config.PlayerConnect.ConnectedEmbed;
                     var embedBuider = DiscordUtilities!.GetEmbedBuilderFromConfig(config, replaceVariablesBuilder);
                     var content = DiscordUtilities!.ReplaceVariables(Config.PlayerConnect.ConnectedEmbed.Content, replaceVariablesBuilder);
-                    DiscordUtilities.SendMessageToChannel(ulong.Parse(Config.PlayerConnect.ChannelID), content, embedBuider, null);
+                    if (TryGetChannelId(Config.PlayerConnect.ChannelID, "PlayerConnect", out var playerConnectChannelId))
+                        DiscordUtilities.SendMessageToChannel(playerConnectChannelId, content, embedBuider, null);
                 }
             }
         }
@@ -361,6 +367,15 @@ namespace EventNotifications
                     break;
             }
         }
+        private bool TryGetChannelId(string value, string section, out ulong channelId)
+        {
+            if (ulong.TryParse(value, out channelId))
+                return true;
+
+            DiscordUtilities!.SendConsoleMessage($"Invalid 'Channel ID' '{value}'! ({section})", MessageType.Error);
+            return false;
+        }
+
         private IDiscordUtilitiesAPI GetDiscordUtilitiesEventSender()
         {
             if (DiscordUtilities is not null)
