@@ -16,7 +16,7 @@ namespace ChatRelay
     {
         public override string ModuleName => "[Discord Utilities] Chat Relay";
         public override string ModuleAuthor => "SourceFactory.eu";
-        public override string ModuleVersion => "1.3";
+        public override string ModuleVersion => "1.4";
         private IDiscordUtilitiesAPI? DiscordUtilities { get; set; }
         public Config Config { get; set; } = new();
         public void OnConfigParsed(Config config) { Config = config; }
@@ -131,11 +131,13 @@ namespace ChatRelay
                 DiscordUtilities!.SendConsoleMessage("Can't send a message to Discord because the 'Channel ID' is empty! (Chat Relay (ChatLog))", MessageType.Error);
                 return;
             }
+            // {MUTE_PREFIX} is replaced before {MESSAGE} so a placeholder typed by the player stays untouched
             var replaceVariablesBuilder = new ReplaceVariables.Builder
             {
                 ServerData = true,
                 PlayerData = player,
                 CustomVariables = new Dictionary<string, string>{
+                    { "{MUTE_PREFIX}", GetMutePrefix(player) },
                     { "{MESSAGE}", message }
                 },
             };
@@ -155,6 +157,15 @@ namespace ChatRelay
                 if (TryGetChannelId(Config.Chatlog.ChannelID, "Chatlog", out var chatlogChannelId))
                     DiscordUtilities.SendMessageToChannel(chatlogChannelId, content, embedBuider, null);
             }
+        }
+
+        private string GetMutePrefix(CCSPlayerController player)
+        {
+            var prefix = Config.Chatlog.MutedPrefix.Trim();
+            if (prefix.Length == 0 || !player.VoiceFlags.HasFlag(VoiceFlags.Muted))
+                return string.Empty;
+
+            return $"{prefix} ";
         }
 
         public void PerformAdminChatlog(CCSPlayerController player, string message)
